@@ -28,14 +28,6 @@
    NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
-union f32_4x
-{
-    __m128  m;
-    __m128i mi;
-    f32 e[4];
-    u32 u[4];
-};
-
 struct SinCos4x
 {
     f32_4x cos;

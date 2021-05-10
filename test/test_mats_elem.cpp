@@ -132,36 +132,6 @@ exp32_sse(f32 x)
 #include "../mats/mats_elem4x.h"
 
 #include "test_common.cpp"
-#define MATH_FUNC_F32_4x_FROM_F32_4x(name)     f32_4x name(f32_4x x)
-typedef MATH_FUNC_F32_4x_FROM_F32_4x(MathFuncF32_4xFromF32_4x);
-
-global volatile f32_4x gRunSpeedSum4x;
-internal f32
-run_speed_f32_4x(String name, u32 maxNameSize, char *func, u32 tests, f32 minVal, f32 maxVal,
-                 MathFuncF32_4xFromF32_4x *testFunc, f32 secondsBase)
-{
-    gRunSpeedSum4x.m = _mm_setzero_ps();
-    f32 oneOverTests = 1.0f / (f32)tests;
-    f32 scale = (maxVal - minVal) * oneOverTests;
-    struct timespec start = linux_get_wall_clock();
-    for (u32 index = 0; index < tests; ++index)
-    {
-        f32_4x inputVal = F32_4x((f32)index * scale + minVal, 0.0f, F32_MAX, -F32_MAX);
-        f32_4x testRes0 = testFunc(inputVal);
-        f32_4x testRes1 = testFunc(testRes0);
-        f32_4x testRes2 = testFunc(testRes1);
-        f32_4x testRes3 = testFunc(testRes2);
-        gRunSpeedSum4x.m = _mm_add_ps(gRunSpeedSum4x.m, testRes3.m);
-    }
-    f32 seconds = linux_get_seconds_elapsed(start, linux_get_wall_clock());
-
-    if (secondsBase == 0.0f) {
-        print_speed_info(name, maxNameSize, func, 16*tests, seconds, gRunSpeedSum4x.e[0], 1.0f);
-    } else {
-        print_speed_info(name, maxNameSize, func, 16*tests, seconds, gRunSpeedSum4x.e[0], seconds / secondsBase);
-    }
-    return seconds;
-}
 
 internal f32_4x
 expf_4x(f32_4x x)

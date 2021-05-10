@@ -1,34 +1,38 @@
-// NOTE(michiel): The sin/cos code is based on the arm functions in mingw's newlib.
 
-/* Data definitions for sinf, cosf and sincosf.
-   Copyright (c) 2018 Arm Ltd.  All rights reserved.
+internal f32
+reduce_fast_pi4(f32 x, int *np)
+{
+    /* Use scaled float to int conversion with explicit rounding.
+       hpi_inv is prescaled by 2^24 so the quadrant ends up in bits 24..31.
+       This avoids inaccuracies introduced by truncating negative values.  */
+    f32 r = x * 0x1.45F306p+23f;
+    s32 n = ((s32)r + 0x800000) >> 24;
+    *np = n;
+    return x - n * 0x1.921FB4p0f;
+}
 
-   SPDX-License-Identifier: BSD-3-Clause
+internal f32
+sinf_poly_q0(f32 x, f32 x2)
+{
+    // NOTE(michiel): x - s1*x^3 + s2*x^5 - s3*x^7
+    f32 x3 = x * x2;                                // x^3
+    f32 s1 = 0x1.110760p-7f - x2 * 0x1.994eb2p-13f; // s2 - s3*x^2
+    f32 x7 = x3 * x2;                               // x^5
+    f32 s = x - x3 * 0x1.555544p-3f;                // x - s1*x^3
+    return s + x7 * s1;                             // x - s1*x^3 + x^5*(s2 - s3*x^2)
+}
 
-   Redistribution and use in source and binary forms, with or without
-   modification, are permitted provided that the following conditions
-   are met:
-   1. Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-   2. Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-   3. The name of the company may not be used to endorse or promote
-      products derived from this software without specific prior written
-      permission.
-
-   THIS SOFTWARE IS PROVIDED BY ARM LTD ``AS IS'' AND ANY EXPRESS OR IMPLIED
-   WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-   MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-   IN NO EVENT SHALL ARM LTD BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
-   TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-   PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-   LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
-
-//global const f32 gPiOver4 = F32_PI * 0.25f; // 0x1.921FB54442D18p-1;
+internal f32
+sinf_poly_q1(f32 x2)
+{
+    // NOTE(michiel): c0 - c1*x^2 + c2*x^4 - c3*x^6 + c4*x^8;
+    f32 x4 = x2 * x2;                                 // x^4
+    f32 c2 = -0x1.6c087ep-10f + x2 * 0x1.993430p-16f; // -c3 + c4*x^2
+    f32 c1 = 1.0f - x2 * 0x1.fffffep-2f;              // c0 - c1*x^2
+    f32 x6 = x4 * x2;                                 // x^6
+    f32 c = c1 + x4 * 0x1.55553ep-5f;                 // c0 - c1*x^2 + c2*x^4
+    return c + x6 * c2;                               // c0 - c1*x^2 + c2*x^4 + x^6(-c3 + c4*x^2)
+}
 
 internal f64
 reduce_fast_pi4_prec(f64 x, int *np)
@@ -66,44 +70,9 @@ sinf_poly_q1_prec(f64 x2)
 }
 
 internal f32
-reduce_fast_pi4(f32 x, int *np)
-{
-    /* Use scaled float to int conversion with explicit rounding.
-       hpi_inv is prescaled by 2^24 so the quadrant ends up in bits 24..31.
-       This avoids inaccuracies introduced by truncating negative values.  */
-    f32 r = x * 0x1.45F306p+23f;
-    s32 n = ((s32)r + 0x800000) >> 24;
-    *np = n;
-    return x - n * 0x1.921FB4p0f;
-}
-
-internal f32
-sinf_poly_q0(f32 x, f32 x2)
-{
-    // NOTE(michiel): x - s1*x^3 + s2*x^5 - s3*x^7
-    f32 x3 = x * x2;                                // x^3
-    f32 s1 = 0x1.110760p-7f - x2 * 0x1.994eb2p-13f; // s2 - s3*x^2
-    f32 x7 = x3 * x2;                               // x^5
-    f32 s = x - x3 * 0x1.555544p-3f;                // x - s1*x^3
-    return s + x7 * s1;                             // x - s1*x^3 + x^5*(s2 - s3*x^2)
-}
-
-internal f32
-sinf_poly_q1(f32 x2)
-{
-    // NOTE(michiel): c0 - c1*x^2 + c2*x^4 - c3*x^6 + c4*x^8;
-    f32 x4 = x2 * x2;                                 // x^4
-    f32 c2 = -0x1.6c087ep-10f + x2 * 0x1.993430p-16f; // -c3 + c4*x^2
-    f32 c1 = 1.0f - x2 * 0x1.fffffep-2f;              // c0 - c1*x^2
-    f32 x6 = x4 * x2;                                 // x^6
-    f32 c = c1 + x4 * 0x1.55553ep-5f;                 // c0 - c1*x^2 + c2*x^4
-    return c + x6 * c2;                               // c0 - c1*x^2 + c2*x^4 + x^6(-c3 + c4*x^2)
-}
-
-internal f32
 cos32(f32 y)
 {
-    i_expect(absolute(y) < 120.0f);
+    i_expect(mats_fabs32(y) < 120.0f);
     f32 x = y;
     f32 result;
     if (abstop12_(y) < abstop12_(0x1p-12f))
@@ -130,7 +99,7 @@ cos32(f32 y)
 internal f32
 sin32(f32 y)
 {
-    i_expect(absolute(y) < 120.0f);
+    i_expect(mats_fabs32(y) < 120.0f);
     f32 x = y;
 
     f32 result;
@@ -158,7 +127,7 @@ sin32(f32 y)
 internal f32
 cos32_prec(f32 y)
 {
-    i_expect(absolute(y) < 120.0f);
+    i_expect(mats_fabs32(y) < 120.0f);
     f32 x = y;
     f32 result;
     if (abstop12_(y) < abstop12_(0x1p-12f))
@@ -185,7 +154,7 @@ cos32_prec(f32 y)
 internal f32
 sin32_prec(f32 y)
 {
-    i_expect(absolute(y) < 120.0f);
+    i_expect(mats_fabs32(y) < 120.0f);
     f32 x = y;
 
     f32 result;
@@ -214,7 +183,7 @@ internal v2
 sincos32(f32 y)
 {
     // NOTE(michiel): x = cos, y = sin
-    i_expect(absolute(y) < 120.0f);
+    i_expect(mats_fabs32(y) < 120.0f);
     f32 x = y;
 
     v2 result;
@@ -228,12 +197,46 @@ sincos32(f32 y)
         int n = 0;
         f32 xm = (abstop12_(y) < abstop12_(0.25f * F32_PI)) ? x : reduce_fast_pi4(x, &n);
         f32 x2 = xm * xm;
+        f32 sinP = sinf_poly_q0(xm, x2);
+        f32 cosP = sinf_poly_q1(x2);
         switch (n & 3)
         {
-            case 0: { result.x =  sinf_poly_q1(x2); result.y =  sinf_poly_q0(xm, x2); } break;
-            case 1: { result.x = -sinf_poly_q0(xm, x2); result.y =  sinf_poly_q1(x2); } break;
-            case 2: { result.x = -sinf_poly_q1(x2); result.y = -sinf_poly_q0(xm, x2); } break;
-            case 3: { result.x =  sinf_poly_q0(xm, x2); result.y = -sinf_poly_q1(x2); } break;
+            case 0: { result.x =  cosP; result.y =  sinP; } break;
+            case 1: { result.x = -sinP; result.y =  cosP; } break;
+            case 2: { result.x = -cosP; result.y = -sinP; } break;
+            case 3: { result.x =  sinP; result.y = -cosP; } break;
+        }
+    }
+
+    return result;
+}
+
+internal v2
+sincos32_prec(f32 y)
+{
+    // NOTE(michiel): x = cos, y = sin
+    i_expect(mats_fabs32(y) < 120.0f);
+    f32 x = y;
+
+    v2 result;
+    if (abstop12_(y) < abstop12_(0x1p-12f))
+    {
+        result.x = 1.0f;
+        result.y = y;
+    }
+    else
+    {
+        int n = 0;
+        f64 xm = (abstop12_(y) < abstop12_(0.25f * F32_PI)) ? x : reduce_fast_pi4_prec(x, &n);
+        f64 x2 = xm * xm;
+        f64 sinP = sinf_poly_q0_prec(xm, x2);
+        f64 cosP = sinf_poly_q1_prec(x2);
+        switch (n & 3)
+        {
+            case 0: { result.x =  cosP; result.y =  sinP; } break;
+            case 1: { result.x = -sinP; result.y =  cosP; } break;
+            case 2: { result.x = -cosP; result.y = -sinP; } break;
+            case 3: { result.x =  sinP; result.y = -cosP; } break;
         }
     }
 
@@ -249,7 +252,7 @@ tan32_kernel(f32 x, s32 mod)
     {
         if ((s32)x == 0) {
             if ((hx | (mod + 1)) == 0) {
-                return 1.0f / mats_fabs32(x);
+                return 1.0f / u32f32(hx).f;
             } else {
                 return (mod == 1) ? x : -1.0f / x;
             }
@@ -310,7 +313,7 @@ tan32_kernel(f32 x, s32 mod)
 internal f32
 tan32(f32 y)
 {
-    i_expect(absolute(y) < 120.0f);
+    i_expect(mats_fabs32(y) < 120.0f);
     f32 result;
     u32 uy = u32f32(y).u & 0x7FFFFFFF;
     if (uy < 0x3F490FDA)
@@ -329,37 +332,37 @@ tan32(f32 y)
 internal f32
 acos32(f32 x)
 {
-#define pi        3.1415925026e+00
-#define pio2_hi   1.5707962513e+00
-#define pio2_lo   7.5497894159e-08
-#define pS0   1.6666667163e-01
-#define pS1  -3.2556581497e-01
-#define pS2   2.0121252537e-01
-#define pS3  -4.0055535734e-02
-#define pS4   7.9153501429e-04
-#define pS5   3.4793309169e-05
-#define qS1  -2.4033949375e+00
-#define qS2   2.0209457874e+00
-#define qS3  -6.8828397989e-01
-#define qS4   7.7038154006e-02
+#define pi        3.1415925026e+00f
+#define pio2_hi   1.5707962513e+00f
+#define pio2_lo   7.5497894159e-08f
+#define pS0   1.6666667163e-01f
+#define pS1  -3.2556581497e-01f
+#define pS2   2.0121252537e-01f
+#define pS3  -4.0055535734e-02f
+#define pS4   7.9153501429e-04f
+#define pS5   3.4793309169e-05f
+#define qS1  -2.4033949375e+00f
+#define qS2   2.0209457874e+00f
+#define qS3  -6.8828397989e-01f
+#define qS4   7.7038154006e-02f
 
 	s32 ix = (s32)u32f32(x).u;
     u32 hx = ix & 0x7FFFFFFF;
 
     if (hx == 0x3F800000) {
         if (ix > 0) {
-            return 0.0f;
+            return 0.0f;                 // NOTE(michiel): x == 1.0f
         } else {
-            return gPiF32 + 2.0f * pio2_lo;
+            return pi + 2.0f * pio2_lo;  // NOTE(michiel): x == -1.0f
         }
     } else if (hx > 0x3F800000) {
-        return (x - x) / (x - x);
+        return (x - x) / (x - x);        // NOTE(michiel): |x| > 1.0f
     }
 
     if (hx < 0x3F000000)
     {
         if (hx <= 0x23000000) {
-            return pio2_hi + pio2_lo;
+            return pio2_hi + pio2_lo;    // NOTE(michiel): |x| <= 2^-57
         }
         f32 x2 = x * x;
         f32 p = pS5 * x2;
@@ -374,7 +377,7 @@ acos32(f32 x)
         q = (q + qS1) * x2;
         q += 1.0f;
         f32 r = p / q;
-        return pio2_hi - (x - (pio2_lo - x * r));
+        return pio2_hi - (x - (pio2_lo - x * r)); // NOTE(michiel): |x| < 0.5f
     }
     else if (ix < 0)
     {
@@ -393,7 +396,7 @@ acos32(f32 x)
         f32 s = sqrt32(z);
         f32 r = p / q;
         f32 w = r * s - pio2_lo;
-        return pi - 2.0f * (s + w);
+        return pi - 2.0f * (s + w); // NOTE(michiel): x <= -0.5f
     }
     else
     {
@@ -414,7 +417,7 @@ acos32(f32 x)
         q += 1.0f;
         f32 r = p / q;
         f32 w = r * s + c;
-        return 2.0f * (df + w);
+        return 2.0f * (df + w); // NOTE(michiel): x >= 0.5f
     }
 #undef pS0
 #undef pS1
@@ -457,7 +460,7 @@ asin32(f32 x)
         return (x - x) / (x - x);
     } else if (hx < 0x3F000000) {
         if (hx < 0x32000000) {
-            if (gHugeF32 + x > gOneF32) {
+            if (gHugeF32 + x > 1.0f) {
                 return x;
             }
         } else {
@@ -478,7 +481,7 @@ asin32(f32 x)
         }
     }
 
-    f32 w = 1.0f - mats_fabs32(x);
+    f32 w = 1.0f - u32f32(hx).f;
     f32 t = w * 0.5f;
     f32 p = pS5 * t;
     p = (p + pS4) * t;
@@ -550,10 +553,10 @@ atan32(f32 x)
     s32 ix = (s32)u32f32(x).u;
     u32 hx = ix & 0x7FFFFFFF;
 
-    if (ix >= 0x50800000)
+    if (hx >= 0x50800000)
     {
         // NOTE(michiel): |x| >= 2^34
-        if (FLT_UWORD_IS_NAN(ix)) {
+        if (FLT_UWORD_IS_NAN(hx)) {
             return x + x;
         } else if (ix > 0) {
             return 1.5707962513e+00f + 7.5497894159e-08f;
@@ -574,7 +577,7 @@ atan32(f32 x)
         }
         else
         {
-            x = mats_fabs32(x);
+            x = u32f32(hx).f;
             if (hx < 0x3F980000) { // NOTE(michiel): |x| < 1.1875
                 if (hx < 0x3F300000) { // NOTE(michiel): 7/16 <= |x| < 11/16
                     id = 0;
@@ -595,9 +598,28 @@ atan32(f32 x)
         }
 
         f32 x2 = x * x;
-        f32 x4 = x2 * x2;
+#if MATS_USE_SSE
+        WideMath x2w; x2w.m = _mm_set1_ps(x2);
+        WideMath x4w; x4w.m = _mm_mul_ps(x2w.m, x2w.m);
 
-#if 0
+        WideMath coef0; coef0.m = _mm_setr_ps(3.3333334327e-01f, 0.0f, 0.0f, 0.0f);
+        WideMath coef1; coef1.m = _mm_setr_ps(1.4285714924e-01f, -2.0000000298e-01f, 0, 0);
+        WideMath coef2; coef2.m = _mm_setr_ps(9.0908870101e-02f, -1.1111110449e-01f, 0, 0);
+        WideMath coef3; coef3.m = _mm_setr_ps(6.6610731184e-02f, -7.6918758452e-02f, 0, 0);
+        WideMath coef4; coef4.m = _mm_setr_ps(4.9768779427e-02f, -5.8335702866e-02f, 0, 0);
+        WideMath coef5; coef5.m = _mm_setr_ps(1.6285819933e-02f, -3.6531571299e-02f, 0, 0);
+        WideMath s1s2; s1s2.m = _mm_mul_ps(coef5.m, x4w.m);
+        s1s2.m = _mm_mul_ps(_mm_add_ps(s1s2.m, coef4.m), x4w.m);
+        s1s2.m = _mm_mul_ps(_mm_add_ps(s1s2.m, coef3.m), x4w.m);
+        s1s2.m = _mm_mul_ps(_mm_add_ps(s1s2.m, coef2.m), x4w.m);
+        s1s2.m = _mm_mul_ps(_mm_add_ps(s1s2.m, coef1.m), x4w.m);
+        s1s2.m = _mm_add_ps(s1s2.m, coef0.m);
+
+        f32 s1 = s1s2.e[0] * x2;
+        f32 s2 = s1s2.e[1];
+#else
+        f32 x4 = x2 * x2;
+#if 1
         f32 s1 =   1.6285819933e-02f * x4;
         f32 s2 = - 3.6531571299e-02f * x4;
         s1 = (s1 + 4.9768779427e-02f) * x4;
@@ -620,12 +642,13 @@ atan32(f32 x)
         s2 = (s2 - 2.0000000298e-01f) * x4;
         s1 = (s1 + 3.3333334327e-01f) * x2;
 #endif
+#endif
 
-        f32 result;
+        f32 result = x * (s1 + s2);
         if (id < 0) {
-            result = x - x * (s1 + s2);
+            result = x - result;
         } else {
-            result = gAtanHiF32[id] - ((x * (s1 + s2) - gAtanLoF32[id]) - x);
+            result = gAtanHiF32[id] - ((result - gAtanLoF32[id]) - x);
             result = (ix < 0) ? -result : result;
         }
 

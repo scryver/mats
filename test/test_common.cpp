@@ -4,6 +4,8 @@ typedef MATH_FUNC_F32_FROM_F32(MathFuncF32FromF32);
 typedef MATH_FUNC_F32_FROM_F32_F32(MathFuncF32FromF32F32);
 #define MATH_FUNC_F64_FROM_F64(name)                f64 name(f64 x)
 typedef MATH_FUNC_F64_FROM_F64(MathFuncF64FromF64);
+#define MATH_FUNC_F32_4x_FROM_F32_4x(name)     f32_4x name(f32_4x x)
+typedef MATH_FUNC_F32_4x_FROM_F32_4x(MathFuncF32_4xFromF32_4x);
 
 internal f32
 square(f32 x)
@@ -230,6 +232,145 @@ run_speed_f32(String name, u32 maxNameSize, char *func, u32 tests, f32 minVal, f
         print_speed_info(name, maxNameSize, func, 4*tests, seconds, gRunSpeedSum, 1.0f);
     } else {
         print_speed_info(name, maxNameSize, func, 4*tests, seconds, gRunSpeedSum, seconds / secondsBase);
+    }
+    return seconds;
+}
+
+internal f32
+run_comp_f32_4x(String name, u32 maxNameSize, char *func, u32 tests, f32 minVal, f32 maxVal,
+                MathFuncF32FromF32 *origFunc, MathFuncF32_4xFromF32_4x *testFunc, f32 secondsBase)
+{
+    CompInfo compInfo = {};
+    compInfo.minAbsErr = F32_MAX;
+    compInfo.maxAbsErr = -F32_MAX;
+    compInfo.minRelErr = F32_MAX;
+    compInfo.maxRelErr = -F32_MAX;
+
+    f32 oneOverTests = 1.0f / (f32)tests;
+    f32 scale = (maxVal - minVal) * oneOverTests;
+    struct timespec start = linux_get_wall_clock();
+    for (u32 index = 0; index < tests; ++index)
+    {
+        f32 baseInput = (f32)index * scale + minVal;
+        f32_4x inputVal = F32_4x(baseInput, 1.0e-9f * baseInput, 1.0e9f * baseInput, -1.0e9f * baseInput);
+        f32 origRes = origFunc(baseInput);
+        f32_4x testRes = testFunc(inputVal);
+
+        f64 absErr = origRes - testRes.e[0];
+        if (compInfo.minAbsErr > absErr) {
+            compInfo.minAbsErr = absErr;
+            compInfo.minAbsInput = baseInput;
+        }
+        if (compInfo.maxAbsErr < absErr) {
+            compInfo.maxAbsErr = absErr;
+            compInfo.maxAbsInput = baseInput;
+        }
+        compInfo.totalAbsErr += absErr;
+
+        if (baseInput)
+        {
+            f64 relErr = (origRes - testRes.e[0]) / baseInput;
+            if (compInfo.minRelErr > relErr) {
+                compInfo.minRelErr = relErr;
+                compInfo.minRelInput = baseInput;
+            }
+            if (compInfo.maxRelErr < relErr) {
+                compInfo.maxRelErr = relErr;
+                compInfo.maxRelInput = baseInput;
+            }
+            compInfo.totalRelErr += relErr;
+        }
+    }
+    f32 seconds = linux_get_seconds_elapsed(start, linux_get_wall_clock());
+
+    if (secondsBase == 0.0f) {
+        print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, 1.0f);
+    } else {
+        print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, seconds / secondsBase);
+    }
+    return seconds;
+}
+
+internal f32
+run_comp_f32_4x_x(String name, u32 maxNameSize, char *func, u32 tests, f32 minVal, f32 maxVal,
+                  MathFuncF64FromF64 *origFunc, MathFuncF32_4xFromF32_4x  *testFunc, f32 secondsBase)
+{
+    CompInfo compInfo = {};
+    compInfo.minAbsErr = F32_MAX;
+    compInfo.maxAbsErr = -F32_MAX;
+    compInfo.minRelErr = F32_MAX;
+    compInfo.maxRelErr = -F32_MAX;
+
+    f32 oneOverTests = 1.0f / (f32)tests;
+    f32 scale = (maxVal - minVal) * oneOverTests;
+    struct timespec start = linux_get_wall_clock();
+    for (u32 index = 0; index < tests; ++index)
+    {
+        f32 baseInput = (f32)index * scale + minVal;
+        f32_4x inputVal = F32_4x(baseInput, 1.0e-9f * baseInput, 1.0e9f * baseInput, -1.0e9f * baseInput);
+        f64 origRes = origFunc(baseInput);
+        f32_4x testRes = testFunc(inputVal);
+
+        f64 absErr = origRes - testRes.e[0];
+        if (compInfo.minAbsErr > absErr) {
+            compInfo.minAbsErr = absErr;
+            compInfo.minAbsInput = baseInput;
+        }
+        if (compInfo.maxAbsErr < absErr) {
+            compInfo.maxAbsErr = absErr;
+            compInfo.maxAbsInput = baseInput;
+        }
+        compInfo.totalAbsErr += absErr;
+
+        if (baseInput)
+        {
+            f64 relErr = (origRes - testRes.e[0]) / baseInput;
+            if (compInfo.minRelErr > relErr) {
+                compInfo.minRelErr = relErr;
+                compInfo.minRelInput = baseInput;
+            }
+            if (compInfo.maxRelErr < relErr) {
+                compInfo.maxRelErr = relErr;
+                compInfo.maxRelInput = baseInput;
+            }
+            compInfo.totalRelErr += relErr;
+        }
+    }
+    f32 seconds = linux_get_seconds_elapsed(start, linux_get_wall_clock());
+
+    if (secondsBase == 0.0f) {
+        print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, 1.0f);
+    } else {
+        print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, seconds / secondsBase);
+    }
+    return seconds;
+}
+
+global volatile f32_4x gRunSpeedSum4x;
+internal f32
+run_speed_f32_4x(String name, u32 maxNameSize, char *func, u32 tests, f32 minVal, f32 maxVal,
+                 MathFuncF32_4xFromF32_4x *testFunc, f32 secondsBase)
+{
+    gRunSpeedSum4x.m = _mm_setzero_ps();
+    f32 oneOverTests = 1.0f / (f32)tests;
+    f32 scale = (maxVal - minVal) * oneOverTests;
+    struct timespec start = linux_get_wall_clock();
+    for (u32 index = 0; index < tests; ++index)
+    {
+        f32 baseInput = (f32)index * scale + minVal;
+        f32_4x inputVal = F32_4x(baseInput, 1.0e-9f * baseInput, 1.0e9f * baseInput, -1.0e9f * baseInput);
+        f32_4x testRes0 = testFunc(inputVal);
+        f32_4x testRes1 = testFunc(testRes0);
+        f32_4x testRes2 = testFunc(testRes1);
+        f32_4x testRes3 = testFunc(testRes2);
+        gRunSpeedSum4x.m = _mm_add_ps(gRunSpeedSum4x.m, testRes3.m);
+    }
+    f32 seconds = linux_get_seconds_elapsed(start, linux_get_wall_clock());
+
+    if (secondsBase == 0.0f) {
+        print_speed_info(name, maxNameSize, func, 16*tests, seconds, gRunSpeedSum4x.e[0], 1.0f);
+    } else {
+        print_speed_info(name, maxNameSize, func, 16*tests, seconds, gRunSpeedSum4x.e[0], seconds / secondsBase);
     }
     return seconds;
 }

@@ -6,6 +6,7 @@
 
 #define STR_FMT(x)   safe_truncate_to_s32(x.size), (char *)x.data
 #include "../libberdip/src/common.h"
+#include "../libberdip/src/multilane.h"
 
 #define IEEE_754_2008_SNAN 1
 #include "../mats/mats_common.h"

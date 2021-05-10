@@ -6,6 +6,7 @@
 
 #define STR_FMT(x)   safe_truncate_to_s32(x.size), (char *)x.data
 #include "../libberdip/src/common.h"
+#include "../libberdip/src/multilane.h"
 
 #include "../src/sun93.h"
 
