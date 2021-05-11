@@ -4,6 +4,7 @@
 #define FLT_UWORD_IS_INFINITE(x)   ((x) == 0x7f800000L)
 #define FLT_UWORD_MAX              0x7fffffff
 #define FLT_UWORD_LOG_MAX          0x42b17217
+#define FLT_UWORD_HALF_MAX         (FLT_UWORD_MAX - (1L << 23))
 #define FLT_LARGEST_EXP            (FLT_UWORD_MAX >> 23)
 #define FLT_SMALLEST_EXP           -22
 
@@ -45,6 +46,7 @@ mats_invalid32(f32 x)
     return result;
 }
 
+// TODO(michiel): Rename to absolute32
 internal f32
 mats_fabs32(f32 x)
 {

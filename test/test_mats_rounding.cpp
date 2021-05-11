@@ -12,10 +12,12 @@
 #include "../mats/mats_common.h"
 #include "../mats/mats_constants.h"
 
-#define floor32  floor32_nonsse
-#define ceil32   ceil32_nonsse
-#define round32  round32_nonsse
-#define trunc32  trunc32_nonsse
+#define floor32     floor32_nonsse
+#define ceil32      ceil32_nonsse
+#define round32     round32_nonsse
+#define trunc32     trunc32_nonsse
+#define modulus32   modulus32_nonsse
+#define remainder32 remainder32_nonsse
 #define MATS_USE_SSE4 0
 #include "../mats/mats_defines.h"
 #include "../mats/mats_rounding.h"
@@ -23,11 +25,15 @@
 #undef ceil32
 #undef round32
 #undef trunc32
+#undef modulus32
+#undef remainder32
 
 #define floor32  floor32_sse
 #define ceil32   ceil32_sse
 #define round32  round32_sse
 #define trunc32  trunc32_sse
+#define modulus32   modulus32_sse
+#define remainder32 remainder32_sse
 #undef  MATS_USE_SSE4
 #define MATS_USE_SSE4 1
 #include "../mats/mats_defines.h"
@@ -36,6 +42,8 @@
 #undef ceil32
 #undef round32
 #undef trunc32
+#undef modulus32
+#undef remainder32
 
 #include "test_common.cpp"
 
@@ -53,9 +61,9 @@ s32 main(s32 argc, char **argv)
     fprintf(stdout, "Correctness\n\n");
 
     fprintf(stdout, "Floor\n");
-    f32 stdSecFloor32 = run_comp_f32(string("stdlib floor"), 15, "floor", tests, minVal, maxVal, floorf, floorf, 0.0f);
-    run_comp_f32(string("mats floor"), 15, "floor", tests, minVal, maxVal, floorf, floor32_nonsse, stdSecFloor32);
-    run_comp_f32(string("mats floor sse"), 15, "floor", tests, minVal, maxVal, floorf, floor32_sse, stdSecFloor32);
+    f32 stdSecFloor32 = run_comp_f32_x(string("stdlib floor"), 15, "floor", tests, minVal, maxVal, floor, floorf, 0.0f);
+    run_comp_f32_x(string("mats floor"), 15, "floor", tests, minVal, maxVal, floor, floor32_nonsse, stdSecFloor32);
+    run_comp_f32_x(string("mats floor sse"), 15, "floor", tests, minVal, maxVal, floor, floor32_sse, stdSecFloor32);
     fprintf(stdout, "\n");
 
     fprintf(stdout, "Ceil\n");
@@ -76,6 +84,19 @@ s32 main(s32 argc, char **argv)
     f32 stdSecTruncate32 = run_comp_f32(string("stdlib trunc"), 15, "trunc", tests, minVal, maxVal, truncf, truncf, 0.0f);
     run_comp_f32(string("mats trunc"), 15, "trunc", tests, minVal, maxVal, truncf, trunc32_nonsse, stdSecTruncate32);
     run_comp_f32(string("mats trunc sse"), 15, "trunc", tests, minVal, maxVal, truncf, trunc32_sse, stdSecTruncate32);
+    fprintf(stdout, "\n");
+
+    f32 minValB = -100.0f;
+    f32 maxValB = 100.0f;
+
+    fprintf(stdout, "Mod\n");
+    f32 stdSecMod32 = run_comp_f32_f32_x(string("stdlib mod"), 15, "mod", tests, minVal, maxVal, minValB, maxValB, fmod, fmodf, 0.0f);
+    run_comp_f32_f32_x(string("mats mod"), 15, "mod", tests, minVal, maxVal, minValB, maxValB, fmod, modulus32_nonsse, stdSecMod32);
+    fprintf(stdout, "\n");
+
+    fprintf(stdout, "Rem\n");
+    f32 stdSecRem32 = run_comp_f32_f32_x(string("stdlib rem"), 15, "rem", tests, minVal, maxVal, minValB, maxValB, remainder, remainderf, 0.0f);
+    run_comp_f32_f32_x(string("mats rem"), 15, "rem", tests, minVal, maxVal, minValB, maxValB, remainder, remainder32_nonsse, stdSecRem32);
     fprintf(stdout, "\n");
 
     fprintf(stdout, "Speed\n\n");
@@ -102,6 +123,16 @@ s32 main(s32 argc, char **argv)
     f32 spdSecTruncate32 = run_speed_f32(string("stdlib trunc"), 15, "trunc", tests, minVal, maxVal, truncf, 0.0f);
     run_speed_f32(string("mats trunc"), 15, "trunc", tests, minVal, maxVal, trunc32_nonsse, spdSecTruncate32);
     run_speed_f32(string("mats trunc sse"), 15, "trunc", tests, minVal, maxVal, trunc32_sse, spdSecTruncate32);
+    fprintf(stdout, "\n");
+
+    fprintf(stdout, "Mod\n");
+    f32 spdSecMod32 = run_speed_f32_f32(string("stdlib mod"), 15, "mod", tests, minVal, maxVal, minValB, maxValB, fmodf, 0.0f);
+    run_speed_f32_f32(string("mats mod"), 15, "mod", tests, minVal, maxVal, minValB, maxValB, modulus32_nonsse, spdSecMod32);
+    fprintf(stdout, "\n");
+
+    fprintf(stdout, "Rem\n");
+    f32 spdSecRem32 = run_speed_f32_f32(string("stdlib rem"), 15, "rem", tests, minVal, maxVal, minValB, maxValB, remainderf, 0.0f);
+    run_speed_f32_f32(string("mats rem"), 15, "rem", tests, minVal, maxVal, minValB, maxValB, remainder32_nonsse, spdSecRem32);
     fprintf(stdout, "\n");
 
     return 0;
