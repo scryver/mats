@@ -10,6 +10,7 @@
 
 #include "../src/sun93.h"
 
+#if 0
 internal f32
 absolute(f32 x)
 {
@@ -17,6 +18,7 @@ absolute(f32 x)
     xf.u &= ~F32_SIGN_MASK;
     return xf.f;
 }
+#endif
 
 #include "../mats/mats_defines.h"
 #include "../mats/mats_common.h"

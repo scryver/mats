@@ -9,7 +9,7 @@ pow32_log2(u32 xu)
     u32 index = (temp >> (23 - POWF_LOG2_TABLE_BITS)) % (1 << POWF_LOG2_TABLE_BITS);
     u32 top = temp & 0xFF800000;
     u32 iz = xu - top;
-    s32 k = (s32)temp >> (23 - POWF_SCALE_BITS);
+    s32 k = (s32)temp >> 23;
     f64 invC = gPowF32_Log2Table[index].invC;
     f64 logC = gPowF32_Log2Table[index].logC;
     f64 z = (f64)u32f32(iz).f;
@@ -29,30 +29,21 @@ pow32_log2(u32 xu)
 internal f64
 pow32_exp2(f64 xd, u32 signBias)
 {
-#if 0 // TOINT_INTRINSICS
-    // TODO(michiel): In 4x we can use round/cvt
-#define C gExp2F32_PolyScaled
-    f64 kd = roundtoint(xd);
-    u64 ki = converttoint(xd);
-#else
-#define C gExp2F32_Poly
     f64 kd = xd + gExp2F32_ShiftScaled;
     u64 ki = u64f64(kd).u;
     kd -= gExp2F32_ShiftScaled;
-#endif
 
     f64 r = xd - kd;
     u64 t = gExp2F32_Table[ki % (1 << EXP2F_TABLE_BITS)];
     u64 ski = ki + signBias;
     t += ski << (52 - EXP2F_TABLE_BITS);
     f64 s = u64f64(t).f;
-    f64 z = C[0] * r + C[1];
+    f64 z = gExp2F32_Poly[0] * r + gExp2F32_Poly[1];
     f64 r2 = r * r;
-    f64 result = C[2] * r + 1.0;
+    f64 result = gExp2F32_Poly[2] * r + 1.0;
     result = z * r2 + result;
     result = result * s;
     return result;
-#undef C
 }
 
 internal s32
@@ -87,7 +78,6 @@ pow32(f32 x, f32 y)
 
     u32 xu = u32f32(x).u;
     u32 yu = u32f32(y).u;
-
 
     if (((xu - 0x00800000) >= (0x7f800000 - 0x00800000)) || pow32_zeroinfnan(yu))
     {

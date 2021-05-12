@@ -56,6 +56,7 @@ arm_exp_cosf(f32 y)
         f32 x2 = xm * xm;
         switch (n & 3)
         {
+            default:
             case 0: { result =  sinf_exp_poly_q1(x2); } break;
             case 1: { result = -sinf_exp_poly_q0(xm, x2); } break;
             case 2: { result = -sinf_exp_poly_q1(x2); } break;
@@ -131,6 +132,7 @@ arm_exp_sinf(f32 y)
         f32 x2 = xm * xm;
         switch (n & 3)
         {
+            default:
             case 0: { result =  sinf_exp_poly_q0(xm, x2); } break;
             case 1: { result =  sinf_exp_poly_q1(x2); } break;
             case 2: { result = -sinf_exp_poly_q0(xm, x2); } break;

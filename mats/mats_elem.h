@@ -149,15 +149,9 @@ exp2_32(f32 x)
     }
 
     f64 xd = x;
-#if 0 // TOINT_INTRINSICS
-    // TODO(michiel): In 4x we can use round/cvt
-    f64 kd = roundtoint(z);
-    u64 ki = converttoint(z);
-#else
     f64 kd = xd + gExp2F32_ShiftScaled; /* Rounding to double precision is required.  */
     u64 ki = u64f64(kd).u;
     kd -= gExp2F32_ShiftScaled;
-#endif
 
     f64 r = xd - kd;
     /* exp(x) = 2^(k/N) * 2^(r/N) ~= s * (C0*r^3 + C1*r^2 + C2*r + 1) */
@@ -201,7 +195,7 @@ log32(f32 x)
     u32 temp = xu - 0x3F330000;
     u32 index = (temp >> (23 - LOGF_TABLE_BITS)) % (1 << LOGF_TABLE_BITS);
     s32 k = (s32)temp >> 23;
-    u32 iz = xu - (temp & 0x1FF << 23);
+    u32 iz = xu - (temp & (0x1FF << 23));
     f64 invC = gLogF32_Table[index].invC;
     f64 logC = gLogF32_Table[index].logC;
     f64 z = (f64)u32f32(iz).f;

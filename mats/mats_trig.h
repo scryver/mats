@@ -70,8 +70,9 @@ sinf_poly_q1_prec(f64 x2)
 }
 
 internal f32
-cos32(f32 y)
+cos32_fast(f32 y)
 {
+    // NOTE(michiel): Sloppy
     i_expect(mats_fabs32(y) < 120.0f);
     f32 x = y;
     f32 result;
@@ -86,10 +87,69 @@ cos32(f32 y)
         f32 x2 = xm * xm;
         switch (n & 3)
         {
+            default:
             case 0: { result =  sinf_poly_q1(x2); } break;
             case 1: { result = -sinf_poly_q0(xm, x2); } break;
             case 2: { result = -sinf_poly_q1(x2); } break;
             case 3: { result =  sinf_poly_q0(xm, x2); } break;
+        }
+    }
+
+    return result;
+}
+
+internal f32
+sin32_fast(f32 y)
+{
+    // NOTE(michiel): Sloppy
+    i_expect(mats_fabs32(y) < 120.0f);
+    f32 x = y;
+
+    f32 result;
+    if (abstop12_(y) < abstop12_(0x1p-12f))
+    {
+        result = y;
+    }
+    else
+    {
+        int n = 0;
+        f32 xm = (abstop12_(y) < abstop12_(0.25f * F32_PI)) ? x : reduce_fast_pi4(x, &n);
+        f32 x2 = xm * xm;
+        switch (n & 3)
+        {
+            default:
+            case 0: { result =  sinf_poly_q0(xm, x2); } break;
+            case 1: { result =  sinf_poly_q1(x2); } break;
+            case 2: { result = -sinf_poly_q0(xm, x2); } break;
+            case 3: { result = -sinf_poly_q1(x2); } break;
+        }
+    }
+
+    return result;
+}
+
+internal f32
+cos32(f32 y)
+{
+    i_expect(mats_fabs32(y) < 120.0f);
+    f32 x = y;
+    f32 result;
+    if (abstop12_(y) < abstop12_(0x1p-12f))
+    {
+        result = 1.0f;
+    }
+    else
+    {
+        int n = 0;
+        f64 xm = (abstop12_(y) < abstop12_(0.25f * F32_PI)) ? (f64)x : reduce_fast_pi4_prec((f64)x, &n);
+        f64 x2 = xm * xm;
+        switch (n & 3)
+        {
+            default:
+            case 0: { result =  sinf_poly_q1_prec(x2); } break;
+            case 1: { result = -sinf_poly_q0_prec(xm, x2); } break;
+            case 2: { result = -sinf_poly_q1_prec(x2); } break;
+            case 3: { result =  sinf_poly_q0_prec(xm, x2); } break;
         }
     }
 
@@ -110,65 +170,11 @@ sin32(f32 y)
     else
     {
         int n = 0;
-        f32 xm = (abstop12_(y) < abstop12_(0.25f * F32_PI)) ? x : reduce_fast_pi4(x, &n);
-        f32 x2 = xm * xm;
-        switch (n & 3)
-        {
-            case 0: { result =  sinf_poly_q0(xm, x2); } break;
-            case 1: { result =  sinf_poly_q1(x2); } break;
-            case 2: { result = -sinf_poly_q0(xm, x2); } break;
-            case 3: { result = -sinf_poly_q1(x2); } break;
-        }
-    }
-
-    return result;
-}
-
-internal f32
-cos32_prec(f32 y)
-{
-    i_expect(mats_fabs32(y) < 120.0f);
-    f32 x = y;
-    f32 result;
-    if (abstop12_(y) < abstop12_(0x1p-12f))
-    {
-        result = 1.0f;
-    }
-    else
-    {
-        int n = 0;
         f64 xm = (abstop12_(y) < abstop12_(0.25f * F32_PI)) ? (f64)x : reduce_fast_pi4_prec((f64)x, &n);
         f64 x2 = xm * xm;
         switch (n & 3)
         {
-            case 0: { result =  sinf_poly_q1_prec(x2); } break;
-            case 1: { result = -sinf_poly_q0_prec(xm, x2); } break;
-            case 2: { result = -sinf_poly_q1_prec(x2); } break;
-            case 3: { result =  sinf_poly_q0_prec(xm, x2); } break;
-        }
-    }
-
-    return result;
-}
-
-internal f32
-sin32_prec(f32 y)
-{
-    i_expect(mats_fabs32(y) < 120.0f);
-    f32 x = y;
-
-    f32 result;
-    if (abstop12_(y) < abstop12_(0x1p-12f))
-    {
-        result = y;
-    }
-    else
-    {
-        int n = 0;
-        f64 xm = (abstop12_(y) < abstop12_(0.25f * F32_PI)) ? (f64)x : reduce_fast_pi4_prec((f64)x, &n);
-        f64 x2 = xm * xm;
-        switch (n & 3)
-        {
+            default:
             case 0: { result =  sinf_poly_q0_prec(xm, x2); } break;
             case 1: { result =  sinf_poly_q1_prec(x2); } break;
             case 2: { result = -sinf_poly_q0_prec(xm, x2); } break;
@@ -180,7 +186,7 @@ sin32_prec(f32 y)
 }
 
 internal v2
-sincos32(f32 y)
+sincos32_fast(f32 y)
 {
     // NOTE(michiel): x = cos, y = sin
     i_expect(mats_fabs32(y) < 120.0f);
@@ -212,7 +218,7 @@ sincos32(f32 y)
 }
 
 internal v2
-sincos32_prec(f32 y)
+sincos32(f32 y)
 {
     // NOTE(michiel): x = cos, y = sin
     i_expect(mats_fabs32(y) < 120.0f);

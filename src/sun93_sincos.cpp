@@ -293,7 +293,8 @@ __kernel_rem_pio2f(f32 *x, f32 *y, s32 e0, s32 nx, s32 prec, const s32 *ipio2)
             for (s32 i= jz + 1; i <= jz + k; i++)
             {   /* add q[jz+1] to q[jz+k] */
                 f[jx+i] = (f32)ipio2[jv+i];
-                for (s32 ij = 0, fw=0.0f; ij <= jx; ij++) {
+                fw = 0.0f;
+                for (s32 ij = 0; ij <= jx; ij++) {
                     fw += x[ij] * f[jx+i-ij];
                 }
                 q[i] = fw;

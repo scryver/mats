@@ -4,6 +4,9 @@
 #include <x86intrin.h>
 #include <xmmintrin.h>
 
+#define rint32_sse    round32_sse
+#define fmod32_nonsse modulus32_nonsse
+
 #define STR_FMT(x)   safe_truncate_to_s32(x.size), (char *)x.data
 #include "../libberdip/src/common.h"
 #include "../libberdip/src/multilane.h"
@@ -53,6 +56,13 @@ s32 main(s32 argc, char **argv)
     f32 minVal = -12.0f;
     f32 maxVal = 123.8f;
 
+    u32 testsA = 20000;
+    u32 testsB = 10000;
+    f32 minValA = -1200.0f;
+    f32 maxValA = 1230.8f;
+    f32 minValB = -100.0f;
+    f32 maxValB = 100.0f;
+
     fprintf(stdout, "Test round (note that the sse implementation does round-to-even to break ties)\n");
     fprintf(stdout, "  -10.5 %8a %8a | %g %g\n", roundf(-10.5f), round32_sse(-10.5f), roundf(-10.5f), round32_sse(-10.5f));
     fprintf(stdout, "   -0.5 %8a %8a | %g %g\n", roundf( -0.5f), round32_sse( -0.5f), roundf( -0.5f), round32_sse( -0.5f));
@@ -61,78 +71,81 @@ s32 main(s32 argc, char **argv)
     fprintf(stdout, "Correctness\n\n");
 
     fprintf(stdout, "Floor\n");
-    f32 stdSecFloor32 = run_comp_f32_x(string("stdlib floor"), 15, "floor", tests, minVal, maxVal, floor, floorf, 0.0f);
-    run_comp_f32_x(string("mats floor"), 15, "floor", tests, minVal, maxVal, floor, floor32_nonsse, stdSecFloor32);
-    run_comp_f32_x(string("mats floor sse"), 15, "floor", tests, minVal, maxVal, floor, floor32_sse, stdSecFloor32);
+    f32 stdSecFloor32 = call_comp_x(stdlib, floor, f, 0.0f);
+    call_comp_x(mats, floor, 32_nonsse, stdSecFloor32);
+    call_comp_x(matsse, floor, 32_sse, stdSecFloor32);
     fprintf(stdout, "\n");
 
     fprintf(stdout, "Ceil\n");
-    f32 stdSecCeil32 = run_comp_f32(string("stdlib ceil"), 15, "ceil", tests, minVal, maxVal, ceilf, ceilf, 0.0f);
-    run_comp_f32(string("mats ceil"), 15, "ceil", tests, minVal, maxVal, ceilf, ceil32_nonsse, stdSecCeil32);
-    run_comp_f32(string("mats ceil sse"), 15, "ceil", tests, minVal, maxVal, ceilf, ceil32_sse, stdSecCeil32);
+    f32 stdSecCeil32 = call_comp_x(stdlib, ceil, f, 0.0f);
+    call_comp_x(mats, ceil, 32_nonsse, stdSecCeil32);
+    call_comp_x(matsse, ceil, 32_sse, stdSecCeil32);
     fprintf(stdout, "\n");
 
     fprintf(stdout, "Round (expect round sse to 'misbehave')\n");
-    f32 stdSecRound32 = run_comp_f32(string("stdlib round"), 15, "round", tests, minVal, maxVal, roundf, roundf, 0.0f);
-    run_comp_f32(string("mats round"), 15, "round", tests, minVal, maxVal, roundf, round32_nonsse, stdSecRound32);
-    run_comp_f32(string("mats round sse"), 15, "round", tests, minVal, maxVal, roundf, round32_sse, stdSecRound32);
+    f32 stdSecRound32 = call_comp_x(stdlib, round, f, 0.0f);
+    call_comp_x(mats, round, 32_nonsse, stdSecRound32);
+    call_comp_x(matsse, round, 32_sse, stdSecRound32);
     fprintf(stdout, "Round sse vs correct call 'rintf'\n");
-    run_comp_f32(string("mats round sse"), 15, "round", tests, minVal, maxVal, rintf, round32_sse, stdSecRound32);
+    f32 stdSecRint32 = call_comp_x(stdlib, rint, f, 0.0f);
+    call_comp_x(matssse, rint, 32_sse, stdSecRint32 );
     fprintf(stdout, "\n");
 
     fprintf(stdout, "Truncate\n");
-    f32 stdSecTruncate32 = run_comp_f32(string("stdlib trunc"), 15, "trunc", tests, minVal, maxVal, truncf, truncf, 0.0f);
-    run_comp_f32(string("mats trunc"), 15, "trunc", tests, minVal, maxVal, truncf, trunc32_nonsse, stdSecTruncate32);
-    run_comp_f32(string("mats trunc sse"), 15, "trunc", tests, minVal, maxVal, truncf, trunc32_sse, stdSecTruncate32);
+    f32 stdSecTruncate32 = call_comp_x(stdlib, trunc, f, 0.0f);
+    call_comp_x(mats, trunc, 32_nonsse, stdSecTruncate32);
+    call_comp_x(matsse, trunc, 32_sse, stdSecTruncate32);
     fprintf(stdout, "\n");
 
-    f32 minValB = -100.0f;
-    f32 maxValB = 100.0f;
-
     fprintf(stdout, "Mod\n");
-    f32 stdSecMod32 = run_comp_f32_f32_x(string("stdlib mod"), 15, "mod", tests, minVal, maxVal, minValB, maxValB, fmod, fmodf, 0.0f);
-    run_comp_f32_f32_x(string("mats mod"), 15, "mod", tests, minVal, maxVal, minValB, maxValB, fmod, modulus32_nonsse, stdSecMod32);
+    f32 stdSecMod32 = call_comp_x2(stdlib, fmod, f, 0.0f);
+    call_comp_x2(mats, fmod, 32_nonsse, stdSecMod32);
     fprintf(stdout, "\n");
 
     fprintf(stdout, "Rem\n");
-    f32 stdSecRem32 = run_comp_f32_f32_x(string("stdlib rem"), 15, "rem", tests, minVal, maxVal, minValB, maxValB, remainder, remainderf, 0.0f);
-    run_comp_f32_f32_x(string("mats rem"), 15, "rem", tests, minVal, maxVal, minValB, maxValB, remainder, remainder32_nonsse, stdSecRem32);
+    f32 stdSecRem32 = call_comp_x2(stdlib, remainder, f, 0.0f);
+    call_comp_x2(mats, remainder, 32_nonsse, stdSecRem32);
     fprintf(stdout, "\n");
 
     fprintf(stdout, "Speed\n\n");
 
     fprintf(stdout, "Floor\n");
-    f32 spdSecFloor32 = run_speed_f32(string("stdlib floor"), 15, "floor", tests, minVal, maxVal, floorf, 0.0f);
-    run_speed_f32(string("mats floor"), 15, "floor", tests, minVal, maxVal, floor32_nonsse, spdSecFloor32);
-    run_speed_f32(string("mats floor sse"), 15, "floor", tests, minVal, maxVal, floor32_sse, spdSecFloor32);
+    f32 spdSecFloor32 = call_spd(stdlib, floor, f, 0.0f);
+    call_spd(mats, floor, 32_nonsse, spdSecFloor32);
+    call_spd(matsse, floor, 32_sse, spdSecFloor32);
     fprintf(stdout, "\n");
 
     fprintf(stdout, "Ceil\n");
-    f32 spdSecCeil32 = run_speed_f32(string("stdlib ceil"), 15, "ceil", tests, minVal, maxVal, ceilf, 0.0f);
-    run_speed_f32(string("mats ceil"), 15, "ceil", tests, minVal, maxVal, ceil32_nonsse, spdSecCeil32);
-    run_speed_f32(string("mats ceil sse"), 15, "ceil", tests, minVal, maxVal, ceil32_sse, spdSecCeil32);
+    f32 spdSecCeil32 = call_spd(stdlib, ceil, f, 0.0f);
+    call_spd(mats, ceil, 32_nonsse, spdSecCeil32);
+    call_spd(matsse, ceil, 32_sse, spdSecCeil32);
     fprintf(stdout, "\n");
 
     fprintf(stdout, "Round\n");
-    f32 spdSecRound32 = run_speed_f32(string("stdlib round"), 15, "round", tests, minVal, maxVal, roundf, 0.0f);
-    run_speed_f32(string("mats round"), 15, "round", tests, minVal, maxVal, round32_nonsse, spdSecRound32);
-    run_speed_f32(string("mats round sse"), 15, "round", tests, minVal, maxVal, round32_sse, spdSecRound32);
+    f32 spdSecRound32 = call_spd(stdlib, round, f, 0.0f);
+    call_spd(mats, round, 32_nonsse, spdSecRound32);
+    call_spd(matsse, round, 32_sse, spdSecRound32);
+    fprintf(stdout, "\n");
+
+    fprintf(stdout, "Rint\n");
+    f32 spdSecRint32 = call_spd(stdlib, rint, f, 0.0f);
+    call_spd(matsse, rint, 32_sse, spdSecRint32);
     fprintf(stdout, "\n");
 
     fprintf(stdout, "Truncate\n");
-    f32 spdSecTruncate32 = run_speed_f32(string("stdlib trunc"), 15, "trunc", tests, minVal, maxVal, truncf, 0.0f);
-    run_speed_f32(string("mats trunc"), 15, "trunc", tests, minVal, maxVal, trunc32_nonsse, spdSecTruncate32);
-    run_speed_f32(string("mats trunc sse"), 15, "trunc", tests, minVal, maxVal, trunc32_sse, spdSecTruncate32);
+    f32 spdSecTrunc32 = call_spd(stdlib, trunc, f, 0.0f);
+    call_spd(mats, trunc, 32_nonsse, spdSecTrunc32);
+    call_spd(matsse, trunc, 32_sse, spdSecTrunc32);
     fprintf(stdout, "\n");
 
     fprintf(stdout, "Mod\n");
-    f32 spdSecMod32 = run_speed_f32_f32(string("stdlib mod"), 15, "mod", tests, minVal, maxVal, minValB, maxValB, fmodf, 0.0f);
-    run_speed_f32_f32(string("mats mod"), 15, "mod", tests, minVal, maxVal, minValB, maxValB, modulus32_nonsse, spdSecMod32);
+    f32 spdSecMod32 = call_spd2(stdlib, fmod, f, 0.0f);
+    call_spd2(mats, fmod, 32_nonsse, spdSecMod32);
     fprintf(stdout, "\n");
 
     fprintf(stdout, "Rem\n");
-    f32 spdSecRem32 = run_speed_f32_f32(string("stdlib rem"), 15, "rem", tests, minVal, maxVal, minValB, maxValB, remainderf, 0.0f);
-    run_speed_f32_f32(string("mats rem"), 15, "rem", tests, minVal, maxVal, minValB, maxValB, remainder32_nonsse, spdSecRem32);
+    f32 spdSecRem32 = call_spd2(stdlib, remainder, f, 0.0f);
+    call_spd2(mats, remainder, 32_nonsse, spdSecRem32);
     fprintf(stdout, "\n");
 
     return 0;
