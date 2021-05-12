@@ -188,6 +188,28 @@ log2f_4x(f32_4x x)
     return result;
 }
 
+internal f32_4x
+powf_4x(f32_4x a, f32_4x b)
+{
+    f32_4x result;
+    result.e[0] = powf(a.e[0], b.e[0]);
+    result.e[1] = powf(a.e[1], b.e[1]);
+    result.e[2] = powf(a.e[2], b.e[2]);
+    result.e[3] = powf(a.e[3], b.e[3]);
+    return result;
+}
+
+internal f32_4x
+pow32_4x_temp(f32_4x a, f32_4x b)
+{
+    f32_4x result;
+    result.e[0] = pow32(a.e[0], b.e[0]);
+    result.e[1] = pow32(a.e[1], b.e[1]);
+    result.e[2] = pow32(a.e[2], b.e[2]);
+    result.e[3] = pow32(a.e[3], b.e[3]);
+    return result;
+}
+
 enum DoTestFlag
 {
     DoTest_Sqrt       = 0x00000001,
@@ -267,12 +289,34 @@ s32 main(s32 argc, char **argv)
     f32 minVal = 1.0e-9f;
     f32 maxVal = 123.8f;
 
+#if 0
+    u32 testsA = 100;
+    f32 minValA = -1.0f;
+    f32 maxValA =  2.0f;
+    u32 testsB = 100;
+    f32 minValB = -5.0f;
+    f32 maxValB =  5.0f;
+#else
     u32 testsA = 10000;
-    f32 minValA = 1.0e-1f;
-    f32 maxValA = 12.8f;
-    u32 testsB = 10000;
-    f32 minValB = -10.0f;
-    f32 maxValB =  10.0f;
+    f32 minValA = -10.0f;
+    f32 maxValA =  10.0f;
+    u32 testsB = 4000;
+    f32 minValB = -13.0f;
+    f32 maxValB =  14.0f;
+#endif
+
+#if 0
+    f32 pRes = powf(2.34f, 2.123f);
+    f32_4x mRes = pow32_4x(F32_4x(2.34f), F32_4x(2.123f));
+    fprintf(stdout, "P: %a %a | %g %g\n", pRes, mRes.e[0], pRes, mRes.e[0]);
+    f64 plRes = pow32_log2(u32f32(2.34f).u);
+    f64_2x mlResLo, mlResHi;
+    pow32_log2_4x(F32_4x(2.34f), &mlResLo, &mlResHi);
+    fprintf(stdout, "PL: %a %a | %g %g\n", plRes, mlResLo.e[0], plRes, mlResLo.e[0]);
+    f32 peRes = pow32_exp2(plRes, 0);
+    f32_4x meRes = pow32_exp2_4x(mlResLo, mlResHi, zero_f32_4x());
+    fprintf(stdout, "PE: %a %a | %g %g\n", peRes, meRes.e[0], peRes, meRes.e[0]);
+#endif
 
     fprintf(stdout, "\n");
 
@@ -283,9 +327,9 @@ s32 main(s32 argc, char **argv)
         if (doTests & DoTest_Sqrt)
         {
             fprintf(stdout, "Square root\n");
-            f32 stdSecSqrt32 = run_comp_f32_x(string("stdlib sqrt"), 15, "sqrt", tests, minVal, maxVal, sqrt, sqrtf, 0.0f);
-            run_comp_f32_x(string("mats sqrt"), 15, "sqrt", tests, minVal, maxVal, sqrt, sqrt32_nonsse, stdSecSqrt32);
-            run_comp_f32_x(string("mats sqrt sse"), 15, "sqrt", tests, minVal, maxVal, sqrt, sqrt32_sse, stdSecSqrt32);
+            f32 stdSec = call_comp_x(stdlib, sqrt, f, 0.0f);
+            call_comp_x(mats, sqrt, 32_nonsse, stdSec);
+            call_comp_x(matsse, sqrt, 32_sse, stdSec);
             fprintf(stdout, "\n");
         }
 
@@ -295,21 +339,21 @@ s32 main(s32 argc, char **argv)
         if (doTests & DoTest_Exp)
         {
             fprintf(stdout, "Exp\n");
-            f32 stdSecExp32 = run_comp_f32_x(string("stdlib exp"), 15, "exp", tests, minVal, maxVal, exp, expf, 0.0f);
-            run_comp_f32_x(string("mats exp"), 15, "exp", tests, minVal, maxVal, exp, exp32_nonsse, stdSecExp32);
-            run_comp_f32_x(string("mats exp sse"), 15, "exp", tests, minVal, maxVal, exp, exp32_sse, stdSecExp32);
-            run_comp_f32_4x_x(string("mats exp 4x"), 15, "exp", tests, minVal, maxVal, exp, exp32_4x, stdSecExp32);
-            run_comp_f32_4x_x(string("mats fast 4x"), 15, "exp", tests, minVal, maxVal, exp, exp32_fast_4x, stdSecExp32);
+            f32 stdSecExp32 = call_comp_x(stdlib, exp, f, 0.0f);
+            call_comp_x(mats, exp, 32_nonsse, stdSecExp32);
+            call_comp_x(matsse, exp, 32_sse, stdSecExp32);
+            call_comp_x_4x(mats, exp, 32_4x, stdSecExp32);
+            call_comp_x_4x(fats, exp, 32_fast_4x, stdSecExp32);
             fprintf(stdout, "\n");
         }
 
         if (doTests & DoTest_Exp2)
         {
             fprintf(stdout, "Exp2\n");
-            f32 stdSecExp232 = run_comp_f32_x(string("stdlib exp2"), 15, "exp2", tests, minVal, maxVal, exp2, exp2f, 0.0f);
-            run_comp_f32_x(string("mats exp2"), 15, "exp2", tests, minVal, maxVal, exp2, exp2_32_nonsse, stdSecExp232);
-            run_comp_f32_4x_x(string("mats exp2 4x"), 15, "exp2", tests, minVal, maxVal, exp2, exp2_32_4x, stdSecExp232);
-            run_comp_f32_4x_x(string("mats fast 4x"), 15, "exp2", tests, minVal, maxVal, exp2, exp2_32_fast_4x, stdSecExp232);
+            f32 stdSecExp232 = call_comp_x(stdlib, exp2, f, 0.0f);
+            call_comp_x(mats, exp2, _32_nonsse, stdSecExp232);
+            call_comp_x_4x(mats, exp2, _32_4x, stdSecExp232);
+            call_comp_x_4x(fats, exp2, _32_fast_4x, stdSecExp232);
             fprintf(stdout, "\n");
         }
 
@@ -319,20 +363,20 @@ s32 main(s32 argc, char **argv)
         if (doTests & DoTest_Log)
         {
             fprintf(stdout, "Log\n");
-            f32 stdSecLog32 = run_comp_f32_x(string("stdlib log"), 15, "log", tests, minVal, maxVal, log, logf, 0.0f);
-            run_comp_f32_x(string("mats log"), 15, "log", tests, minVal, maxVal, log, log32_nonsse, stdSecLog32);
-            run_comp_f32_4x_x(string("mats log 4x"), 15, "log", tests, minVal, maxVal, log, log32_4x, stdSecLog32);
-            run_comp_f32_4x_x(string("mats fast 4x"), 15, "log", tests, minVal, maxVal, log, log32_fast_4x, stdSecLog32);
+            f32 stdSecLog32 = call_comp_x(stdlib, log, f, 0.0f);
+            call_comp_x(mats, log, 32_nonsse, stdSecLog32);
+            call_comp_x_4x(mats, log, 32_4x, stdSecLog32);
+            call_comp_x_4x(fats, log, 32_fast_4x, stdSecLog32);
             fprintf(stdout, "\n");
         }
 
         if (doTests & DoTest_Log2)
         {
             fprintf(stdout, "Log2\n");
-            f32 stdSecLog232 = run_comp_f32_x(string("stdlib log2"), 15, "log2", tests, minVal, maxVal, log2, log2f, 0.0f);
-            run_comp_f32_x(string("mats log2"), 15, "log2", tests, minVal, maxVal, log2, log2_32_nonsse, stdSecLog232);
-            run_comp_f32_4x_x(string("mats log2 4x"), 15, "log2", tests, minVal, maxVal, log2, log2_32_4x, stdSecLog232);
-            run_comp_f32_4x_x(string("mats fast 4x"), 15, "log2", tests, minVal, maxVal, log2, log2_32_fast_4x, stdSecLog232);
+            f32 stdSecLog232 = call_comp_x(stdlib, log2, f, 0.0f);
+            call_comp_x(mats, log2, _32_nonsse, stdSecLog232);
+            call_comp_x_4x(mats, log2, _32_4x, stdSecLog232);
+            call_comp_x_4x(fats, log2, _32_fast_4x, stdSecLog232);
             fprintf(stdout, "\n");
         }
 
@@ -341,7 +385,9 @@ s32 main(s32 argc, char **argv)
             fprintf(stdout, "Pow\n");
             f32 stdSecPow32 = call_comp_x2(stdlib, pow, f, 0.0f);
             call_comp_x2(mats, pow, 32, stdSecPow32);
-            //call_comp_x2(mats, pow, 32_temp, stdSecPow32);
+            call_comp_x2(mats, pow, 32_temp, stdSecPow32);
+            call_comp_x2_4x(mats, pow, 32_4x, stdSecPow32);
+            call_comp_x2_4x(mats, pow, 32_4x_temp, stdSecPow32);
             fprintf(stdout, "\n");
         }
     }
@@ -356,9 +402,9 @@ s32 main(s32 argc, char **argv)
         if (doTests & DoTest_Sqrt)
         {
             fprintf(stdout, "Square root\n");
-            f32 spdSecSqrt32 = run_speed_f32(string("stdlib sqrt"), 15, "sqrt", tests, minVal, maxVal, sqrtf, 0.0f);
-            run_speed_f32(string("mats sqrt"), 15, "sqrt", tests, minVal, maxVal, sqrt32_nonsse, spdSecSqrt32);
-            run_speed_f32(string("mats sqrt sse"), 15, "sqrt", tests, minVal, maxVal, sqrt32_sse, spdSecSqrt32);
+            f32 stdSec = call_spd(stdlib, sqrt, f, 0.0f);
+            call_spd(mats, sqrt, 32_nonsse, stdSec);
+            call_spd(mats, sqrt, 32_sse, stdSec);
             fprintf(stdout, "\n");
         }
 
@@ -368,17 +414,17 @@ s32 main(s32 argc, char **argv)
         if (doTests & DoTest_Exp)
         {
             fprintf(stdout, "Exp\n");
-            f32 spdSecExp32 = run_speed_f32(string("stdlib exp"), 15, "exp", tests, minVal, maxVal, expf, 0.0f);
-            run_speed_f32(string("mats exp"), 15, "exp", tests, minVal, maxVal, exp32_nonsse, spdSecExp32);
-            run_speed_f32(string("mats exp sse"), 15, "exp", tests, minVal, maxVal, exp32_sse, spdSecExp32);
+            f32 stdSec = call_spd(stdlib, exp, f, 0.0f);
+            call_spd(mats, exp, 32_nonsse, stdSec);
+            call_spd(mats, exp, 32_sse, stdSec);
             fprintf(stdout, "\n");
         }
 
         if (doTests & DoTest_Exp2)
         {
             fprintf(stdout, "Exp2\n");
-            f32 spdSecExp232 = run_speed_f32(string("stdlib exp2"), 15, "exp2", tests, minVal, maxVal, exp2f, 0.0f);
-            run_speed_f32(string("mats exp2"), 15, "exp2", tests, minVal, maxVal, exp2_32_nonsse, spdSecExp232);
+            f32 stdSec = call_spd(stdlib, exp2, f, 0.0f);
+            call_spd(mats, exp2, _32_nonsse, stdSec);
             fprintf(stdout, "\n");
         }
 
@@ -388,16 +434,16 @@ s32 main(s32 argc, char **argv)
         if (doTests & DoTest_Log)
         {
             fprintf(stdout, "Log\n");
-            f32 spdSecLog32 = run_speed_f32(string("stdlib log"), 15, "log", tests, minVal, maxVal, logf, 0.0f);
-            run_speed_f32(string("mats log"), 15, "log", tests, minVal, maxVal, log32_nonsse, spdSecLog32);
+            f32 stdSec = call_spd(stdlib, log, f, 0.0f);
+            call_spd(mats, log, 32_nonsse, stdSec);
             fprintf(stdout, "\n");
         }
 
         if (doTests & DoTest_Log2)
         {
             fprintf(stdout, "Log2\n");
-            f32 spdSecLog232 = run_speed_f32(string("stdlib log2"), 15, "log2", tests, minVal, maxVal, log2f, 0.0f);
-            run_speed_f32(string("mats log2"), 15, "log2", tests, minVal, maxVal, log2_32_nonsse, spdSecLog232);
+            f32 stdSec = call_spd(stdlib, log2, f, 0.0f);
+            call_spd(mats, log2, _32_nonsse, stdSec);
             fprintf(stdout, "\n");
         }
 
@@ -406,7 +452,7 @@ s32 main(s32 argc, char **argv)
             fprintf(stdout, "Pow\n");
             f32 spdSecPow32 = call_spd2(stdlib, pow, f, 0.0f);
             call_spd2(mats, pow, 32, spdSecPow32);
-            //call_spd2(mats, pow, 32_temp, spdSecPow32);
+            call_spd2(mats, pow, 32_temp, spdSecPow32);
             fprintf(stdout, "\n");
         }
 
@@ -420,8 +466,8 @@ s32 main(s32 argc, char **argv)
             if (doTests & DoTest_Sqrt)
             {
                 fprintf(stdout, "Sqrt wide\n");
-                f32 spdSecSqrt4x = run_speed_f32_4x(string("stdlib sqrt 4x"), 15, "sqrt_4x", tests, minVal, maxVal, sqrtf_4x, 0.0f);
-                run_speed_f32_4x(string("mats sqrt 4x"), 15, "sqrt_4x", tests, minVal, maxVal, sqrt32_4x, spdSecSqrt4x);
+                f32 stdSec = call_spd_4x(stdlib, sqrt, f_4x, 0.0f);
+                call_spd_4x(mats, sqrt, 32_4x, stdSec);
                 fprintf(stdout, "\n");
             }
 
@@ -431,18 +477,18 @@ s32 main(s32 argc, char **argv)
             if (doTests & DoTest_Exp)
             {
                 fprintf(stdout, "Exp wide\n");
-                f32 spdSecExp4x = run_speed_f32_4x(string("stdlib exp 4x"), 15, "exp_4x", tests, minVal, maxVal, expf_4x, 0.0f);
-                run_speed_f32_4x(string("mats exp 4x"), 15, "exp_4x", tests, minVal, maxVal, exp32_4x, spdSecExp4x);
-                run_speed_f32_4x(string("mats fast 4x"), 15, "exp_4x", tests, minVal, maxVal, exp32_fast_4x, spdSecExp4x);
+                f32 stdSec = call_spd_4x(stdlib, exp, f_4x, 0.0f);
+                call_spd_4x(mats, exp, 32_4x, stdSec);
+                call_spd_4x(fats, exp, 32_fast_4x, stdSec);
                 fprintf(stdout, "\n");
             }
 
             if (doTests & DoTest_Exp2)
             {
                 fprintf(stdout, "Exp2 wide\n");
-                f32 spdSecExp4x = run_speed_f32_4x(string("stdlib exp2 4x"), 15, "exp2_4x", tests, minVal, maxVal, exp2f_4x, 0.0f);
-                run_speed_f32_4x(string("mats exp2 4x"), 15, "exp2_4x", tests, minVal, maxVal, exp2_32_4x, spdSecExp4x);
-                run_speed_f32_4x(string("mats fast 4x"), 15, "exp2_4x", tests, minVal, maxVal, exp2_32_fast_4x, spdSecExp4x);
+                f32 stdSec = call_spd_4x(stdlib, exp2, f_4x, 0.0f);
+                call_spd_4x(mats, exp2, _32_4x, stdSec);
+                call_spd_4x(fats, exp2, _32_fast_4x, stdSec);
                 fprintf(stdout, "\n");
             }
 
@@ -452,19 +498,30 @@ s32 main(s32 argc, char **argv)
             if (doTests & DoTest_Log)
             {
                 fprintf(stdout, "Log wide\n");
-                f32 spdSecLog32 = run_speed_f32_4x(string("stdlib log 4x"), 15, "log", tests, minVal, maxVal, logf_4x, 0.0f);
-                run_speed_f32_4x(string("mats log 4x"), 15, "log", tests, minVal, maxVal, log32_4x, spdSecLog32);
-                run_speed_f32_4x(string("mats fast 4x"), 15, "log", tests, minVal, maxVal, log32_fast_4x, spdSecLog32);
+                f32 stdSec = call_spd_4x(stdlib, log, f_4x, 0.0f);
+                call_spd_4x(mats, log, 32_4x, stdSec);
+                call_spd_4x(fats, log, 32_fast_4x, stdSec);
                 fprintf(stdout, "\n");
             }
 
             if (doTests & DoTest_Log2)
             {
                 fprintf(stdout, "Log2 wide\n");
-                f32 spdSecLog232 = run_speed_f32_4x(string("stdlib log2 4x"), 15, "log2", tests, minVal, maxVal, log2f_4x, 0.0f);
-                run_speed_f32_4x(string("mats log2 4x"), 15, "log2", tests, minVal, maxVal, log2_32_4x, spdSecLog232);
-                run_speed_f32_4x(string("mats fast 4x"), 15, "log2", tests, minVal, maxVal, log2_32_fast_4x, spdSecLog232);
+                f32 stdSec = call_spd_4x(stdlib, log2, f_4x, 0.0f);
+                call_spd_4x(mats, log2, _32_4x, stdSec);
+                call_spd_4x(fats, log2, _32_fast_4x, stdSec);
+                fprintf(stdout, "\n");
             }
+
+            if (doTests & DoTest_Pow)
+            {
+                fprintf(stdout, "Pow\n");
+                f32 spdSecPow32 = call_spd2_4x(stdlib, pow, f_4x, 0.0f);
+                call_spd2_4x(mats, pow, 32_4x, spdSecPow32);
+                call_spd2_4x(mats, pow, 32_4x_temp, spdSecPow32);
+                fprintf(stdout, "\n");
+            }
+
         }
     }
 

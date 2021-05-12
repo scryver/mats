@@ -335,12 +335,24 @@ tan32(f32 y)
     return result;
 }
 
-internal f32
-acos32(f32 x)
-{
-#define pi        3.1415925026e+00f
-#define pio2_hi   1.5707962513e+00f
-#define pio2_lo   7.5497894159e-08f
+// NOTE(michiel): The smaller poly were found in the musl c library version of the sun93 code
+#define MATS_ASINCOS_USE_SMALL_POLY 1
+#define MATS_ATAN_USE_SMALL_POLY    1
+
+#if MATS_ASINCOS_USE_SMALL_POLY
+#define pS0   1.6666586697e-01f
+#define pS1  -4.2743422091e-02f
+#define pS2  -8.6563630030e-03f
+#define qS1  -7.0662963390e-01f
+#define poly(z) \
+f32 p = pS2 * z; \
+p = (p + pS1) * z; \
+p = (p + pS0) * z; \
+f32 q = qS1 * z; \
+q = (q + 1.0f); \
+f32 r = p / q
+
+#else
 #define pS0   1.6666667163e-01f
 #define pS1  -3.2556581497e-01f
 #define pS2   2.0121252537e-01f
@@ -351,6 +363,28 @@ acos32(f32 x)
 #define qS2   2.0209457874e+00f
 #define qS3  -6.8828397989e-01f
 #define qS4   7.7038154006e-02f
+#define poly(z) \
+f32 p = pS5 * z; \
+f32 q = qS4 * z; \
+p = (p + pS4) * z; \
+q = (q + qS3) * z; \
+p = (p + pS3) * z; \
+q = (q + qS2) * z; \
+p = (p + pS2) * z; \
+p = (p + pS1) * z; \
+q = (q + qS1) * z; \
+p = (p + pS0) * z; \
+q = (q + 1.0f); \
+f32 r = p / q
+
+#endif
+
+internal f32
+acos32(f32 x)
+{
+#define pi        3.1415925026e+00f
+#define pio2_hi   1.5707962513e+00f
+#define pio2_lo   7.5497894159e-08f
 
 	s32 ix = (s32)u32f32(x).u;
     u32 hx = ix & 0x7FFFFFFF;
@@ -371,36 +405,14 @@ acos32(f32 x)
             return pio2_hi + pio2_lo;    // NOTE(michiel): |x| <= 2^-57
         }
         f32 x2 = x * x;
-        f32 p = pS5 * x2;
-        p = (p + pS4) * x2;
-        p = (p + pS3) * x2;
-        p = (p + pS2) * x2;
-        p = (p + pS1) * x2;
-        p = (p + pS0) * x2;
-        f32 q = qS4 * x2;
-        q = (q + qS3) * x2;
-        q = (q + qS2) * x2;
-        q = (q + qS1) * x2;
-        q += 1.0f;
-        f32 r = p / q;
+        poly(x2);
         return pio2_hi - (x - (pio2_lo - x * r)); // NOTE(michiel): |x| < 0.5f
     }
     else if (ix < 0)
     {
         f32 z = (1.0f + x) * 0.5f;
-        f32 p = pS5 * z;
-        p = (p + pS4) * z;
-        p = (p + pS3) * z;
-        p = (p + pS2) * z;
-        p = (p + pS1) * z;
-        p = (p + pS0) * z;
-        f32 q = qS4 * z;
-        q = (q + qS3) * z;
-        q = (q + qS2) * z;
-        q = (q + qS1) * z;
-        q += 1.0f;
+        poly(z);
         f32 s = sqrt32(z);
-        f32 r = p / q;
         f32 w = r * s - pio2_lo;
         return pi - 2.0f * (s + w); // NOTE(michiel): x <= -0.5f
     }
@@ -410,31 +422,11 @@ acos32(f32 x)
         f32 s = sqrt32(z);
         f32 df = u32f32(u32f32(s).u & 0xFFFFF000).f;
         f32 c = (z - df * df) / (s + df);
-        f32 p = pS5 * z;
-        p = (p + pS4) * z;
-        p = (p + pS3) * z;
-        p = (p + pS2) * z;
-        p = (p + pS1) * z;
-        p = (p + pS0) * z;
-        f32 q = qS4 * z;
-        q = (q + qS3) * z;
-        q = (q + qS2) * z;
-        q = (q + qS1) * z;
-        q += 1.0f;
-        f32 r = p / q;
+        poly(z);
         f32 w = r * s + c;
         return 2.0f * (df + w); // NOTE(michiel): x >= 0.5f
     }
-#undef pS0
-#undef pS1
-#undef pS2
-#undef pS3
-#undef pS4
-#undef pS5
-#undef qS1
-#undef qS2
-#undef qS3
-#undef qS4
+
 #undef pio2_hi
 #undef pio2_lo
 #undef pi
@@ -446,16 +438,6 @@ asin32(f32 x)
 #define pio2_hi 1.57079637050628662109375f
 #define pio2_lo -4.37113900018624283e-8f
 #define pio4_hi 0.785398185253143310546875f
-#define pS0   1.6666667163e-01f
-#define pS1  -3.2556581497e-01f
-#define pS2   2.0121252537e-01f
-#define pS3  -4.0055535734e-02f
-#define pS4   7.9153501429e-04f
-#define pS5   3.4793309169e-05f
-#define qS1  -2.4033949375e+00f
-#define qS2   2.0209457874e+00f
-#define qS3  -6.8828397989e-01f
-#define qS4   7.7038154006e-02f
 
     s32 ix = (s32)u32f32(x).u;
     u32 hx = ix & 0x7FFFFFFF;
@@ -471,40 +453,18 @@ asin32(f32 x)
             }
         } else {
             f32 x2 = x * x;
-            f32 p = pS5 * x2;
-            p = (p + pS4) * x2;
-            p = (p + pS3) * x2;
-            p = (p + pS2) * x2;
-            p = (p + pS1) * x2;
-            p = (p + pS0) * x2;
-            f32 q = qS4 * x2;
-            q = (q + qS3) * x2;
-            q = (q + qS2) * x2;
-            q = (q + qS1) * x2;
-            q += 1.0f;
-            f32 w = p / q;
-            return x + x * w;
+            poly(x2);
+            return x + x * r;
         }
     }
 
     f32 w = 1.0f - u32f32(hx).f;
     f32 t = w * 0.5f;
-    f32 p = pS5 * t;
-    p = (p + pS4) * t;
-    p = (p + pS3) * t;
-    p = (p + pS2) * t;
-    p = (p + pS1) * t;
-    p = (p + pS0) * t;
-    f32 q = qS4 * t;
-    q = (q + qS3) * t;
-    q = (q + qS2) * t;
-    q = (q + qS1) * t;
-    q += 1.0f;
+    poly(t);
     f32 s = sqrt32(t);
     if (hx >= 0x3F79999A)
     {
-        w = p / q;
-        t = pio2_hi - (2.0f * (s + s * w) - pio2_lo);
+        t = pio2_hi - (2.0f * (s + s * r) - pio2_lo);
     }
     else
     {
@@ -512,7 +472,6 @@ asin32(f32 x)
         u32 iw = u32f32(w).u;
         w = u32f32(iw & 0xFFFFF000).f;
         f32 c = (t - w * w) / (s + w);
-        f32 r = p / q;
         p = 2.0f * s * r - (pio2_lo - 2.0f * c);
         q = pio4_hi - 2.0f * w;
         t = pio4_hi - (p - q);
@@ -524,6 +483,11 @@ asin32(f32 x)
         return -t;
     }
 
+#undef pio4_hi
+#undef pio2_hi
+#undef pio2_lo
+}
+
 #undef pS0
 #undef pS1
 #undef pS2
@@ -534,10 +498,6 @@ asin32(f32 x)
 #undef qS2
 #undef qS3
 #undef qS4
-#undef pio4_hi
-#undef pio2_hi
-#undef pio2_lo
-}
 
 global const f32 gAtanHiF32[] = {
     4.6364760399e-01, /* atan(0.5)hi 0x3eed6338 */
@@ -604,6 +564,14 @@ atan32(f32 x)
         }
 
         f32 x2 = x * x;
+#if MATS_ATAN_USE_SMALL_POLY
+        f32 x4 = x2 * x2;
+        f32 s1 =   6.1687607318e-02f * x4;
+        f32 s2 = - 1.0648017377e-01f * x4;
+        s1 = (s1 + 1.4253635705e-01f) * x4;
+        s2 = (s2 - 1.9999158382e-01f) * x4;
+        s1 = (s1 + 3.3333328366e-01f) * x2;
+#else
 #if MATS_USE_SSE
         WideMath x2w; x2w.m = _mm_set1_ps(x2);
         WideMath x4w; x4w.m = _mm_mul_ps(x2w.m, x2w.m);
@@ -625,21 +593,10 @@ atan32(f32 x)
         f32 s2 = s1s2.e[1];
 #else
         f32 x4 = x2 * x2;
-#if 1
         f32 s1 =   1.6285819933e-02f * x4;
         f32 s2 = - 3.6531571299e-02f * x4;
         s1 = (s1 + 4.9768779427e-02f) * x4;
         s2 = (s2 - 5.8335702866e-02f) * x4;
-        s1 = (s1 + 6.6610731184e-02f) * x4;
-        s2 = (s2 - 7.6918758452e-02f) * x4;
-        s1 = (s1 + 9.0908870101e-02f) * x4;
-        s2 = (s2 - 1.1111110449e-01f) * x4;
-        s1 = (s1 + 1.4285714924e-01f) * x4;
-        s2 = (s2 - 2.0000000298e-01f) * x4;
-        s1 = (s1 + 3.3333334327e-01f) * x2;
-#else
-        f32 s1 =   4.9768779427e-02f * x4;
-        f32 s2 = - 5.8335702866e-02f * x4;
         s1 = (s1 + 6.6610731184e-02f) * x4;
         s2 = (s2 - 7.6918758452e-02f) * x4;
         s1 = (s1 + 9.0908870101e-02f) * x4;

@@ -8,6 +8,8 @@ typedef MATH_FUNC_F64_FROM_F64(MathFuncF64FromF64);
 typedef MATH_FUNC_F64_FROM_F64_F64(MathFuncF64FromF64F64);
 #define MATH_FUNC_F32_4x_FROM_F32_4x(name)          f32_4x name(f32_4x x)
 typedef MATH_FUNC_F32_4x_FROM_F32_4x(MathFuncF32_4xFromF32_4x);
+#define MATH_FUNC_F32_4x_FROM_F32_4x_F32_4x(name)   f32_4x name(f32_4x a, f32_4x b)
+typedef MATH_FUNC_F32_4x_FROM_F32_4x_F32_4x(MathFuncF32_4xFromF32_4xF32_4x);
 
 #define call_comp_x(lib, name, suf, sec)  \
 run_comp_f32_x(string(#lib " " #name), 20, #name, tests, minVal, maxVal, name, name ## suf, sec)
@@ -18,6 +20,16 @@ run_speed_f32(string(#lib " " #name), 20, #name, tests, minVal, maxVal, name ## 
 run_comp_f32_f32_x(string(#lib " " #name), 20, #name, testsA, minValA, maxValA, testsB, minValB, maxValB, name, name ## suf, sec)
 #define call_spd2(lib, name, suf, sec) \
 run_speed_f32_f32(string(#lib " " #name), 20, #name, testsA, minValA, maxValA, testsB, minValB, maxValB, name ## suf, sec)
+
+#define call_comp_x_4x(lib, name, suf, sec)  \
+run_comp_f32_4x_x(string(#lib " " #name), 20, #name "_4x", tests, minVal, maxVal, name, name ## suf, sec)
+#define call_spd_4x(lib, name, suf, sec) \
+run_speed_f32_4x(string(#lib " " #name), 20, #name "_4x", tests, minVal, maxVal, name ## suf, sec)
+
+#define call_comp_x2_4x(lib, name, suf, sec)  \
+run_comp_f32_f32_4x_x(string(#lib " " #name), 20, #name "_4x", testsA, minValA, maxValA, testsB, minValB, maxValB, name, name ## suf, sec)
+#define call_spd2_4x(lib, name, suf, sec) \
+run_speed_f32_f32_4x(string(#lib " " #name), 20, #name "_4x", testsA, minValA, maxValA, testsB, minValB, maxValB, name ## suf, sec)
 
 internal void
 set_default_fp_behavior(void)
@@ -164,15 +176,24 @@ print_comp_info(String name, u32 maxNameSize, char *func, u32 tests, f32 seconds
 }
 
 internal void
-print_speed_info(String name, u32 maxNameSize, char *func, u32 tests, f32 seconds, f64 sum, f32 secondsRatio)
+print_speed_info(String name, u32 maxNameSize, char *func, u32 tests, f32 seconds, f64 sum, f32 secondsRatio, f64 extraCall = 0.0)
 {
     volatile f64 x = sum;
     unused(x);
     f64 testCalls = (f64)tests;
     persist char *spaces = "                                                                ";
-    fprintf(stdout, "%.*s%.*s: %f, %f sec, %10.0f %s/sec, avg %f usec\n",
-            STR_FMT(name), (u32)(maxNameSize - name.size), spaces, secondsRatio,
-            seconds, testCalls / seconds, func, seconds / (testCalls / 1000000.0));
+    if (extraCall)
+    {
+        fprintf(stdout, "%.*s%.*s: %f, %f sec, %10.0f %s/sec, avg %f usec (%f usec/call)\n",
+                STR_FMT(name), (u32)(maxNameSize - name.size), spaces, secondsRatio,
+                seconds, testCalls / seconds, func, seconds / (testCalls / 1000000.0), seconds / (extraCall * testCalls / 1000000.0));
+    }
+    else
+    {
+        fprintf(stdout, "%.*s%.*s: %f, %f sec, %10.0f %s/sec, avg %f usec\n",
+                STR_FMT(name), (u32)(maxNameSize - name.size), spaces, secondsRatio,
+                seconds, testCalls / seconds, func, seconds / (testCalls / 1000000.0));
+    }
 }
 
 internal void
@@ -380,9 +401,9 @@ run_speed_f32_4x(String name, u32 maxNameSize, char *func, u32 tests, f32 minVal
     f32 seconds = linux_get_seconds_elapsed(start, linux_get_wall_clock());
 
     if (secondsBase == 0.0f) {
-        print_speed_info(name, maxNameSize, func, 16*tests, seconds, gRunSpeedSum4x.e[0], 1.0f);
+        print_speed_info(name, maxNameSize, func, 4*tests, seconds, gRunSpeedSum4x.e[0], 1.0f, 4.0);
     } else {
-        print_speed_info(name, maxNameSize, func, 16*tests, seconds, gRunSpeedSum4x.e[0], seconds / secondsBase);
+        print_speed_info(name, maxNameSize, func, 4*tests, seconds, gRunSpeedSum4x.e[0], seconds / secondsBase, 4.0);
     }
     return seconds;
 }
@@ -484,6 +505,115 @@ run_speed_f32_f32(String name, u32 maxNameSize, char *func, u32 testsA, f32 minV
         print_speed_info(name, maxNameSize, func, 4*tests, seconds, gRunSpeedSumF32F32, 1.0f);
     } else {
         print_speed_info(name, maxNameSize, func, 4*tests, seconds, gRunSpeedSumF32F32, seconds / secondsBase);
+    }
+    return seconds;
+}
+
+internal f32
+run_comp_f32_f32_4x(String name, u32 maxNameSize, char *func,
+                    u32 testsA, f32 minValA, f32 maxValA, u32 testsB, f32 minValB, f32 maxValB,
+                    MathFuncF32FromF32F32 *origFunc, MathFuncF32_4xFromF32_4xF32_4x *testFunc, f32 secondsBase)
+{
+    CompInfo compInfo = {};
+    compInfo.numInputs = 2;
+    compInfo.minAbsErr = F32_MAX;
+    compInfo.minRelErr = F32_MAX;
+
+    f32 scaleA = (maxValA - minValA) / (f32)testsA;
+    f32 scaleB = (maxValB - minValB) / (f32)testsB;
+    struct timespec start = linux_get_wall_clock();
+    for (u32 aIdx = 0; aIdx < testsA; ++aIdx)
+    {
+        f32 inputValA = (f32)aIdx * scaleA + minValA;
+        f32_4x inputValA4 = F32_4x(inputValA, 1.0e-9f * inputValA, 1.0e9f * inputValA, -1.0e9f * inputValA);
+        for (u32 bIdx = 0; bIdx < testsB; ++bIdx)
+        {
+            f32 inputValB = (f32)bIdx * scaleB + minValB;
+            f32_4x inputValB4 = F32_4x(inputValB, 1.0e-9f * inputValB, 1.0e9f * inputValB, -1.0e9f * inputValB);
+            f32 origRes = origFunc(inputValA, inputValB);
+            f32_4x testRes = testFunc(inputValA4, inputValB4);
+            update_comp(&compInfo, origRes, testRes.e[0], inputValA, inputValB);
+        }
+    }
+    f32 seconds = linux_get_seconds_elapsed(start, linux_get_wall_clock());
+
+    u32 tests = testsA * testsB;
+    if (secondsBase == 0.0f) {
+        print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, 1.0f);
+    } else {
+        print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, seconds / secondsBase);
+    }
+    return seconds;
+}
+
+internal f32
+run_comp_f32_f32_4x_x(String name, u32 maxNameSize, char *func,
+                      u32 testsA, f32 minValA, f32 maxValA, u32 testsB, f32 minValB, f32 maxValB,
+                      MathFuncF64FromF64F64 *origFunc, MathFuncF32_4xFromF32_4xF32_4x *testFunc, f32 secondsBase)
+{
+    CompInfo compInfo = {};
+    compInfo.numInputs = 2;
+    compInfo.minAbsErr = F32_MAX;
+    compInfo.minRelErr = F32_MAX;
+
+    f32 scaleA = (maxValA - minValA) / (f32)testsA;
+    f32 scaleB = (maxValB - minValB) / (f32)testsB;
+    struct timespec start = linux_get_wall_clock();
+    for (u32 aIdx = 0; aIdx < testsA; ++aIdx)
+    {
+        f32 inputValA = (f32)aIdx * scaleA + minValA;
+        f32_4x inputValA4 = F32_4x(inputValA, 1.0e-9f * inputValA, 1.0e9f * inputValA, -1.0e9f * inputValA);
+        for (u32 bIdx = 0; bIdx < testsB; ++bIdx)
+        {
+            f32 inputValB = (f32)bIdx * scaleB + minValB;
+            f32_4x inputValB4 = F32_4x(inputValB, 1.0e-9f * inputValB, 1.0e9f * inputValB, -1.0e9f * inputValB);
+            f64 origRes = origFunc(inputValA, inputValB);
+            f32_4x testRes = testFunc(inputValA4, inputValB4);
+            update_comp(&compInfo, origRes, testRes.e[0], inputValA, inputValB);
+        }
+    }
+    f32 seconds = linux_get_seconds_elapsed(start, linux_get_wall_clock());
+
+    u32 tests = testsA * testsB;
+    if (secondsBase == 0.0f) {
+        print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, 1.0f);
+    } else {
+        print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, seconds / secondsBase);
+    }
+    return seconds;
+}
+
+global volatile f64 gRunSpeedSumF32F324x;
+internal f32
+run_speed_f32_f32_4x(String name, u32 maxNameSize, char *func, u32 testsA, f32 minValA, f32 maxValA, u32 testsB, f32 minValB, f32 maxValB,
+                     MathFuncF32_4xFromF32_4xF32_4x *testFunc, f32 secondsBase)
+{
+    gRunSpeedSumF32F324x = 0.0;
+    f32 scaleA = (maxValA - minValA) / (f32)testsA;
+    f32 scaleB = (maxValB - minValB) / (f32)testsB;
+    struct timespec start = linux_get_wall_clock();
+    for (u32 aIdx = 0; aIdx < testsA; ++aIdx)
+    {
+        f32 inputValA = (f32)aIdx * scaleA + minValA;
+        f32_4x inputValA4 = F32_4x(inputValA, 1.0e-9f * inputValA, 1.0e9f * inputValA, -1.0e9f * inputValA);
+        for (u32 bIdx = 0; bIdx < testsB; ++bIdx)
+        {
+            f32 inputValB = (f32)bIdx * scaleB + minValB;
+            f32_4x inputValB4 = F32_4x(inputValB, 1.0e-9f * inputValB, 1.0e9f * inputValB, -1.0e9f * inputValB);
+            f32_4x testRes0 = testFunc(inputValA4, inputValB4);
+            f32_4x testRes1 = testFunc(testRes0, inputValB4);
+            f32_4x testRes2 = testFunc(testRes1, inputValB4);
+            f32_4x testRes3 = testFunc(testRes2, inputValB4);
+            gRunSpeedSumF32F324x += testRes3.e[0];
+        }
+    }
+    f32 seconds = linux_get_seconds_elapsed(start, linux_get_wall_clock());
+
+    u32 tests = testsA * testsB;
+    if (secondsBase == 0.0f) {
+        print_speed_info(name, maxNameSize, func, 4*tests, seconds, gRunSpeedSumF32F324x, 1.0f, 4.0);
+    } else {
+        print_speed_info(name, maxNameSize, func, 4*tests, seconds, gRunSpeedSumF32F324x, seconds / secondsBase, 4.0);
     }
     return seconds;
 }

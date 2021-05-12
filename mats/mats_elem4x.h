@@ -398,7 +398,6 @@ log2_32_4x(f32_4x x)
     return result;
 }
 
-#if 0
 //
 // NOTE(mich2iel): Pow
 //
@@ -406,12 +405,13 @@ log2_32_4x(f32_4x x)
 internal void
 pow32_log2_4x(f32_4x x, f64_2x *dstLo, f64_2x *dstHi)
 {
+#if 0
     f64_2x poly0 = F64_2x(gPowF32_Log2PolyScaled[0]);
     f64_2x poly1 = F64_2x(gPowF32_Log2PolyScaled[1]);
     f64_2x poly2 = F64_2x(gPowF32_Log2PolyScaled[2]);
     f64_2x poly3 = F64_2x(gPowF32_Log2PolyScaled[3]);
     f64_2x poly4 = F64_2x(gPowF32_Log2PolyScaled[4]);
-    f32_4x temp = s32_4x_sub(x, S32_4x(0x3F30000));
+    f32_4x temp = s32_4x_sub(x, S32_4x(0x3F330000));
     f32_4x index = s32_4x_and(s32_4x_srl(temp, 23 - POWF_LOG2_TABLE_BITS),
                               S32_4x((1 << POWF_LOG2_TABLE_BITS) - 1));
     f32_4x iz = s32_4x_sub(x, s32_4x_and(temp, S32_4x(0x1FF << 23)));
@@ -424,6 +424,26 @@ pow32_log2_4x(f32_4x x, f64_2x *dstLo, f64_2x *dstHi)
     f64_2x invCHi = F64_2x(gPowF32_Log2TableScaled[index.u[2]].invC, gPowF32_Log2TableScaled[index.u[3]].invC);
     f64_2x logCLo = F64_2x(gPowF32_Log2TableScaled[index.u[0]].logC, gPowF32_Log2TableScaled[index.u[1]].logC);
     f64_2x logCHi = F64_2x(gPowF32_Log2TableScaled[index.u[2]].logC, gPowF32_Log2TableScaled[index.u[3]].logC);
+#else
+    f64_2x poly0 = F64_2x(gPowF32_Log2Poly[0]);
+    f64_2x poly1 = F64_2x(gPowF32_Log2Poly[1]);
+    f64_2x poly2 = F64_2x(gPowF32_Log2Poly[2]);
+    f64_2x poly3 = F64_2x(gPowF32_Log2Poly[3]);
+    f64_2x poly4 = F64_2x(gPowF32_Log2Poly[4]);
+    f32_4x temp = s32_4x_sub(x, S32_4x(0x3F330000));
+    f32_4x index = s32_4x_and(s32_4x_srl(temp, 23 - POWF_LOG2_TABLE_BITS),
+                              S32_4x((1 << POWF_LOG2_TABLE_BITS) - 1));
+    f32_4x iz = s32_4x_sub(x, s32_4x_and(temp, S32_4x(0xFF800000)));
+    f32_4x k = s32_4x_sra(temp, 23);
+    f64_2x k64Lo; k64Lo.md = _mm_cvtepi32_pd(k.mi);
+    f64_2x k64Hi; k64Hi.md = _mm_cvtepi32_pd(_mm_castps_si128(_mm_shuffle_ps(k.m, k.m, MULTILANE_SHUFFLE_MASK(2, 3, 2, 3))));
+
+    // TODO(michiel): Hmm...
+    f64_2x invCLo = F64_2x(gPowF32_Log2Table[index.u[0]].invC, gPowF32_Log2Table[index.u[1]].invC);
+    f64_2x invCHi = F64_2x(gPowF32_Log2Table[index.u[2]].invC, gPowF32_Log2Table[index.u[3]].invC);
+    f64_2x logCLo = F64_2x(gPowF32_Log2Table[index.u[0]].logC, gPowF32_Log2Table[index.u[1]].logC);
+    f64_2x logCHi = F64_2x(gPowF32_Log2Table[index.u[2]].logC, gPowF32_Log2Table[index.u[3]].logC);
+#endif
 
     f64_2x zLo = F64_2x(iz);
     f64_2x zHi = F64_2x(iz, true);
@@ -450,9 +470,10 @@ pow32_log2_4x(f32_4x x, f64_2x *dstLo, f64_2x *dstHi)
     *dstHi = resultHi;
 }
 
-internal void
-pow32_exp2_4x(f64_2x xLo, f64_2x xHi, f32_4x signBias, f64_2x *dstLo, f64_2x *dstHi)
+internal f32_4x
+pow32_exp2_4x(f64_2x xLo, f64_2x xHi, f32_4x signBias)
 {
+#if 0
     f64_2x poly0 = F64_2x(gExp2F32_PolyScaled[0]);
     f64_2x poly1 = F64_2x(gExp2F32_PolyScaled[1]);
     f64_2x poly2 = F64_2x(gExp2F32_PolyScaled[2]);
@@ -464,6 +485,20 @@ pow32_exp2_4x(f64_2x xLo, f64_2x xHi, f32_4x signBias, f64_2x *dstLo, f64_2x *ds
     u64 ki1 = (u64)s64_from_f64_2x(xLo, true);
     u64 ki2 = (u64)s64_from_f64_2x(xHi);
     u64 ki3 = (u64)s64_from_f64_2x(xHi, true);
+#else
+    f64_2x poly0 = F64_2x(gExp2F32_Poly[0]);
+    f64_2x poly1 = F64_2x(gExp2F32_Poly[1]);
+    f64_2x poly2 = F64_2x(gExp2F32_Poly[2]);
+
+    f64_2x kdLo = xLo + F64_2x(gExp2F32_ShiftScaled);
+    f64_2x kdHi = xHi + F64_2x(gExp2F32_ShiftScaled);
+    u64 ki0 = kdLo.u[0];
+    u64 ki1 = kdLo.u[1];
+    u64 ki2 = kdHi.u[0];
+    u64 ki3 = kdHi.u[1];
+    kdLo = kdLo - F64_2x(gExp2F32_ShiftScaled);
+    kdHi = kdHi - F64_2x(gExp2F32_ShiftScaled);
+#endif
 
     f64_2x rLo = xLo - kdLo;
     f64_2x rHi = xHi - kdHi;
@@ -490,10 +525,12 @@ pow32_exp2_4x(f64_2x xLo, f64_2x xHi, f32_4x signBias, f64_2x *dstLo, f64_2x *ds
     resultHi = zHi * r2Hi + resultHi;
     resultLo = resultLo * sLo;
     resultHi = resultHi * sHi;
-    *dstLo = resultLo;
-    *dstHi = resultHi;
+
+    f32_4x result = F32_4x(resultLo, resultHi);
+    return result;
 }
 
+#if 0
 internal f32_4x
 pow32_checkint_4x(f32_4x x)
 {
@@ -516,7 +553,89 @@ pow32_zeroinfnan_4x(f32_4x x)
                                S32_4x(0xFFFFFFFF));
     return result;
 }
+#endif
 
+internal f32
+pow32_temp(f32 x, f32 y)
+{
+    // NOTE(michiel): We don't really care about the results for bad inputs!
+    u32 signBias = 0;
+
+    u32 xu = u32f32(x).u;
+    u32 yu = u32f32(y).u;
+
+    if ((yu & 0x7FFFFFFF) == 0)
+    {
+        return 1.0f;
+    }
+    if ((xu & 0x7FFFFFFF) == 0)
+    {
+        return (yu & 0x80000000) ? 1.0f / x : x;
+    }
+
+    /* x and y are non-zero finite.  */
+    if (xu & 0x80000000)
+    {
+        u32 mask = (1 << (0x7F + 23 - ((yu >> 23) & 0xFF)));
+        if (yu & mask) {
+            signBias = (1 << (EXP2F_TABLE_BITS + 11));
+        }
+        xu &= 0x7FFFFFFF;
+    }
+
+    f64 logX = pow32_log2(xu);
+    f64 yLogX = (f64)y * logX; /* Note: cannot overflow, y is single prec.  */
+    f32 result = pow32_exp2(yLogX, signBias);
+
+    return result;
+}
+
+internal f32_4x
+pow32_4x(f32_4x x, f32_4x y)
+{
+    f32_4x signBias = zero_f32_4x();
+    f32_4x expManMask = S32_4x(0x7FFFFFFF);
+
+    f32_4x xu = x & expManMask;
+
+    f32_4x xIsZero = s32_4x_equal(xu, zero_f32_4x());
+    f32_4x yIsZero = s32_4x_equal(s32_4x_and(y, expManMask), zero_f32_4x());
+
+    f32_4x one4x = F32_4x(1.0f);
+    f32_4x oneOverX = reciprocal(x);
+
+    f32_4x xSign = s32_4x_less(x, zero_f32_4x());
+    f32_4x ySign = s32_4x_less(y, zero_f32_4x());
+
+    f32_4x xZeroResult = select(x, ySign, oneOverX);
+
+    f32_4x e = s32_4x_and(s32_4x_srl(y, 23), S32_4x(0xFF));
+    f32_4x shiftCount = s32_4x_sub(S32_4x(0x7F + 23), e);
+    // TODO(michiel): Ieuw
+    f32_4x yMask;
+    yMask.u[0] = 1 << shiftCount.u[0];
+    yMask.u[1] = 1 << shiftCount.u[1];
+    yMask.u[2] = 1 << shiftCount.u[2];
+    yMask.u[3] = 1 << shiftCount.u[3];
+    yMask = s32_4x_equal(s32_4x_and(yMask, y), zero_f32_4x());
+    yMask = and_not(xSign, yMask);
+    f32_4x modSign = S32_4x(1 << (EXP2F_TABLE_BITS + 11));
+    signBias = s32_4x_and(modSign, yMask);
+
+    f64_2x logXLo, logXHi;
+    pow32_log2_4x(xu, &logXLo, &logXHi);
+    f64_2x yLogXLo = F64_2x(y) * logXLo;
+    f64_2x yLogXHi = F64_2x(y, true) * logXHi;
+
+    f32_4x result = pow32_exp2_4x(yLogXLo, yLogXHi, signBias);
+
+    result = select(result, xIsZero, xZeroResult);
+    result = select(result, yIsZero, one4x);
+
+    return result;
+}
+
+#if 0
 internal f32
 pow32_temp(f32 x, f32 y)
 {
@@ -524,72 +643,79 @@ pow32_temp(f32 x, f32 y)
 
     u32 xu = u32f32(x).u;
     u32 yu = u32f32(y).u;
+    u32 xSign = xu & 0x80000000;
 
-    b32 yIsZeroInfNan = pow32_zeroinfnan(yu);
-    b32 xIsZeroInfNan = pow32_zeroinfnan(xu);
+    //b32 yIsZeroInfNan = pow32_zeroinfnan(yu);
+    //b32 xIsZeroInfNan = pow32_zeroinfnan(xu);
     s32 yInt = pow32_checkint(yu);
 
-    if (xIsZeroInfNan)
+    f32 result = 1.0f;
+    if (0) // xIsZeroInfNan)
     {
         f32 x2 = x * x;
-        if ((xu & 0x80000000) && (yInt == 1)) {
+        if (xSign && (yInt == 1)) {
             x2 = -x2;
         }
-        return yu & 0x80000000 ? 1.0f / x2 : x2;
+        result = yu & 0x80000000 ? 1.0f / x2 : x2;
     }
-    else if (yIsZeroInfNan)
+    else if (0) // yIsZeroInfNan)
     {
+        u32 twoXu = 2 * xu;
+        u32 twoYu = 2 * yu;
         if (2 * yu == 0) {
-            return issignaling32(x) ? x + y : 1.0f;
+            //return 1.0f;
+        } else if (xu == 0x3F800000) {
+            //return 1.0f;
+        } else if ((twoXu > (2u * 0x7F800000)) ||
+                   (twoYu > (2u * 0x7F800000))) {
+            result = x + y;
+        } else if (twoXu == 0x3F800000) {
+            //return 1.0f;
+        } else if ((twoXu < (2 * 0x3F800000)) == !(yu & 0x80000000)) {
+            result = 0.0f; // NOTE(michiel): |x| < 1 && y == inf or |x| > 1 && y == -inf
+        } else {
+            result = y * y;
         }
-        if (xu == 0x3F800000) {
-            return issignaling32(y) ? x + y : 1.0f;
-        }
-        if (((2 * xu) > (2u * 0x7F800000)) ||
-            ((2 * yu) > (2u * 0x7F800000))) {
-            return x + y;
-        }
-        if ((2 * xu) == 0x3F800000) {
-            return 1.0f;
-        }
-        if (((2 * xu) < (2 * 0x3F800000)) == !(yu & 0x80000000)) {
-            return 0.0f; // NOTE(michiel): |x| < 1 && y == inf or |x| > 1 && y == -inf
-        }
-        return y * y;
     }
-    else if ((yInt == 0) && (xu & 0x80000000))
+    else if (0) // (yInt == 0) && xSign)
     {
-        return mats_invalid32(x);
+        result = (x - x) / (x - x);
     }
-    else if (((xu - 0x00800000) >= (0x7f800000 - 0x00800000)))
+    else
     {
-        /* x and y are non-zero finite.  */
-        if (xu & 0x80000000)
+        if (((xu - 0x00800000) >= (0x7f800000 - 0x00800000)))
         {
-            if (yInt == 1) {
-                signBias = (1 << (EXP2F_TABLE_BITS + 11));
+            /* x and y are non-zero finite.  */
+            if (xSign)
+            {
+                if (yInt == 1) {
+                    signBias = (1 << (EXP2F_TABLE_BITS + 11));
+                }
+                xu &= 0x7FFFFFFF;
             }
-            xu &= 0x7FFFFFFF;
+            if (xu < 0x00800000)
+            {
+                xu = u32f32(x * 0x1p23f).u;
+                xu &= 0x7FFFFFFF;
+                xu -= 23 << 23;
+            }
         }
-        if (xu < 0x00800000)
-        {
-            xu = u32f32(x * 0x1p23f).u;
-            xu &= 0x7FFFFFFF;
-            xu -= 23 << 23;
+
+        f64 logX = pow32_log2(xu);
+        f64 yLogX = (f64)y * logX; /* Note: cannot overflow, y is single prec.  */
+        b32 expIsBig = ((u64f64(yLogX).u >> 47) & 0xFFFF) >= (u64f64(126.0 * POWF_SCALE).u >> 47);
+        b32 resIsOverflow = yLogX > 0x1.fffffffd1d571p+6 * POWF_SCALE;
+        b32 resIsUnderflow = yLogX <= -150.0 * POWF_SCALE;
+
+        if (expIsBig && resIsOverflow) {
+            result = u32f32(xSign ^ u32f32(0x1p97f * 0x1p97f).u).f;
+        } else if (expIsBig && resIsUnderflow) {
+            result = u32f32(xSign ^ u32f32(0x1p-95f * 0x1p-95f).u).f;
+        } else {
+            result = pow32_exp2(yLogX, signBias);
         }
     }
 
-    f64 logX = pow32_log2(xu);
-    f64 yLogX = (f64)y * logX; /* Note: cannot overflow, y is single prec.  */
-    if ((u64f64(yLogX).u >> 47 & 0xFFFF) >= (u64f64(126.0 * POWF_SCALE).u >> 47))
-    {
-        if (yLogX > 0x1.fffffffd1d571p+6 * POWF_SCALE) {
-            return mats_overflow32(signBias);
-        }
-        if (yLogX <= -150.0 * POWF_SCALE) {
-            return mats_underflow32(signBias);
-        }
-    }
-    return pow32_exp2(yLogX, signBias);
+    return result;
 }
 #endif

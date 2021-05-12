@@ -405,6 +405,13 @@ acos32_4x(f32_4x x)
     f32_4x polyIn = and_not(one4x, lessThanHalf);
     polyIn = (polyIn + addIn) * multIn;;
 
+#if MATS_ASINCOS_USE_SMALL_POLY
+    f32_4x p = F32_4x(-8.6563630030e-03f) * polyIn;
+    f32_4x q = F32_4x(-7.0662963390e-01f) * polyIn;
+    p = (p - F32_4x(4.2743422091e-02f)) * polyIn;
+    q = (q + F32_4x(1.0f));
+    p = (p + F32_4x(1.6666586697e-01f)) * polyIn;
+#else
     f32_4x p = F32_4x(3.4793309169e-05f) * polyIn;
     f32_4x q = F32_4x(7.7038154006e-02f) * polyIn;
     p = (p + F32_4x(7.9153501429e-04f)) * polyIn;
@@ -416,6 +423,7 @@ acos32_4x(f32_4x x)
     p = (p - F32_4x(3.2556581497e-01f)) * polyIn;
     q = (q + F32_4x(1.0f));
     p = (p + F32_4x(1.6666667163e-01f)) * polyIn;
+#endif
 
     f32_4x xMinX = x - x;
 #if MATS_USE_SSE4
@@ -493,17 +501,25 @@ asin32_4x(f32_4x x)
 
     f32_4x polyIn = select(half4x * (one4x - hx), lessThanHalf, x * x);
 
-    f32_4x p = F32_4x(3.4793309169e-05f) * polyIn;
-    p = (p + F32_4x(7.9153501429e-04f)) * polyIn;
-    p = (p - F32_4x(4.0055535734e-02f)) * polyIn;
-    p = (p + F32_4x(2.0121252537e-01f)) * polyIn;
-    p = (p - F32_4x(3.2556581497e-01f)) * polyIn;
-    p = (p + F32_4x(1.6666667163e-01f)) * polyIn;
-    f32_4x q = F32_4x(7.7038154006e-02f) * polyIn;
-    q = (q - F32_4x(6.8828397989e-01f)) * polyIn;
-    q = (q + F32_4x(2.0209457874e+00f)) * polyIn;
-    q = (q - F32_4x(2.4033949375e+00f)) * polyIn;
+#if MATS_ASINCOS_USE_SMALL_POLY
+    f32_4x p = F32_4x(-8.6563630030e-03f) * polyIn;
+    f32_4x q = F32_4x(-7.0662963390e-01f) * polyIn;
+    p = (p - F32_4x(4.2743422091e-02f)) * polyIn;
     q = (q + F32_4x(1.0f));
+    p = (p + F32_4x(1.6666586697e-01f)) * polyIn;
+#else
+    f32_4x p = F32_4x(3.4793309169e-05f) * polyIn;
+    f32_4x q = F32_4x(7.7038154006e-02f) * polyIn;
+    p = (p + F32_4x(7.9153501429e-04f)) * polyIn;
+    q = (q - F32_4x(6.8828397989e-01f)) * polyIn;
+    p = (p - F32_4x(4.0055535734e-02f)) * polyIn;
+    q = (q + F32_4x(2.0209457874e+00f)) * polyIn;
+    p = (p + F32_4x(2.0121252537e-01f)) * polyIn;
+    q = (q - F32_4x(2.4033949375e+00f)) * polyIn;
+    p = (p - F32_4x(3.2556581497e-01f)) * polyIn;
+    q = (q + F32_4x(1.0f));
+    p = (p + F32_4x(1.6666667163e-01f)) * polyIn;
+#endif
 
     f32_4x xMinX = x - x;
     p = select(p, greaterThanOne, xMinX);
@@ -589,6 +605,13 @@ atan32_4x(f32_4x x)
     f32_4x x2 = x * x;
     f32_4x x4 = x2 * x2;
 
+#if MATS_ATAN_USE_SMALL_POLY
+    f32_4x s1 = F32_4x(6.1687607318e-02f) * x4;
+    f32_4x s2 = F32_4x(-1.0648017377e-01f) * x4;
+    s1 = (s1 + F32_4x(1.4253635705e-01f)) * x4;
+    s2 = (s2 - F32_4x(1.9999158382e-01f)) * x4;
+    s1 = (s1 + F32_4x(3.3333328366e-01f)) * x2;
+#else
     f32_4x s1 = F32_4x(1.6285819933e-02f) * x4;
     f32_4x s2 = F32_4x(-3.6531571299e-02f) * x4;
     s1 = (s1 + F32_4x(4.9768779427e-02f)) * x4;
@@ -600,6 +623,7 @@ atan32_4x(f32_4x x)
     s1 = (s1 + F32_4x(1.4285714924e-01f)) * x4;
     s2 = (s2 - F32_4x(2.0000000298e-01f)) * x4;
     s1 = (s1 + F32_4x(3.3333334327e-01f)) * x2;
+#endif
 
     f32_4x smallResult = x * (s1 + s2);
 
