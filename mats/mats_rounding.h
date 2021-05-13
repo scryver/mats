@@ -351,8 +351,8 @@ remainder32(f32 num, f32 den)
         return u32f32(signNum).f;
     }
 
-    num = mats_fabs32(num);
-    den = mats_fabs32(den);
+    num = absolute32(num);
+    den = absolute32(den);
 
     if (hden < 0x01000000)
     {

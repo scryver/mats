@@ -1,3 +1,4 @@
+// TODO(michiel): Move out all constants
 
 #define FLT_UWORD_IS_FINITE(x)     ((x) <  0x7f800000L)
 #define FLT_UWORD_IS_NAN(x)        ((x) >  0x7f800000L)
@@ -46,13 +47,6 @@ mats_invalid32(f32 x)
     return result;
 }
 
-// TODO(michiel): Rename to absolute32
-internal f32
-mats_fabs32(f32 x)
-{
-    return u32f32(u32f32(x).u & 0x7FFFFFFF).f;
-}
-
 /* Top 12 bits of the float representation with the sign bit cleared.  */
 internal u32
 abstop12_(f32 x)
@@ -67,4 +61,14 @@ issignaling32(f32 x)
     if (!IEEE_754_2008_SNAN)
         return (xu & 0x7fc00000) == 0x7fc00000;
     return 2 * (xu ^ 0x00400000) > 0xFF800000u;
+}
+
+//
+// NOTE(michiel): Public
+//
+
+internal f32
+absolute32(f32 x)
+{
+    return u32f32(u32f32(x).u & 0x7FFFFFFF).f;
 }

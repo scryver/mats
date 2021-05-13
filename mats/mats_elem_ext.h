@@ -49,7 +49,7 @@ pow32_exp2(f64 xd, u32 signBias)
 internal s32
 pow32_checkint(u32 xu)
 {
-    s32 e = xu >> 23 & 0xFF;
+    s32 e = (xu >> 23) & 0xFF;
     if (e < 0x7F) {
         return 0;
     }
@@ -145,4 +145,16 @@ pow32(f32 x, f32 y)
         }
     }
     return pow32_exp2(yLogX, signBias);
+}
+
+internal f32
+pow10_32(f32 x)
+{
+    return pow32(10.0f, x);
+}
+
+internal f32
+exp10_32(f32 x)
+{
+    return pow32(10.0f, x);
 }

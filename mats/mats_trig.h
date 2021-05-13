@@ -73,7 +73,7 @@ internal f32
 cos32_fast(f32 y)
 {
     // NOTE(michiel): Sloppy
-    i_expect(mats_fabs32(y) < 120.0f);
+    i_expect(absolute32(y) < 120.0f);
     f32 x = y;
     f32 result;
     if (abstop12_(y) < abstop12_(0x1p-12f))
@@ -102,7 +102,7 @@ internal f32
 sin32_fast(f32 y)
 {
     // NOTE(michiel): Sloppy
-    i_expect(mats_fabs32(y) < 120.0f);
+    i_expect(absolute32(y) < 120.0f);
     f32 x = y;
 
     f32 result;
@@ -131,7 +131,7 @@ sin32_fast(f32 y)
 internal f32
 cos32(f32 y)
 {
-    i_expect(mats_fabs32(y) < 120.0f);
+    i_expect(absolute32(y) < 120.0f);
     f32 x = y;
     f32 result;
     if (abstop12_(y) < abstop12_(0x1p-12f))
@@ -159,7 +159,7 @@ cos32(f32 y)
 internal f32
 sin32(f32 y)
 {
-    i_expect(mats_fabs32(y) < 120.0f);
+    i_expect(absolute32(y) < 120.0f);
     f32 x = y;
 
     f32 result;
@@ -189,7 +189,7 @@ internal v2
 sincos32_fast(f32 y)
 {
     // NOTE(michiel): x = cos, y = sin
-    i_expect(mats_fabs32(y) < 120.0f);
+    i_expect(absolute32(y) < 120.0f);
     f32 x = y;
 
     v2 result;
@@ -221,7 +221,7 @@ internal v2
 sincos32(f32 y)
 {
     // NOTE(michiel): x = cos, y = sin
-    i_expect(mats_fabs32(y) < 120.0f);
+    i_expect(absolute32(y) < 120.0f);
     f32 x = y;
 
     v2 result;
@@ -319,7 +319,7 @@ tan32_kernel(f32 x, s32 mod)
 internal f32
 tan32(f32 y)
 {
-    i_expect(mats_fabs32(y) < 120.0f);
+    i_expect(absolute32(y) < 120.0f);
     f32 result;
     u32 uy = u32f32(y).u & 0x7FFFFFFF;
     if (uy < 0x3F490FDA)
@@ -684,7 +684,7 @@ atan2_32(f32 y, f32 x)
     } else if ((ix < 0) && (k < -60)) {
         result = 0.0f;
     } else {
-        result = atan32(mats_fabs32(y / x));
+        result = atan32(absolute32(y / x));
     }
     switch (m)
     {

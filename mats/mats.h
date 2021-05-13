@@ -47,9 +47,15 @@
 
 
 #include "mats_defines.h"
-#include "mats_common.h"
 #include "mats_constants.h"
+
+// NOTE(michiel): absolute32
+#include "mats_common.h"
+// NOTE(michiel): floor32/ceil32/round32/trunc32/modulus32/remainder32
 #include "mats_rounding.h"
+// NOTE(michiel): sqrt32/exp32/exp2_32/pow2_32/log32/log2_32/log10_32
 #include "mats_elem.h"
+// NOTE(michiel): pow32/pow10_32/exp10_32
 #include "mats_elem_ext.h"
+// NOTE(michiel): cos32/sin32/sincos32/tan32/acos32/asin32/atan32/atan2_32
 #include "mats_trig.h"

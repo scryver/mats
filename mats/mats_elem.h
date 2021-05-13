@@ -129,6 +129,7 @@ exp32(f32 x)
 internal f32
 exp2_32(f32 x)
 {
+    // NOTE(michiel): result = 2^x
     u32 xu = u32f32(x).u;
 
     u32 abstop = abstop12_(x);
@@ -165,6 +166,12 @@ exp2_32(f32 x)
     y = z * r2 + y;
     y = y * s;
     return y;
+}
+
+internal f32
+pow2_32(f32 x)
+{
+    return exp2_32(x);
 }
 
 internal f32
@@ -255,4 +262,31 @@ log2_32(f32 x)
     f64 p = gLog2F32_Poly[3] * r + y0;
     result = result * r2 + p;
     return result;
+}
+
+internal f32
+log10_32(f32 x)
+{
+    s32 hx = (s32)u32f32(x).u;
+
+    s32 k = 0;
+    if (FLT_UWORD_IS_ZERO(hx & 0x7FFFFFFF)) {
+        return -g2pow25F32 / 0.0f; // NOTE(michiel): log10(+/-0) = -inf
+    } else if (hx < 0) {
+        return (x - x) / 0.0f;     // NOTE(michiel): log10(-X) = NaN
+    } else if (!FLT_UWORD_IS_FINITE(hx)) {
+        return x + x;
+    } else if (FLT_UWORD_IS_SUBNORMAL(hx)) {
+        k -= 25;
+        x *= g2pow25F32; // NOTE(michiel): x * 2^25
+        hx = (s32)u32f32(x).u;
+    }
+
+    k += (hx >> 23) - 127;
+    s32 i = (u32)k >> 31;
+    hx = (hx & 0x007FFFFF) | ((0x7F - i) << 23);
+    f32 y = (f32)(k + i);
+    x = u32f32((u32)hx).f;
+    f32 z = y * gLog10_2_lo + gInvLn10F32 * log32(x);
+    return z + y * gLog10_2_hi;
 }

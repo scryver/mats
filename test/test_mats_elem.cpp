@@ -15,22 +15,28 @@
 #define sqrt32   sqrt32_nonsse
 #define exp32    exp32_nonsse
 #define exp2_32  exp2_32_nonsse
+#define pow2_32  pow2_32_nonsse
 #define log32    log32_nonsse
 #define log2_32  log2_32_nonsse
+#define log10_32 log10_32_nonsse
 #define MATS_USE_SSE2 0
 #include "../mats/mats_defines.h"
 #include "../mats/mats_elem.h"
 #undef sqrt32
 #undef exp32
 #undef exp2_32
+#undef pow2_32
 #undef log32
 #undef log2_32
+#undef log10_32
 
 #define sqrt32   sqrt32_sse
 #define exp32    exp32_not_used
 #define exp2_32  exp2_32_not_used
 #define log32    log32_not_used
 #define log2_32  log2_32_not_used
+#define pow2_32  pow2_32_not_used
+#define log10_32 log10_32_not_used
 #undef  MATS_USE_SSE2
 #undef  MATS_USE_SSE4
 #define MATS_USE_SSE2 1
@@ -42,6 +48,8 @@
 #undef exp2_32
 #undef log32
 #undef log2_32
+#undef pow2_32
+#undef log10_32
 
 internal f32
 exp32_sse(f32 x)
@@ -189,6 +197,17 @@ log2f_4x(f32_4x x)
 }
 
 internal f32_4x
+log10f_4x(f32_4x x)
+{
+    f32_4x result;
+    result.e[0] = log10f(x.e[0]);
+    result.e[1] = log10f(x.e[1]);
+    result.e[2] = log10f(x.e[2]);
+    result.e[3] = log10f(x.e[3]);
+    return result;
+}
+
+internal f32_4x
 powf_4x(f32_4x a, f32_4x b)
 {
     f32_4x result;
@@ -210,14 +229,21 @@ pow32_4x_temp(f32_4x a, f32_4x b)
     return result;
 }
 
+internal f32_4x
+log10_32_fast_4x_t(f32_4x x)
+{
+    return log10_32_fast_4x(x);
+}
+
 enum DoTestFlag
 {
     DoTest_Sqrt       = 0x00000001,
-    DoTest_Log        = 0x00000002,
-    DoTest_Log2       = 0x00000004,
-    DoTest_Exp        = 0x00000008,
-    DoTest_Exp2       = 0x00000010,
-    DoTest_Pow        = 0x00000020,
+    DoTest_Exp        = 0x00000002,
+    DoTest_Exp2       = 0x00000004,
+    DoTest_Log        = 0x00000008,
+    DoTest_Log2       = 0x00000010,
+    DoTest_Log10      = 0x00000020,
+    DoTest_Pow        = 0x00000040,
     DoTest_FuncMask   = 0x000000FF,
 
     DoTest_NoFpBehave = 0x00100000,
@@ -260,6 +286,8 @@ s32 main(s32 argc, char **argv)
                 tests |= DoTest_Log;
             } else if (strings_are_equal("log2", argv[index])) {
                 tests |= DoTest_Log2;
+            } else if (strings_are_equal("log10", argv[index])) {
+                tests |= DoTest_Log10;
             } else if (strings_are_equal("exp", argv[index])) {
                 tests |= DoTest_Exp;
             } else if (strings_are_equal("exp2", argv[index])) {
@@ -342,8 +370,8 @@ s32 main(s32 argc, char **argv)
             f32 stdSecExp32 = call_comp_x(stdlib, exp, f, 0.0f);
             call_comp_x(mats, exp, 32_nonsse, stdSecExp32);
             call_comp_x(matsse, exp, 32_sse, stdSecExp32);
-            call_comp_x_4x(mats, exp, 32_4x, stdSecExp32);
-            call_comp_x_4x(fats, exp, 32_fast_4x, stdSecExp32);
+            call_comp_x_4x(matsse, exp, 32_4x, stdSecExp32);
+            call_comp_x_4x(fatsse, exp, 32_fast_4x, stdSecExp32);
             fprintf(stdout, "\n");
         }
 
@@ -352,8 +380,8 @@ s32 main(s32 argc, char **argv)
             fprintf(stdout, "Exp2\n");
             f32 stdSecExp232 = call_comp_x(stdlib, exp2, f, 0.0f);
             call_comp_x(mats, exp2, _32_nonsse, stdSecExp232);
-            call_comp_x_4x(mats, exp2, _32_4x, stdSecExp232);
-            call_comp_x_4x(fats, exp2, _32_fast_4x, stdSecExp232);
+            call_comp_x_4x(matsse, exp2, _32_4x, stdSecExp232);
+            call_comp_x_4x(fatsse, exp2, _32_fast_4x, stdSecExp232);
             fprintf(stdout, "\n");
         }
 
@@ -365,8 +393,8 @@ s32 main(s32 argc, char **argv)
             fprintf(stdout, "Log\n");
             f32 stdSecLog32 = call_comp_x(stdlib, log, f, 0.0f);
             call_comp_x(mats, log, 32_nonsse, stdSecLog32);
-            call_comp_x_4x(mats, log, 32_4x, stdSecLog32);
-            call_comp_x_4x(fats, log, 32_fast_4x, stdSecLog32);
+            call_comp_x_4x(matsse, log, 32_4x, stdSecLog32);
+            call_comp_x_4x(fatsse, log, 32_fast_4x, stdSecLog32);
             fprintf(stdout, "\n");
         }
 
@@ -375,8 +403,18 @@ s32 main(s32 argc, char **argv)
             fprintf(stdout, "Log2\n");
             f32 stdSecLog232 = call_comp_x(stdlib, log2, f, 0.0f);
             call_comp_x(mats, log2, _32_nonsse, stdSecLog232);
-            call_comp_x_4x(mats, log2, _32_4x, stdSecLog232);
-            call_comp_x_4x(fats, log2, _32_fast_4x, stdSecLog232);
+            call_comp_x_4x(matsse, log2, _32_4x, stdSecLog232);
+            call_comp_x_4x(fatsse, log2, _32_fast_4x, stdSecLog232);
+            fprintf(stdout, "\n");
+        }
+
+        if (doTests & DoTest_Log10)
+        {
+            fprintf(stdout, "Log10\n");
+            f32 stdSec = call_comp_x(stdlib, log10, f, 0.0f);
+            call_comp_x(mats, log10, _32_nonsse, stdSec);
+            call_comp_x_4x(matsse, log10, _32_4x, stdSec);
+            call_comp_x_4x(fatsse, log10, _32_fast_4x_t, stdSec);
             fprintf(stdout, "\n");
         }
 
@@ -385,8 +423,7 @@ s32 main(s32 argc, char **argv)
             fprintf(stdout, "Pow\n");
             f32 stdSecPow32 = call_comp_x2(stdlib, pow, f, 0.0f);
             call_comp_x2(mats, pow, 32, stdSecPow32);
-            call_comp_x2(mats, pow, 32_temp, stdSecPow32);
-            call_comp_x2_4x(mats, pow, 32_4x, stdSecPow32);
+            call_comp_x2_4x(matsse, pow, 32_4x, stdSecPow32);
             call_comp_x2_4x(mats, pow, 32_4x_temp, stdSecPow32);
             fprintf(stdout, "\n");
         }
@@ -447,12 +484,19 @@ s32 main(s32 argc, char **argv)
             fprintf(stdout, "\n");
         }
 
+        if (doTests & DoTest_Log10)
+        {
+            fprintf(stdout, "Log10\n");
+            f32 stdSec = call_spd(stdlib, log10, f, 0.0f);
+            call_spd(mats, log10, _32_nonsse, stdSec);
+            fprintf(stdout, "\n");
+        }
+
         if (doTests & DoTest_Pow)
         {
             fprintf(stdout, "Pow\n");
             f32 spdSecPow32 = call_spd2(stdlib, pow, f, 0.0f);
             call_spd2(mats, pow, 32, spdSecPow32);
-            call_spd2(mats, pow, 32_temp, spdSecPow32);
             fprintf(stdout, "\n");
         }
 
@@ -513,12 +557,21 @@ s32 main(s32 argc, char **argv)
                 fprintf(stdout, "\n");
             }
 
+            if (doTests & DoTest_Log10)
+            {
+                fprintf(stdout, "Log10 wide\n");
+                f32 stdSec = call_spd_4x(stdlib, log10, f_4x, 0.0f);
+                call_spd_4x(mats, log10, _32_4x, stdSec);
+                call_spd_4x(fats, log10, _32_fast_4x_t, stdSec);
+                fprintf(stdout, "\n");
+            }
+
             if (doTests & DoTest_Pow)
             {
                 fprintf(stdout, "Pow\n");
                 f32 spdSecPow32 = call_spd2_4x(stdlib, pow, f_4x, 0.0f);
                 call_spd2_4x(mats, pow, 32_4x, spdSecPow32);
-                call_spd2_4x(mats, pow, 32_4x_temp, spdSecPow32);
+                call_spd2_4x(tats, pow, 32_4x_temp, spdSecPow32);
                 fprintf(stdout, "\n");
             }
 

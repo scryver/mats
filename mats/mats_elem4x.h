@@ -378,23 +378,76 @@ log2_32_4x(f32_4x x)
     f32_4x infResult     = x;
     f32_4x invalidResult = F32_4x(F32_INF); // TODO(michiel): Or should we return 0 here
 
-    f32_4x errorMask   = s32_4x_xor(s32_4x_less(xuMinLowExp, maxX), fullBits);
-    f32_4x divZeroMask = s32_4x_and(s32_4x_equal(xuTimes2, zero_f32_4x()), errorMask);
-    f32_4x infMask     = s32_4x_and(s32_4x_equal(x, fullExp), errorMask);
-    f32_4x invalidMask = s32_4x_and(s32_4x_or(s32_4x_and(x, signMask),
-                                              s32_4x_xor(s32_4x_less(xuTimes2, maxExp), fullBits)),
-                                    errorMask);
+    f32_4x noErrorMask = s32_4x_less(xuMinLowExp, maxX);
+    f32_4x divZeroMask = s32_4x_and_not(s32_4x_equal(xuTimes2, zero_f32_4x()), noErrorMask);
+    f32_4x infMask     = s32_4x_and_not(s32_4x_equal(x, fullExp), noErrorMask);
+    f32_4x invalidMask = s32_4x_and_not(s32_4x_or(s32_4x_and(x, signMask),
+                                                  s32_4x_xor(s32_4x_less(xuTimes2, maxExp), fullBits)),
+                                        noErrorMask);
 
     f32_4x subNormalFix = x * F32_4x(0x1p23f);
     subNormalFix = s32_4x_sub(subNormalFix, S32_4x(23 << 23));
 
-    x = select(x, errorMask, subNormalFix);
+    x = select(subNormalFix, noErrorMask, x);
 
     f32_4x result = log2_32_fast_4x(x);
     result = select(result, invalidMask, invalidResult);
     result = select(result, infMask, infResult);
     result = select(result, divZeroMask, divZeroResult);
 
+    return result;
+}
+
+internal f32_4x
+log10_32_fast_4x(f32_4x x, f32_4x k = zero_f32_4x())
+{
+    f32_4x invLn10    = F32_4x(gInvLn10F32);
+    f32_4x log10_2hi  = F32_4x(gLog10_2_hi);
+    f32_4x log10_2lo  = F32_4x(gLog10_2_lo);
+
+    k = s32_4x_add(k, s32_4x_sub(s32_4x_sra(x, 23), S32_4x(127)));
+    f32_4x i = s32_4x_srl(k, 31);
+    x = s32_4x_and(x, S32_4x(0x007FFFFF)) | s32_4x_sll(s32_4x_sub(S32_4x(0x7F), i), 23);
+    f32_4x y = f32_4x_from_s32(s32_4x_add(k, i));
+    f32_4x z = y * log10_2lo + invLn10 * log32_fast_4x(x);
+
+    f32_4x result = z + y * log10_2hi;
+    return result;
+}
+
+internal f32_4x
+log10_32_4x(f32_4x x)
+{
+    f32_4x zero4x     = zero_f32_4x();
+    f32_4x fullBits   = S32_4x(0xFFFFFFFF);
+    f32_4x fullExp    = S32_4x(0x7F800000);
+    f32_4x lowExpBit  = S32_4x(0x00800000);
+    f32_4x pow2_25    = F32_4x(g2pow25F32);
+
+    f32_4x zeroResult = F32_4x(-g2pow25F32 / 0.0f);
+    f32_4x negResult  = (x - x) / zero4x;
+    f32_4x infResult  = x + x;
+
+    f32_4x zeroMask   = s32_4x_equal(s32_4x_and(x, S32_4x(0x7FFFFFFF)), zero4x);
+    f32_4x errorMask  = zeroMask;
+    f32_4x negMask    = and_not(s32_4x_less(x, zero4x), errorMask);
+    errorMask         = s32_4x_or(errorMask, negMask);
+    f32_4x infMask    = and_not(s32_4x_xor(s32_4x_less(x, fullExp), fullBits), errorMask);
+    errorMask         = s32_4x_or(errorMask, infMask);
+
+    f32_4x errorRes   = (zeroResult & zeroMask) | (negResult & negMask) | (infResult & infMask);
+
+    f32_4x k          = zero4x;
+    f32_4x subNrmMask = s32_4x_less(x, lowExpBit);
+
+    f32_4x kMod       = s32_4x_sub(k, S32_4x(25));
+    f32_4x xMod       = x * pow2_25;
+
+    k = select(k, subNrmMask, kMod);
+    x = select(x, subNrmMask, xMod);
+
+    f32_4x result = log10_32_fast_4x(x, k);
+    result = select(result, errorMask, errorRes);
     return result;
 }
 
@@ -530,69 +583,10 @@ pow32_exp2_4x(f64_2x xLo, f64_2x xHi, f32_4x signBias)
     return result;
 }
 
-#if 0
-internal f32_4x
-pow32_checkint_4x(f32_4x x)
-{
-    f32_4x result;
-    result.u[0] = pow32_checkint(x.u[0]);
-    result.u[1] = pow32_checkint(x.u[1]);
-    result.u[2] = pow32_checkint(x.u[2]);
-    result.u[3] = pow32_checkint(x.u[3]);
-    return result;
-}
-
-internal f32_4x
-pow32_zeroinfnan_4x(f32_4x x)
-{
-    // NOTE(michiel): We bias the comparison to bring 0 to the most negative value
-    // we only have a signed comparison in simd land. Also we xor the result with
-    // U32_MAX to flip the bits.
-    f32_4x result = s32_4x_xor(s32_4x_less(s32_4x_xor(s32_4x_sub(s32_4x_add(x, x), S32_4x(1)), S32_4x(0x80000000)),
-                                           S32_4x((2u * 0x7F800000 - 1) ^ 0x80000000)),
-                               S32_4x(0xFFFFFFFF));
-    return result;
-}
-#endif
-
-internal f32
-pow32_temp(f32 x, f32 y)
-{
-    // NOTE(michiel): We don't really care about the results for bad inputs!
-    u32 signBias = 0;
-
-    u32 xu = u32f32(x).u;
-    u32 yu = u32f32(y).u;
-
-    if ((yu & 0x7FFFFFFF) == 0)
-    {
-        return 1.0f;
-    }
-    if ((xu & 0x7FFFFFFF) == 0)
-    {
-        return (yu & 0x80000000) ? 1.0f / x : x;
-    }
-
-    /* x and y are non-zero finite.  */
-    if (xu & 0x80000000)
-    {
-        u32 mask = (1 << (0x7F + 23 - ((yu >> 23) & 0xFF)));
-        if (yu & mask) {
-            signBias = (1 << (EXP2F_TABLE_BITS + 11));
-        }
-        xu &= 0x7FFFFFFF;
-    }
-
-    f64 logX = pow32_log2(xu);
-    f64 yLogX = (f64)y * logX; /* Note: cannot overflow, y is single prec.  */
-    f32 result = pow32_exp2(yLogX, signBias);
-
-    return result;
-}
-
 internal f32_4x
 pow32_4x(f32_4x x, f32_4x y)
 {
+    // NOTE(michiel): We don't really care about the results for bad inputs!
     f32_4x signBias = zero_f32_4x();
     f32_4x expManMask = S32_4x(0x7FFFFFFF);
 
@@ -635,87 +629,8 @@ pow32_4x(f32_4x x, f32_4x y)
     return result;
 }
 
-#if 0
-internal f32
-pow32_temp(f32 x, f32 y)
+internal f32_4x
+pow10_32_4x(f32_4x x)
 {
-    u32 signBias = 0;
-
-    u32 xu = u32f32(x).u;
-    u32 yu = u32f32(y).u;
-    u32 xSign = xu & 0x80000000;
-
-    //b32 yIsZeroInfNan = pow32_zeroinfnan(yu);
-    //b32 xIsZeroInfNan = pow32_zeroinfnan(xu);
-    s32 yInt = pow32_checkint(yu);
-
-    f32 result = 1.0f;
-    if (0) // xIsZeroInfNan)
-    {
-        f32 x2 = x * x;
-        if (xSign && (yInt == 1)) {
-            x2 = -x2;
-        }
-        result = yu & 0x80000000 ? 1.0f / x2 : x2;
-    }
-    else if (0) // yIsZeroInfNan)
-    {
-        u32 twoXu = 2 * xu;
-        u32 twoYu = 2 * yu;
-        if (2 * yu == 0) {
-            //return 1.0f;
-        } else if (xu == 0x3F800000) {
-            //return 1.0f;
-        } else if ((twoXu > (2u * 0x7F800000)) ||
-                   (twoYu > (2u * 0x7F800000))) {
-            result = x + y;
-        } else if (twoXu == 0x3F800000) {
-            //return 1.0f;
-        } else if ((twoXu < (2 * 0x3F800000)) == !(yu & 0x80000000)) {
-            result = 0.0f; // NOTE(michiel): |x| < 1 && y == inf or |x| > 1 && y == -inf
-        } else {
-            result = y * y;
-        }
-    }
-    else if (0) // (yInt == 0) && xSign)
-    {
-        result = (x - x) / (x - x);
-    }
-    else
-    {
-        if (((xu - 0x00800000) >= (0x7f800000 - 0x00800000)))
-        {
-            /* x and y are non-zero finite.  */
-            if (xSign)
-            {
-                if (yInt == 1) {
-                    signBias = (1 << (EXP2F_TABLE_BITS + 11));
-                }
-                xu &= 0x7FFFFFFF;
-            }
-            if (xu < 0x00800000)
-            {
-                xu = u32f32(x * 0x1p23f).u;
-                xu &= 0x7FFFFFFF;
-                xu -= 23 << 23;
-            }
-        }
-
-        f64 logX = pow32_log2(xu);
-        f64 yLogX = (f64)y * logX; /* Note: cannot overflow, y is single prec.  */
-        b32 expIsBig = ((u64f64(yLogX).u >> 47) & 0xFFFF) >= (u64f64(126.0 * POWF_SCALE).u >> 47);
-        b32 resIsOverflow = yLogX > 0x1.fffffffd1d571p+6 * POWF_SCALE;
-        b32 resIsUnderflow = yLogX <= -150.0 * POWF_SCALE;
-
-        if (expIsBig && resIsOverflow) {
-            result = u32f32(xSign ^ u32f32(0x1p97f * 0x1p97f).u).f;
-        } else if (expIsBig && resIsUnderflow) {
-            result = u32f32(xSign ^ u32f32(0x1p-95f * 0x1p-95f).u).f;
-        } else {
-            result = pow32_exp2(yLogX, signBias);
-        }
-    }
-
-    return result;
+    return pow32_4x(F32_4x(10.0f), x);
 }
-#endif

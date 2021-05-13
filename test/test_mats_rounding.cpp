@@ -6,6 +6,8 @@
 
 #define rint32_sse    round32_sse
 #define fmod32_nonsse modulus32_nonsse
+#define fmod32_nosafe modulus32_nosafe
+#define fmod32_4x     modulus32_4x
 
 #define STR_FMT(x)   safe_truncate_to_s32(x.size), (char *)x.data
 #include "../libberdip/src/common.h"
@@ -47,6 +49,8 @@
 #undef trunc32
 #undef modulus32
 #undef remainder32
+
+#include "../mats/mats_rounding4x.h"
 
 #include "test_common.cpp"
 
@@ -100,6 +104,8 @@ s32 main(s32 argc, char **argv)
     fprintf(stdout, "Mod\n");
     f32 stdSecMod32 = call_comp_x2(stdlib, fmod, f, 0.0f);
     call_comp_x2(mats, fmod, 32_nonsse, stdSecMod32);
+    call_comp_x2(mats, fmod, 32_nosafe, stdSecMod32);
+    call_comp_x2_4x(mats, fmod, 32_4x, stdSecMod32);
     fprintf(stdout, "\n");
 
     fprintf(stdout, "Rem\n");
@@ -141,6 +147,7 @@ s32 main(s32 argc, char **argv)
     fprintf(stdout, "Mod\n");
     f32 spdSecMod32 = call_spd2(stdlib, fmod, f, 0.0f);
     call_spd2(mats, fmod, 32_nonsse, spdSecMod32);
+    call_spd2(mats, fmod, 32_nosafe, spdSecMod32);
     fprintf(stdout, "\n");
 
     fprintf(stdout, "Rem\n");

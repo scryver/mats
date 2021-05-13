@@ -8,6 +8,7 @@ global const f32 g2powMin8F32   =  3.9062500000e-03f;  /* 0x3b800000 = 2^-8 */
 global const f32 g2powMin25F32  =  2.9802322388e-08f;  /* 0x33000000 = 2^-25 */
 global const f32 g2powMin100F32 =  7.8886090522e-31f;  /* 0x0d800000 = 2^-100 */
 global const f32 gInvLn2F32     =  1.4426950216e+00f;  /* 0x3fb8aa3b = 1/ln(2) */
+global const f32 gInvLn10F32    =  4.3429449201e-01f;  /* 0x3ede5bd9 = 1/ln(10) */
 global const f32 gHugeF32       =  1.0e+30f;
 global const f32 gTinyF32       =  1.0e-30f;
 
@@ -24,6 +25,8 @@ global const f32 gPiOver2F32_2  =  1.0804273188e-05f; /* 0x37354400, second 17 b
 global const f32 gPiOver2F32_2t =  6.0770999344e-11f; /* 0x2e85a308, pi/2 - (pio2_1+pio2_2) */
 global const f32 gPiOver2F32_3  =  6.0770943833e-11f; /* 0x2e85a300, third  17 bit of pi/2 */
 global const f32 gPiOver2F32_3t =  6.1232342629e-17f; /* 0x248d3132, pi/2 - (pio2_1+pio2_2+pio2_3) */
+global const f32 gLog10_2_hi    =  3.0102920532e-01f; /* 0x3e9a2080, log10(2) */
+global const f32 gLog10_2_lo    =  7.9034151668e-07f; /* 0x355427db, log10(2) - gLog10_2_hi */
 
 global const f32 gHalfSignF32s[2]  = {0.5f, -0.5f};
 global const f32 gLn2HighF32s[2]   = {6.9313812256e-01, -6.9313812256e-01}; /* 0x3f317180, 0xbf317180 */
