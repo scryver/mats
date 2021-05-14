@@ -20,6 +20,7 @@
 #define log2_32  log2_32_nonsse
 #define log10_32 log10_32_nonsse
 #define MATS_USE_SSE2 0
+#define MATS_USE_SSE4 0
 #include "../mats/mats_defines.h"
 #include "../mats/mats_elem.h"
 #undef sqrt32
@@ -31,7 +32,7 @@
 #undef log10_32
 
 #define sqrt32   sqrt32_sse
-#define exp32    exp32_not_used
+#define exp32    exp32_sse
 #define exp2_32  exp2_32_not_used
 #define log32    log32_not_used
 #define log2_32  log2_32_not_used
@@ -51,6 +52,7 @@
 #undef pow2_32
 #undef log10_32
 
+#if 0
 internal f32
 exp32_sse(f32 x)
 {
@@ -135,6 +137,7 @@ exp32_sse(f32 x)
     result.m = _mm_or_ps(_mm_andnot_ps(errorMask.m, _mm_cvtpd_ps(y.md)), errors.m);
     return result.e[0];
 }
+#endif
 
 #include "../mats/mats_elem_ext.h"
 #include "../mats/mats_elem4x.h"
@@ -453,7 +456,7 @@ s32 main(s32 argc, char **argv)
             fprintf(stdout, "Exp\n");
             f32 stdSec = call_spd(stdlib, exp, f, 0.0f);
             call_spd(mats, exp, 32_nonsse, stdSec);
-            call_spd(mats, exp, 32_sse, stdSec);
+            call_spd(matsse, exp, 32_sse, stdSec);
             fprintf(stdout, "\n");
         }
 

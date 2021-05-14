@@ -108,22 +108,25 @@ exp32(f32 x)
 
     f64 xd = x;
     f64 z = gExp2F32_InvLn2Scaled * xd;
+
     f64 kd = z + gExp2F32_Shift; /* Rounding to double precision is required.  */
     u64 ki = u64f64(kd).u;
     kd -= gExp2F32_Shift;
 
     f64 r = z - kd;
+
     /* exp(x) = 2^(k/N) * 2^(r/N) ~= s * (C0*r^3 + C1*r^2 + C2*r + 1) */
     u64 t = gExp2F32_Table[ki % (1 << EXP2F_TABLE_BITS)];
     t += ki << (52 - EXP2F_TABLE_BITS);
 
     f64 s = u64f64(t).f;
-    z = gExp2F32_PolyScaled[0] * r + gExp2F32_PolyScaled[1];
+    f64 res = gExp2F32_PolyScaled[0] * r + gExp2F32_PolyScaled[1];
     f64 r2 = r * r;
     f64 y = gExp2F32_PolyScaled[2] * r + 1.0;
-    y = z * r2 + y;
-    y = y * s;
-    return y;
+    res = res * r2 + y;
+    res = res * s;
+
+    return res;
 }
 
 internal f32

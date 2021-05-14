@@ -44,7 +44,7 @@ modulus32_4x(f32_4x num, f32_4x den)
 internal f32
 modulus32_nosafe(f32 num, f32 den)
 {
-    // NOTE(michiel): No 'nan', 'inf' support, and den may not be zero.
+    // NOTE(michiel): No 'nan', 'inf' or subnormal support, and den may not be zero.
 
     // NOTE(michiel): Returns 'num % den' where the returned value's sign is equal to the sign of the numerator,
     // and the magnitude less than the magnitude of the denominator.

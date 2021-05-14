@@ -548,6 +548,7 @@ asin32_4x(f32_4x x)
     result = result ^ and_not(S32_4x(0x80000000), greaterThanZero);
     result = select(result, lessThanHalf, smallResult);
     result = select(result, isOne, oneResult);
+    result = select(result, greaterThanOne, r);
     return result;
 }
 

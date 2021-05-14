@@ -23,7 +23,6 @@ exp32_fast_4x(f32_4x x)
 
     f64_2x kdLo = round(zLo);
     f64_2x kdHi = round(zHi);
-    // TODO(michiel): Should this truncate or round?
     u64 ki0 = (u64)s64_from_f64_2x(zLo);
     u64 ki1 = (u64)s64_from_f64_2x(zLo, true);
     u64 ki2 = (u64)s64_from_f64_2x(zHi);
@@ -120,15 +119,6 @@ exp2_32_fast_4x(f32_4x x)
     f64_2x zLo = xdLo;
     f64_2x zHi = xdHi;
 
-#if 0
-    f64_2x kdLo = round(zLo);
-    f64_2x kdHi = round(zHi);
-    // TODO(michiel): Should this truncate or round?
-    u64 ki0 = (u64)s64_from_f64_2x(zLo);
-    u64 ki1 = (u64)s64_from_f64_2x(zLo, true);
-    u64 ki2 = (u64)s64_from_f64_2x(zHi);
-    u64 ki3 = (u64)s64_from_f64_2x(zHi, true);
-#else
     f64_2x kdLo = xdLo + F64_2x(gExp2F32_ShiftScaled);
     f64_2x kdHi = xdHi + F64_2x(gExp2F32_ShiftScaled);
     u64 ki0 = kdLo.u[0];
@@ -137,7 +127,6 @@ exp2_32_fast_4x(f32_4x x)
     u64 ki3 = kdHi.u[1];
     kdLo = kdLo - F64_2x(gExp2F32_ShiftScaled);
     kdHi = kdHi - F64_2x(gExp2F32_ShiftScaled);;
-#endif
 
     u64 t0 = gExp2F32_Table[ki0 % (1 << EXP2F_TABLE_BITS)];
     u64 t1 = gExp2F32_Table[ki1 % (1 << EXP2F_TABLE_BITS)];
@@ -285,22 +274,32 @@ log32_4x(f32_4x x)
     f32_4x infResult     = x;
     f32_4x invalidResult = F32_4x(F32_INF); // TODO(michiel): Or should we return 0 here
 
-    f32_4x errorMask   = s32_4x_xor(s32_4x_less(xuMinLowExp, maxX), fullBits);
-    f32_4x divZeroMask = s32_4x_and(s32_4x_equal(xuTimes2, zero_f32_4x()), errorMask);
-    f32_4x infMask     = s32_4x_and(s32_4x_equal(x, fullExp), errorMask);
-    f32_4x invalidMask = s32_4x_and(s32_4x_or(s32_4x_and(x, signMask),
-                                              s32_4x_xor(s32_4x_less(xuTimes2, maxExp), fullBits)),
-                                    errorMask);
+    f32_4x noErrorMask = s32_4x_less(xuMinLowExp, maxX);
+    f32_4x divZeroMask = s32_4x_and_not(s32_4x_equal(xuTimes2, zero_f32_4x()), noErrorMask);
+    f32_4x infMask     = s32_4x_and_not(s32_4x_equal(x, fullExp), noErrorMask);
+    f32_4x invalidMask = s32_4x_and_not(s32_4x_or(s32_4x_and(x, signMask),
+                                                  s32_4x_xor(s32_4x_less(xuTimes2, maxExp), fullBits)),
+                                        noErrorMask);
 
     f32_4x subNormalFix = x * F32_4x(0x1p23f);
     subNormalFix = s32_4x_sub(subNormalFix, S32_4x(23 << 23));
 
-    x = select(x, errorMask, subNormalFix);
+#if MATS_USE_SSE4
+    x.m = _mm_blendv_ps(subNormalFix.m, x.m, noErrorMask.m);
+#else
+    x = select(subNormalFix, noErrorMask, x);
+#endif
 
     f32_4x result = log32_fast_4x(x);
+#if MATS_USE_SSE4
+    result.m = _mm_blendv_ps(result.m, invalidResult.m, invalidMask.m);
+    result.m = _mm_blendv_ps(result.m, infResult.m, infMask.m);
+    result.m = _mm_blendv_ps(result.m, divZeroResult.m, divZeroMask.m);
+#else
     result = select(result, invalidMask, invalidResult);
     result = select(result, infMask, infResult);
     result = select(result, divZeroMask, divZeroResult);
+#endif
 
     return result;
 }
@@ -424,8 +423,8 @@ log10_32_4x(f32_4x x)
     f32_4x lowExpBit  = S32_4x(0x00800000);
     f32_4x pow2_25    = F32_4x(g2pow25F32);
 
-    f32_4x zeroResult = F32_4x(-g2pow25F32 / 0.0f);
-    f32_4x negResult  = (x - x) / zero4x;
+    f32_4x zeroResult = F32_4x(-F32_INF);
+    f32_4x negResult  = F32_4x(F32_NAN) ^ (x & S32_4x(0x80000000));
     f32_4x infResult  = x + x;
 
     f32_4x zeroMask   = s32_4x_equal(s32_4x_and(x, S32_4x(0x7FFFFFFF)), zero4x);
@@ -458,26 +457,6 @@ log10_32_4x(f32_4x x)
 internal void
 pow32_log2_4x(f32_4x x, f64_2x *dstLo, f64_2x *dstHi)
 {
-#if 0
-    f64_2x poly0 = F64_2x(gPowF32_Log2PolyScaled[0]);
-    f64_2x poly1 = F64_2x(gPowF32_Log2PolyScaled[1]);
-    f64_2x poly2 = F64_2x(gPowF32_Log2PolyScaled[2]);
-    f64_2x poly3 = F64_2x(gPowF32_Log2PolyScaled[3]);
-    f64_2x poly4 = F64_2x(gPowF32_Log2PolyScaled[4]);
-    f32_4x temp = s32_4x_sub(x, S32_4x(0x3F330000));
-    f32_4x index = s32_4x_and(s32_4x_srl(temp, 23 - POWF_LOG2_TABLE_BITS),
-                              S32_4x((1 << POWF_LOG2_TABLE_BITS) - 1));
-    f32_4x iz = s32_4x_sub(x, s32_4x_and(temp, S32_4x(0x1FF << 23)));
-    f32_4x k = s32_4x_sra(temp, (23 - EXP2F_TABLE_BITS));
-    f64_2x k64Lo; k64Lo.md = _mm_cvtepi32_pd(k.mi);
-    f64_2x k64Hi; k64Hi.md = _mm_cvtepi32_pd(_mm_castps_si128(_mm_shuffle_ps(k.m, k.m, MULTILANE_SHUFFLE_MASK(2, 3, 2, 3))));
-
-    // TODO(michiel): Hmm...
-    f64_2x invCLo = F64_2x(gPowF32_Log2TableScaled[index.u[0]].invC, gPowF32_Log2TableScaled[index.u[1]].invC);
-    f64_2x invCHi = F64_2x(gPowF32_Log2TableScaled[index.u[2]].invC, gPowF32_Log2TableScaled[index.u[3]].invC);
-    f64_2x logCLo = F64_2x(gPowF32_Log2TableScaled[index.u[0]].logC, gPowF32_Log2TableScaled[index.u[1]].logC);
-    f64_2x logCHi = F64_2x(gPowF32_Log2TableScaled[index.u[2]].logC, gPowF32_Log2TableScaled[index.u[3]].logC);
-#else
     f64_2x poly0 = F64_2x(gPowF32_Log2Poly[0]);
     f64_2x poly1 = F64_2x(gPowF32_Log2Poly[1]);
     f64_2x poly2 = F64_2x(gPowF32_Log2Poly[2]);
@@ -496,7 +475,6 @@ pow32_log2_4x(f32_4x x, f64_2x *dstLo, f64_2x *dstHi)
     f64_2x invCHi = F64_2x(gPowF32_Log2Table[index.u[2]].invC, gPowF32_Log2Table[index.u[3]].invC);
     f64_2x logCLo = F64_2x(gPowF32_Log2Table[index.u[0]].logC, gPowF32_Log2Table[index.u[1]].logC);
     f64_2x logCHi = F64_2x(gPowF32_Log2Table[index.u[2]].logC, gPowF32_Log2Table[index.u[3]].logC);
-#endif
 
     f64_2x zLo = F64_2x(iz);
     f64_2x zHi = F64_2x(iz, true);
@@ -526,19 +504,6 @@ pow32_log2_4x(f32_4x x, f64_2x *dstLo, f64_2x *dstHi)
 internal f32_4x
 pow32_exp2_4x(f64_2x xLo, f64_2x xHi, f32_4x signBias)
 {
-#if 0
-    f64_2x poly0 = F64_2x(gExp2F32_PolyScaled[0]);
-    f64_2x poly1 = F64_2x(gExp2F32_PolyScaled[1]);
-    f64_2x poly2 = F64_2x(gExp2F32_PolyScaled[2]);
-
-    f64_2x kdLo = round(xLo);
-    f64_2x kdHi = round(xHi);
-    // TODO(michiel): Should this truncate or round?
-    u64 ki0 = (u64)s64_from_f64_2x(xLo);
-    u64 ki1 = (u64)s64_from_f64_2x(xLo, true);
-    u64 ki2 = (u64)s64_from_f64_2x(xHi);
-    u64 ki3 = (u64)s64_from_f64_2x(xHi, true);
-#else
     f64_2x poly0 = F64_2x(gExp2F32_Poly[0]);
     f64_2x poly1 = F64_2x(gExp2F32_Poly[1]);
     f64_2x poly2 = F64_2x(gExp2F32_Poly[2]);
@@ -551,7 +516,6 @@ pow32_exp2_4x(f64_2x xLo, f64_2x xHi, f32_4x signBias)
     u64 ki3 = kdHi.u[1];
     kdLo = kdLo - F64_2x(gExp2F32_ShiftScaled);
     kdHi = kdHi - F64_2x(gExp2F32_ShiftScaled);
-#endif
 
     f64_2x rLo = xLo - kdLo;
     f64_2x rHi = xHi - kdHi;
@@ -560,6 +524,7 @@ pow32_exp2_4x(f64_2x xLo, f64_2x xHi, f32_4x signBias)
     u64 t1 = gExp2F32_Table[ki1 % (1 << EXP2F_TABLE_BITS)];
     u64 t2 = gExp2F32_Table[ki2 % (1 << EXP2F_TABLE_BITS)];
     u64 t3 = gExp2F32_Table[ki3 % (1 << EXP2F_TABLE_BITS)];
+
     t0 += (ki0 + signBias.u[0]) << (52 - EXP2F_TABLE_BITS);
     t1 += (ki1 + signBias.u[1]) << (52 - EXP2F_TABLE_BITS);
     t2 += (ki2 + signBias.u[2]) << (52 - EXP2F_TABLE_BITS);
@@ -591,19 +556,22 @@ pow32_4x(f32_4x x, f32_4x y)
     f32_4x expManMask = S32_4x(0x7FFFFFFF);
 
     f32_4x xu = x & expManMask;
+    f32_4x yu = y & expManMask;
 
-    f32_4x xIsZero = s32_4x_equal(xu, zero_f32_4x());
-    f32_4x yIsZero = s32_4x_equal(s32_4x_and(y, expManMask), zero_f32_4x());
+    f32_4x xIsZero = s32_4x_equal(xu, zero_s32_4x());
+    f32_4x yIsZero = s32_4x_equal(yu, zero_s32_4x());
 
     f32_4x one4x = F32_4x(1.0f);
     f32_4x oneOverX = reciprocal(x);
 
-    f32_4x xSign = s32_4x_less(x, zero_f32_4x());
-    f32_4x ySign = s32_4x_less(y, zero_f32_4x());
+    f32_4x xSign = s32_4x_less(x, zero_s32_4x());
+    f32_4x ySign = s32_4x_less(y, zero_s32_4x());
 
     f32_4x xZeroResult = select(x, ySign, oneOverX);
 
-    f32_4x e = s32_4x_and(s32_4x_srl(y, 23), S32_4x(0xFF));
+    //s32 e = (yu & 0x7F800000) >> 23;
+    //s32 m = (1 << (150 - e));
+    f32_4x e = s32_4x_srl(yu, 23);
     f32_4x shiftCount = s32_4x_sub(S32_4x(0x7F + 23), e);
     // TODO(michiel): Ieuw
     f32_4x yMask;
@@ -611,8 +579,8 @@ pow32_4x(f32_4x x, f32_4x y)
     yMask.u[1] = 1 << shiftCount.u[1];
     yMask.u[2] = 1 << shiftCount.u[2];
     yMask.u[3] = 1 << shiftCount.u[3];
-    yMask = s32_4x_equal(s32_4x_and(yMask, y), zero_f32_4x());
-    yMask = and_not(xSign, yMask);
+    yMask = s32_4x_equal(s32_4x_and(yMask, yu), zero_s32_4x());
+    yMask = s32_4x_and_not(xSign, yMask);
     f32_4x modSign = S32_4x(1 << (EXP2F_TABLE_BITS + 11));
     signBias = s32_4x_and(modSign, yMask);
 

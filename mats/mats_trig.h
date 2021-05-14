@@ -488,6 +488,7 @@ asin32(f32 x)
 #undef pio2_lo
 }
 
+#undef poly
 #undef pS0
 #undef pS1
 #undef pS2
