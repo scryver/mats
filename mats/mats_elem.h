@@ -1,5 +1,5 @@
 //
-// NOTE(michiel): Sqrt/Exp/Exp2/Log/Log2
+// NOTE(michiel): Sqrt/Hypot/Exp/Exp2/Log/Log2/Log10
 //
 
 internal f32
@@ -81,6 +81,47 @@ sqrt32(f32 x)
 
     result = u32f32((u32)ix).f;
 #endif
+    return result;
+}
+
+internal f32
+hypot32(f32 x, f32 y)
+{
+    u32 ux = u32f32(x).u & 0x7FFFFFFF;
+    u32 uy = u32f32(y).u & 0x7FFFFFFF;
+
+	if (ux < uy) {
+        u32 temp = ux;
+        ux = uy;
+        uy = temp;
+	}
+
+    x = u32f32(ux).f;
+    y = u32f32(uy).f;
+    if (uy == 0x7F800000) {
+        return y;
+    }
+    if ((ux >= 0x7F800000) ||
+        (uy == 0) ||
+        ((ux - uy) >= (25 << 23))) {
+        return x + y;
+    }
+
+    f32 z = 1.0f;
+    if (ux >= ((0x7F + 60) << 23))
+    {
+        z = 0x1p90f;
+        x *= 0x1p-90f;
+        y *= 0x1p-90f;
+    }
+    else if (uy < ((0x7F - 60) << 23))
+    {
+        z = 0x1p-90f;
+        x *= 0x1p90f;
+        y *= 0x1p90f;
+    }
+    f32 result = z * sqrt32((f64)x * x + (f64)y * y);
+    //f32 result = z * sqrt32(x * x + y * y); // NOTE(michiel): Less accurate, but faster
     return result;
 }
 

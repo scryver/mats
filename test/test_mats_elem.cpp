@@ -13,6 +13,7 @@
 #include "../mats/mats_constants.h"
 
 #define sqrt32   sqrt32_nonsse
+#define hypot32  hypot32_nonsse
 #define exp32    exp32_nonsse
 #define exp2_32  exp2_32_nonsse
 #define pow2_32  pow2_32_nonsse
@@ -24,6 +25,7 @@
 #include "../mats/mats_defines.h"
 #include "../mats/mats_elem.h"
 #undef sqrt32
+#undef hypot32
 #undef exp32
 #undef exp2_32
 #undef pow2_32
@@ -32,7 +34,8 @@
 #undef log10_32
 
 #define sqrt32   sqrt32_sse
-#define exp32    exp32_sse
+#define hypot32  hypot32_sse
+#define exp32    exp32_not_used
 #define exp2_32  exp2_32_not_used
 #define log32    log32_not_used
 #define log2_32  log2_32_not_used
@@ -45,6 +48,7 @@
 #include "../mats/mats_defines.h"
 #include "../mats/mats_elem.h"
 #undef sqrt32
+#undef hypot32
 #undef exp32
 #undef exp2_32
 #undef log32
@@ -52,7 +56,90 @@
 #undef pow2_32
 #undef log10_32
 
-#if 0
+internal f32
+hypot_ieee754(f32 x, f32 y)
+{
+	s32 ha = (s32)u32f32(x).u & 0x7FFFFFFF;
+    s32 hb = (s32)u32f32(y).u & 0x7FFFFFFF;
+
+    if (hb > ha) {
+        s32 temp = ha;
+        ha = hb;
+        hb = temp;
+    }
+
+    f32 a = u32f32((u32)ha).f;
+    f32 b = u32f32((u32)hb).f;
+
+    if ((ha - hb) > 0x0F000000) {
+        return a + b; /* x/y > 2**30 */
+    }
+
+    s32 k = 0;
+	if (ha > 0x58800000)
+    {   /* a > 2**50 */
+        if (!FLT_UWORD_IS_FINITE(ha))
+        {
+            f32 w = a + b;
+            if (FLT_UWORD_IS_INFINITE(ha)) {
+                w = a;
+            } else if (FLT_UWORD_IS_INFINITE(hb)) {
+                w = b;
+            }
+            return w;
+        }
+        /* scale a and b by 2**-68 */
+        ha -= 0x22000000;
+        hb -= 0x22000000;
+        k  += 68;
+        a = u32f32((u32)ha).f;
+        b = u32f32((u32)hb).f;
+	}
+
+    if (hb < 0x26800000L) {
+        /* b < 2**-50 */
+        if (FLT_UWORD_IS_ZERO(hb)) {
+            return a;
+        } else if (FLT_UWORD_IS_SUBNORMAL(hb)) {
+            f32 t = u32f32((u32)0x7E800000).f; /* t = 2^126 */
+            a *= t;
+            b *= t;
+            k -= 126;
+        } else { /* scale a and b by 2^68 */
+            ha += 0x22000000; /* a *= 2^68 */
+            hb += 0x22000000; /* b *= 2^68 */
+            k  -= 68;
+            a   = u32f32((u32)ha).f;
+            b   = u32f32((u32)hb).f;
+        }
+	}
+
+    /* medium size a and b */
+    f32 w = a - b;
+    if (w > b)
+    {
+        f32 t1 = u32f32((u32)ha & 0xFFFFF000).f;
+        f32 t2 = a - t1;
+        w = sqrt32_sse(t1 * t1 - (b * (-b) - t2 * (a + t1)));
+    }
+    else
+    {
+        a = a + a;
+        f32 y1 = u32f32((u32)hb & 0xFFFFF000).f;
+        f32 y2 = b - y1;
+        f32 t1 = u32f32((u32)(ha + 0x00800000) & 0xFFFFF000).f;
+        f32 t2 = a - t1;
+        w = sqrt32_sse(t1 * y1 - (w * (-w) - (t1 * y2 + t2 * b)));
+    }
+
+    if (k != 0)
+    {
+        f32 t1 = u32f32((u32)0x3F800000 + (k << 23)).f;
+        w = w * t1;
+    }
+    return w;
+}
+
 internal f32
 exp32_sse(f32 x)
 {
@@ -137,7 +224,6 @@ exp32_sse(f32 x)
     result.m = _mm_or_ps(_mm_andnot_ps(errorMask.m, _mm_cvtpd_ps(y.md)), errors.m);
     return result.e[0];
 }
-#endif
 
 #include "../mats/mats_elem_ext.h"
 #include "../mats/mats_elem4x.h"
@@ -152,6 +238,17 @@ sqrtf_4x(f32_4x x)
     result.e[1] = sqrtf(x.e[1]);
     result.e[2] = sqrtf(x.e[2]);
     result.e[3] = sqrtf(x.e[3]);
+    return result;
+}
+
+internal f32_4x
+hypotf_4x(f32_4x x, f32_4x y)
+{
+    f32_4x result;
+    result.e[0] = hypotf(x.e[0], y.e[0]);
+    result.e[1] = hypotf(x.e[1], y.e[1]);
+    result.e[2] = hypotf(x.e[2], y.e[2]);
+    result.e[3] = hypotf(x.e[3], y.e[3]);
     return result;
 }
 
@@ -241,12 +338,13 @@ log10_32_fast_4x_t(f32_4x x)
 enum DoTestFlag
 {
     DoTest_Sqrt       = 0x00000001,
-    DoTest_Exp        = 0x00000002,
-    DoTest_Exp2       = 0x00000004,
-    DoTest_Log        = 0x00000008,
-    DoTest_Log2       = 0x00000010,
-    DoTest_Log10      = 0x00000020,
-    DoTest_Pow        = 0x00000040,
+    DoTest_Hypot      = 0x00000002,
+    DoTest_Exp        = 0x00000004,
+    DoTest_Exp2       = 0x00000008,
+    DoTest_Log        = 0x00000010,
+    DoTest_Log2       = 0x00000020,
+    DoTest_Log10      = 0x00000040,
+    DoTest_Pow        = 0x00000080,
     DoTest_FuncMask   = 0x000000FF,
 
     DoTest_NoFpBehave = 0x00100000,
@@ -285,6 +383,8 @@ s32 main(s32 argc, char **argv)
                 }
             } else if (strings_are_equal("sqrt", argv[index])) {
                 tests |= DoTest_Sqrt;
+            } else if (strings_are_equal("hypot", argv[index])) {
+                tests |= DoTest_Hypot;
             } else if (strings_are_equal("log", argv[index])) {
                 tests |= DoTest_Log;
             } else if (strings_are_equal("log2", argv[index])) {
@@ -361,6 +461,18 @@ s32 main(s32 argc, char **argv)
             f32 stdSec = call_comp_x(stdlib, sqrt, f, 0.0f);
             call_comp_x(mats, sqrt, 32_nonsse, stdSec);
             call_comp_x(matsse, sqrt, 32_sse, stdSec);
+            fprintf(stdout, "\n");
+        }
+
+        if (doTests & DoTest_Hypot)
+        {
+            fprintf(stdout, "Hypothenuse\n");
+            f32 stdSec = call_comp_x2(stdlib, hypot, f, 0.0f);
+            call_comp_x2(mats, hypot, 32_nonsse, stdSec);
+            call_comp_x2(mats, hypot, 32_sse, stdSec);
+            call_comp_x2(ieee754, hypot, _ieee754, stdSec);
+            call_comp_x2_4x(matsse, hypot, 32_4x, stdSec);
+            call_comp_x2_4x(fatsse, hypot, 32_fast_4x, stdSec);
             fprintf(stdout, "\n");
         }
 
@@ -448,6 +560,16 @@ s32 main(s32 argc, char **argv)
             fprintf(stdout, "\n");
         }
 
+        if (doTests & DoTest_Hypot)
+        {
+            fprintf(stdout, "Hypothenuse\n");
+            f32 stdSec = call_spd2(stdlib, hypot, f, 0.0f);
+            call_spd2(mats, hypot, 32_nonsse, stdSec);
+            call_spd2(mats, hypot, 32_sse, stdSec);
+            call_spd2(ieee754, hypot, _ieee754, stdSec);
+            fprintf(stdout, "\n");
+        }
+
         minVal = -12.0f;
         maxVal = 12.0f;
 
@@ -518,6 +640,15 @@ s32 main(s32 argc, char **argv)
                 fprintf(stdout, "\n");
             }
 
+            if (doTests & DoTest_Hypot)
+            {
+                fprintf(stdout, "Hypot wide\n");
+                f32 stdSec = call_spd2_4x(stdlib, hypot, f_4x, 0.0f);
+                call_spd2_4x(mats, hypot, 32_4x, stdSec);
+                call_spd2_4x(fats, hypot, 32_fast_4x, stdSec);
+                fprintf(stdout, "\n");
+            }
+
             minVal = -12.0f;
             maxVal = 12.0f;
 
@@ -571,7 +702,7 @@ s32 main(s32 argc, char **argv)
 
             if (doTests & DoTest_Pow)
             {
-                fprintf(stdout, "Pow\n");
+                fprintf(stdout, "Pow wide\n");
                 f32 spdSecPow32 = call_spd2_4x(stdlib, pow, f_4x, 0.0f);
                 call_spd2_4x(mats, pow, 32_4x, spdSecPow32);
                 call_spd2_4x(tats, pow, 32_4x_temp, spdSecPow32);

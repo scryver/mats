@@ -1,9 +1,82 @@
+//
+// NOTE(michiel): Sqrt
+//
 
 internal f32_4x
 sqrt32_4x(f32_4x x)
 {
     f32_4x result;
     result.m = _mm_sqrt_ps(x.m);
+    return result;
+}
+
+//
+// NOTE(michiel): Hypot
+//
+
+internal f32_4x
+hypot32_fast_4x(f32_4x x, f32_4x y)
+{
+    return sqrt32_4x(x * x + y * y);
+}
+
+internal f32_4x
+hypot32_4x(f32_4x x, f32_4x y)
+{
+    f32_4x xu = s32_4x_and(x, S32_4x(0x7FFFFFFF));
+    f32_4x yu = s32_4x_and(y, S32_4x(0x7FFFFFFF));
+
+    f32_4x xLessY = s32_4x_less(xu, yu);
+
+    x = select(xu, xLessY, yu);
+    y = select(yu, xLessY, xu);
+
+    xu = x;
+    yu = y;
+
+    f32_4x z = F32_4x(1.0f);
+
+    f32_4x yZero = s32_4x_equal(yu, zero_s32_4x());
+    f32_4x zeroRes = x;
+
+    f32_4x zMax = F32_4x(0x1p90f);
+    f32_4x zMin = F32_4x(0x1p-90f);
+
+    f32_4x xBig = x * zMax;
+    f32_4x xSmall = x * zMin;
+    f32_4x yBig = y * zMax;
+    f32_4x ySmall = y * zMin;
+
+    f32_4x xOkay = s32_4x_less(xu, S32_4x((0x7F + 60) << 23));
+    f32_4x yLess = s32_4x_less(yu, S32_4x((0x7F - 60) << 23));
+
+    z = select(z, yLess, zMin);
+    z = select(zMax, xOkay, z);
+
+    x = select(x, yLess, xBig);
+    x = select(xSmall, xOkay, x);
+
+    y = select(y, yLess, yBig);
+    y = select(ySmall, xOkay, y);
+
+    f64_2x xLo = F64_2x(x);
+    f64_2x xHi = F64_2x(x, true);
+
+    f64_2x yLo = F64_2x(y);
+    f64_2x yHi = F64_2x(y, true);
+
+    f64_2x x2Lo = xLo * xLo;
+    f64_2x x2Hi = xHi * xHi;
+    f64_2x y2Lo = yLo * yLo;
+    f64_2x y2Hi = yHi * yHi;
+
+    f64_2x preLo = x2Lo + y2Lo;
+    f64_2x preHi = x2Hi + y2Hi;
+
+    f32_4x sqrtIn = F32_4x(preLo, preHi);
+    f32_4x result = z * sqrt32_4x(sqrtIn);
+    result = select(result, yZero, zeroRes);
+
     return result;
 }
 
