@@ -1,4 +1,5 @@
 
+#ifndef FLT_UWORD_IS_FINITE
 #define FLT_UWORD_IS_FINITE(x)     ((x) <  0x7f800000L)
 #define FLT_UWORD_IS_NAN(x)        ((x) >  0x7f800000L)
 #define FLT_UWORD_IS_INFINITE(x)   ((x) == 0x7f800000L)
@@ -8,6 +9,7 @@
 
 #define FLT_UWORD_IS_ZERO(x)       ((x) == 0)
 #define FLT_UWORD_IS_SUBNORMAL(x)  ((x) <  0x00800000L)
+#endif
 
 #define OVERFLOW_INT   50000
 #define UNDERFLOW_INT -50000

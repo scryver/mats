@@ -20,6 +20,9 @@
 #define log32    log32_nonsse
 #define log2_32  log2_32_nonsse
 #define log10_32 log10_32_nonsse
+#define expm1_32 expm1_32_nonsse
+#define log1p32  log1p32_nonsse
+#define log1p_fast32  log1p_fast32_nonsse
 #define MATS_USE_SSE2 0
 #define MATS_USE_SSE4 0
 #include "../mats/mats_defines.h"
@@ -32,6 +35,9 @@
 #undef log32
 #undef log2_32
 #undef log10_32
+#undef expm1_32
+#undef log1p32
+#undef log1p_fast32
 
 #define sqrt32   sqrt32_sse
 #define hypot32  hypot32_sse
@@ -41,6 +47,9 @@
 #define log2_32  log2_32_not_used
 #define pow2_32  pow2_32_not_used
 #define log10_32 log10_32_not_used
+#define expm1_32 expm1_32_not_used
+#define log1p32  log1p32_not_used
+#define log1p_fast32  log1p_fast32_not_used
 #undef  MATS_USE_SSE2
 #undef  MATS_USE_SSE4
 #define MATS_USE_SSE2 1
@@ -55,6 +64,9 @@
 #undef log2_32
 #undef pow2_32
 #undef log10_32
+#undef expm1_32
+#undef log1p32
+#undef log1p_fast32
 
 internal f32
 hypot_ieee754(f32 x, f32 y)
@@ -344,8 +356,10 @@ enum DoTestFlag
     DoTest_Log        = 0x00000010,
     DoTest_Log2       = 0x00000020,
     DoTest_Log10      = 0x00000040,
-    DoTest_Pow        = 0x00000080,
-    DoTest_FuncMask   = 0x000000FF,
+    DoTest_ExpM1      = 0x00000080,
+    DoTest_Log1P      = 0x00000100,
+    DoTest_Pow        = 0x00000200,
+    DoTest_FuncMask   = 0x00000FFF,
 
     DoTest_NoFpBehave = 0x00100000,
     DoTest_SpecMask   = 0x0FF00000,
@@ -385,16 +399,20 @@ s32 main(s32 argc, char **argv)
                 tests |= DoTest_Sqrt;
             } else if (strings_are_equal("hypot", argv[index])) {
                 tests |= DoTest_Hypot;
+            } else if (strings_are_equal("exp", argv[index])) {
+                tests |= DoTest_Exp;
+            } else if (strings_are_equal("exp2", argv[index])) {
+                tests |= DoTest_Exp2;
             } else if (strings_are_equal("log", argv[index])) {
                 tests |= DoTest_Log;
             } else if (strings_are_equal("log2", argv[index])) {
                 tests |= DoTest_Log2;
             } else if (strings_are_equal("log10", argv[index])) {
                 tests |= DoTest_Log10;
-            } else if (strings_are_equal("exp", argv[index])) {
-                tests |= DoTest_Exp;
-            } else if (strings_are_equal("exp2", argv[index])) {
-                tests |= DoTest_Exp2;
+            } else if (strings_are_equal("expm1", argv[index])) {
+                tests |= DoTest_ExpM1;
+            } else if (strings_are_equal("log1p", argv[index])) {
+                tests |= DoTest_Log1P;
             } else if (strings_are_equal("pow", argv[index])) {
                 tests |= DoTest_Pow;
             }
@@ -500,6 +518,16 @@ s32 main(s32 argc, char **argv)
             fprintf(stdout, "\n");
         }
 
+        if (doTests & DoTest_ExpM1)
+        {
+            fprintf(stdout, "ExpM1\n");
+            f32 stdSec = call_comp_x(stdlib, expm1, f, 0.0f);
+            call_comp_x(mats, expm1, _32_nonsse, stdSec);
+            //call_comp_x_4x(matsse, expm1, _32_4x, stdSec);
+            //call_comp_x_4x(fatsse, expm1, _32_fast_4x_t, stdSec);
+            fprintf(stdout, "\n");
+        }
+
         minVal = 1.0e-9f;
         maxVal = 123.8f;
 
@@ -530,6 +558,17 @@ s32 main(s32 argc, char **argv)
             call_comp_x(mats, log10, _32_nonsse, stdSec);
             call_comp_x_4x(matsse, log10, _32_4x, stdSec);
             call_comp_x_4x(fatsse, log10, _32_fast_4x_t, stdSec);
+            fprintf(stdout, "\n");
+        }
+
+        if (doTests & DoTest_Log1P)
+        {
+            fprintf(stdout, "Log1P\n");
+            f32 stdSec = call_comp_x(stdlib, log1p, f, 0.0f);
+            call_comp_x(mats, log1p, 32_nonsse, stdSec);
+            call_comp_x(mats, log1p, _fast32_nonsse, stdSec);
+            //call_comp_x_4x(matsse, log1p, _32_4x, stdSec);
+            //call_comp_x_4x(fatsse, log1p, _32_fast_4x_t, stdSec);
             fprintf(stdout, "\n");
         }
 
@@ -590,6 +629,14 @@ s32 main(s32 argc, char **argv)
             fprintf(stdout, "\n");
         }
 
+        if (doTests & DoTest_ExpM1)
+        {
+            fprintf(stdout, "ExpM1\n");
+            f32 stdSec = call_spd(stdlib, expm1, f, 0.0f);
+            call_spd(mats, expm1, _32_nonsse, stdSec);
+            fprintf(stdout, "\n");
+        }
+
         minVal = 1.0e-9f;
         maxVal = 123.8f;
 
@@ -614,6 +661,15 @@ s32 main(s32 argc, char **argv)
             fprintf(stdout, "Log10\n");
             f32 stdSec = call_spd(stdlib, log10, f, 0.0f);
             call_spd(mats, log10, _32_nonsse, stdSec);
+            fprintf(stdout, "\n");
+        }
+
+        if (doTests & DoTest_Log1P)
+        {
+            fprintf(stdout, "Log1P\n");
+            f32 stdSec = call_spd(stdlib, log1p, f, 0.0f);
+            call_spd(mats, log1p, 32_nonsse, stdSec);
+            call_spd(mats, log1p, _fast32_nonsse, stdSec);
             fprintf(stdout, "\n");
         }
 

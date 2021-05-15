@@ -1,41 +1,6 @@
 
-internal f32
-reduce_fast_pi4(f32 x, int *np)
-{
-    /* Use scaled float to int conversion with explicit rounding.
-       hpi_inv is prescaled by 2^24 so the quadrant ends up in bits 24..31.
-       This avoids inaccuracies introduced by truncating negative values.  */
-    f32 r = x * 0x1.45F306p+23f;
-    s32 n = ((s32)r + 0x800000) >> 24;
-    *np = n;
-    return x - n * 0x1.921FB4p0f;
-}
-
-internal f32
-sinf_poly_q0(f32 x, f32 x2)
-{
-    // NOTE(michiel): x - s1*x^3 + s2*x^5 - s3*x^7
-    f32 x3 = x * x2;                                // x^3
-    f32 s1 = 0x1.110760p-7f - x2 * 0x1.994eb2p-13f; // s2 - s3*x^2
-    f32 x7 = x3 * x2;                               // x^5
-    f32 s = x - x3 * 0x1.555544p-3f;                // x - s1*x^3
-    return s + x7 * s1;                             // x - s1*x^3 + x^5*(s2 - s3*x^2)
-}
-
-internal f32
-sinf_poly_q1(f32 x2)
-{
-    // NOTE(michiel): c0 - c1*x^2 + c2*x^4 - c3*x^6 + c4*x^8;
-    f32 x4 = x2 * x2;                                 // x^4
-    f32 c2 = -0x1.6c087ep-10f + x2 * 0x1.993430p-16f; // -c3 + c4*x^2
-    f32 c1 = 1.0f - x2 * 0x1.fffffep-2f;              // c0 - c1*x^2
-    f32 x6 = x4 * x2;                                 // x^6
-    f32 c = c1 + x4 * 0x1.55553ep-5f;                 // c0 - c1*x^2 + c2*x^4
-    return c + x6 * c2;                               // c0 - c1*x^2 + c2*x^4 + x^6(-c3 + c4*x^2)
-}
-
 internal f64
-reduce_fast_pi4_prec(f64 x, int *np)
+reduce_fast_pi4(f64 x, int *np)
 {
     /* Use scaled float to int conversion with explicit rounding.
        hpi_inv is prescaled by 2^24 so the quadrant ends up in bits 24..31.
@@ -47,7 +12,7 @@ reduce_fast_pi4_prec(f64 x, int *np)
 }
 
 internal f64
-sinf_poly_q0_prec(f64 x, f64 x2)
+sinf_poly_q0(f64 x, f64 x2)
 {
     // NOTE(michiel): x - s1*x^3 + s2*x^5 - s3*x^7
     f64 x3 = x * x2;                                // x^3
@@ -58,7 +23,7 @@ sinf_poly_q0_prec(f64 x, f64 x2)
 }
 
 internal f64
-sinf_poly_q1_prec(f64 x2)
+sinf_poly_q1(f64 x2)
 {
     // NOTE(michiel): c0 - c1*x^2 + c2*x^4 - c3*x^6 + c4*x^8;
     f64 x4 = x2 * x2;                                 // x^4
@@ -67,65 +32,6 @@ sinf_poly_q1_prec(f64 x2)
     f64 x6 = x4 * x2;                                 // x^6
     f64 c = c1 + x4 * 0x1.55553e1068f19p-5;                 // c0 - c1*x^2 + c2*x^4
     return c + x6 * c2;                               // c0 - c1*x^2 + c2*x^4 + x^6(-c3 + c4*x^2)
-}
-
-internal f32
-cos32_fast(f32 y)
-{
-    // NOTE(michiel): Sloppy
-    i_expect(absolute32(y) < 120.0f);
-    f32 x = y;
-    f32 result;
-    if (abstop12_(y) < abstop12_(0x1p-12f))
-    {
-        result = 1.0f;
-    }
-    else
-    {
-        int n = 0;
-        f32 xm = (abstop12_(y) < abstop12_(0.25f * F32_PI)) ? x : reduce_fast_pi4(x, &n);
-        f32 x2 = xm * xm;
-        switch (n & 3)
-        {
-            default:
-            case 0: { result =  sinf_poly_q1(x2); } break;
-            case 1: { result = -sinf_poly_q0(xm, x2); } break;
-            case 2: { result = -sinf_poly_q1(x2); } break;
-            case 3: { result =  sinf_poly_q0(xm, x2); } break;
-        }
-    }
-
-    return result;
-}
-
-internal f32
-sin32_fast(f32 y)
-{
-    // NOTE(michiel): Sloppy
-    i_expect(absolute32(y) < 120.0f);
-    f32 x = y;
-
-    f32 result;
-    if (abstop12_(y) < abstop12_(0x1p-12f))
-    {
-        result = y;
-    }
-    else
-    {
-        int n = 0;
-        f32 xm = (abstop12_(y) < abstop12_(0.25f * F32_PI)) ? x : reduce_fast_pi4(x, &n);
-        f32 x2 = xm * xm;
-        switch (n & 3)
-        {
-            default:
-            case 0: { result =  sinf_poly_q0(xm, x2); } break;
-            case 1: { result =  sinf_poly_q1(x2); } break;
-            case 2: { result = -sinf_poly_q0(xm, x2); } break;
-            case 3: { result = -sinf_poly_q1(x2); } break;
-        }
-    }
-
-    return result;
 }
 
 internal f32
@@ -141,15 +47,15 @@ cos32(f32 y)
     else
     {
         int n = 0;
-        f64 xm = (abstop12_(y) < abstop12_(0.25f * F32_PI)) ? (f64)x : reduce_fast_pi4_prec((f64)x, &n);
+        f64 xm = (abstop12_(y) < abstop12_(0.25f * F32_PI)) ? (f64)x : reduce_fast_pi4((f64)x, &n);
         f64 x2 = xm * xm;
         switch (n & 3)
         {
             default:
-            case 0: { result =  sinf_poly_q1_prec(x2); } break;
-            case 1: { result = -sinf_poly_q0_prec(xm, x2); } break;
-            case 2: { result = -sinf_poly_q1_prec(x2); } break;
-            case 3: { result =  sinf_poly_q0_prec(xm, x2); } break;
+            case 0: { result =  sinf_poly_q1(x2); } break;
+            case 1: { result = -sinf_poly_q0(xm, x2); } break;
+            case 2: { result = -sinf_poly_q1(x2); } break;
+            case 3: { result =  sinf_poly_q0(xm, x2); } break;
         }
     }
 
@@ -170,79 +76,46 @@ sin32(f32 y)
     else
     {
         int n = 0;
-        f64 xm = (abstop12_(y) < abstop12_(0.25f * F32_PI)) ? (f64)x : reduce_fast_pi4_prec((f64)x, &n);
+        f64 xm = (abstop12_(y) < abstop12_(0.25f * F32_PI)) ? (f64)x : reduce_fast_pi4((f64)x, &n);
         f64 x2 = xm * xm;
         switch (n & 3)
         {
             default:
-            case 0: { result =  sinf_poly_q0_prec(xm, x2); } break;
-            case 1: { result =  sinf_poly_q1_prec(x2); } break;
-            case 2: { result = -sinf_poly_q0_prec(xm, x2); } break;
-            case 3: { result = -sinf_poly_q1_prec(x2); } break;
+            case 0: { result =  sinf_poly_q0(xm, x2); } break;
+            case 1: { result =  sinf_poly_q1(x2); } break;
+            case 2: { result = -sinf_poly_q0(xm, x2); } break;
+            case 3: { result = -sinf_poly_q1(x2); } break;
         }
     }
 
     return result;
 }
 
-internal v2
-sincos32_fast(f32 y)
-{
-    // NOTE(michiel): x = cos, y = sin
-    i_expect(absolute32(y) < 120.0f);
-    f32 x = y;
-
-    v2 result;
-    if (abstop12_(y) < abstop12_(0x1p-12f))
-    {
-        result.x = 1.0f;
-        result.y = y;
-    }
-    else
-    {
-        int n = 0;
-        f32 xm = (abstop12_(y) < abstop12_(0.25f * F32_PI)) ? x : reduce_fast_pi4(x, &n);
-        f32 x2 = xm * xm;
-        f32 sinP = sinf_poly_q0(xm, x2);
-        f32 cosP = sinf_poly_q1(x2);
-        switch (n & 3)
-        {
-            case 0: { result.x =  cosP; result.y =  sinP; } break;
-            case 1: { result.x = -sinP; result.y =  cosP; } break;
-            case 2: { result.x = -cosP; result.y = -sinP; } break;
-            case 3: { result.x =  sinP; result.y = -cosP; } break;
-        }
-    }
-
-    return result;
-}
-
-internal v2
+internal SinCos32
 sincos32(f32 y)
 {
-    // NOTE(michiel): x = cos, y = sin
     i_expect(absolute32(y) < 120.0f);
     f32 x = y;
 
-    v2 result;
+    SinCos32 result;
     if (abstop12_(y) < abstop12_(0x1p-12f))
     {
-        result.x = 1.0f;
-        result.y = y;
+        result.cos = 1.0f;
+        result.sin = y;
     }
     else
     {
         int n = 0;
-        f64 xm = (abstop12_(y) < abstop12_(0.25f * F32_PI)) ? x : reduce_fast_pi4_prec(x, &n);
+        f64 xm = (abstop12_(y) < abstop12_(0.25f * F32_PI)) ? x : reduce_fast_pi4(x, &n);
         f64 x2 = xm * xm;
-        f64 sinP = sinf_poly_q0_prec(xm, x2);
-        f64 cosP = sinf_poly_q1_prec(x2);
+        f64 sinP = sinf_poly_q0(xm, x2);
+        f64 cosP = sinf_poly_q1(x2);
         switch (n & 3)
         {
-            case 0: { result.x =  cosP; result.y =  sinP; } break;
-            case 1: { result.x = -sinP; result.y =  cosP; } break;
-            case 2: { result.x = -cosP; result.y = -sinP; } break;
-            case 3: { result.x =  sinP; result.y = -cosP; } break;
+            case 0: { result.cos =  cosP; result.sin =  sinP; } break;
+            case 1: { result.cos = -sinP; result.sin =  cosP; } break;
+            case 2: { result.cos = -cosP; result.sin = -sinP; } break;
+            case 3: { result.cos =  sinP; result.sin = -cosP; } break;
         }
     }
 
@@ -329,7 +202,7 @@ tan32(f32 y)
     else
     {
         int n = 0;
-        f32 x = reduce_fast_pi4_prec(y, &n);
+        f32 x = reduce_fast_pi4(y, &n);
         result = tan32_kernel(x, 1 - ((n & 1) << 1));
     }
     return result;
@@ -697,3 +570,249 @@ atan2_32(f32 y, f32 x)
     return result;
 }
 
+//
+// NOTE(michiel): Hyperbolic functions
+//
+
+internal f32
+cosh32(f32 x)
+{
+    s32 ix = (s32)u32f32(x).u;
+    ix &= 0x7FFFFFFF;
+
+    if (!FLT_UWORD_IS_FINITE(ix)) {
+        return x * x;
+    }
+
+    if (ix < 0x3EB17218)
+    {
+        // NOTE(michiel): |x| in [0, ln(2)/2], return 1 + expm1(|x|)^2 / (2*exp(|x|))
+        f32 t = expm1_32(absolute32(x));
+        f32 w = 1.0f + t;
+        if (ix < 0x24000000) {
+            // NOTE(michiel): |x| < 2^-55
+            return w;
+        } else {
+            return 1.0f + (t * t) / (w + w);
+        }
+    }
+    else if (ix < 0x41B00000)
+    {
+        // NOTE(michiel): |x| in [ln(2)/2, 22], return (exp(|x|) + 1/exp(|x|))/2
+        f32 t = exp32(absolute32(x));
+        return 0.5f * t + 0.5f / t;
+    }
+    else if (ix <= FLT_UWORD_LOG_MAX)
+    {
+        // NOTE(michiel): |x| in [22, log(FLT_MAX)], return exp(|x|)/2
+        return 0.5f * exp32(absolute32(x));
+    }
+    else if (ix <= FLT_UWORD_LOG_2MAX)
+    {
+        // NOTE(michiel): |x| in[log(FLT_MAX), overflowThreshold], return exp(|x|/2)^2/2
+        f32 w = exp32(0.5f*absolute32(x));
+        f32 t = 0.5f * w;
+        return t * w;
+    }
+    else
+    {
+        return mats_overflow32(0);
+    }
+}
+
+internal f32
+sinh32(f32 x)
+{
+    s32 jx = (s32)u32f32(x).u;
+    s32 ix = jx & 0x7FFFFFFF;
+
+    if (!FLT_UWORD_IS_FINITE(ix)) {
+        return x + x;
+    }
+
+    f32 h = (jx < 0) ? -0.5f : 0.5f;
+
+    if (ix < 0x41B00000)
+    {
+        // NOTE(michiel): |x| in [0, 22], return sign(x) * 0.5 * (E + E/(E + 1))
+        if (ix < 0x31800000) {
+            // NOTE(michiel): |x| < 2^-28
+            return x;
+        }
+        f32 t = expm1_32(absolute32(x));
+        if (ix < 0x3F800000) {
+            return h * (2.0f * t - t * t / (t + 1.0f));
+        } else {
+            return h * (t + t / (t + 1.0f));
+        }
+    }
+    else if (ix <= FLT_UWORD_LOG_MAX)
+    {
+        // NOTE(michiel): |x| in [22, log(FLT_MAX)], return exp(|x|)/2
+        return h * exp32(absolute32(x));
+    }
+    else if (ix <= FLT_UWORD_LOG_2MAX)
+    {
+        // NOTE(michiel): |x| in[log(FLT_MAX), overflowThreshold], return exp(|x|/2)^2/2
+        f32 w = exp32(0.5f*absolute32(x));
+        f32 t = h * w;
+        return t * w;
+    }
+    else
+    {
+        return x * 1.0e37f;
+    }
+}
+
+internal SinCos32
+sinhcosh32(f32 x)
+{
+    // NOTE(michiel): x = cosh, y = sinh
+    SinCos32 result;
+    if (absolute32(x) <= 0.5f)
+    {
+        result.cos = cosh32(x);
+        result.sin = sinh32(x);
+    }
+    else
+    {
+        f32 e = exp32(x);
+        f32 ei = 0.5f / e;
+        e  = 0.5f * e;
+        result.cos = e + ei;
+        result.sin = e - ei;
+    }
+    return result;
+}
+
+internal f32
+tanh32(f32 x)
+{
+    s32 jx = (s32)u32f32(x).u;
+    s32 ix = jx & 0x7FFFFFFF;
+
+    if (!FLT_UWORD_IS_FINITE(ix))
+    {
+        if (jx >= 0) {
+            return 1.0f / x + 1.0f; // NOTE(michiel): tanh(+/-inf) = +/-1
+        } else {
+            return 1.0f / x - 1.0f; // NOTE(michiel): tanh(NaN) = NaN
+        }
+    }
+
+    f32 result;
+    if (ix < 0x41B00000)
+    {
+        // NOTE(michiel): |x| < 22
+        if (ix < 0x24000000) {
+            // NOTE(michiel): |x| < 2^-55
+            return x * (1.0f + x); // NOTE(michiel): tanh(small) = small
+        }
+
+        if (ix >= 0x3F800000)
+        {
+            // NOTE(michiel): |x| >= 1
+            f32 t = expm1_32(2.0f * absolute32(x));
+            result = 1.0f - 2.0f / (t + 2.0f);
+        }
+        else
+        {
+            f32 t = expm1_32(-2.0f * absolute32(x));
+            result = -t / (t + 2.0f);
+        }
+    }
+    else
+    {
+        // NOTE(michiel): |x| >= 22, return +/-1
+        result = 1.0f - gTinyF32;
+    }
+    return jx < 0 ? -result : result;
+}
+
+internal f32
+acosh32(f32 x)
+{
+    s32 jx = (s32)u32f32(x).u;
+
+    if (jx < 0x3F800000) {
+        // NOTE(michiel): x < 1
+        return (x - x) / (x - x);
+    } else if (jx >= 0x4D800000) {
+        // NOTE(michiel): x >= 2^28
+        if (!FLT_UWORD_IS_FINITE(jx)) {
+            // NOTE(michiel): Inf or NaN
+            return x + x;
+        } else {
+            return log32(x) + gLn2F32;
+        }
+    } else if (jx == 0x3F800000) {
+        // NOTE(michiel): x == 1
+        return 0.0f;
+    } else if (jx > 0x40000000) {
+        // NOTE(michiel): 2 < x < 2^28
+        f32 t = x * x;
+        return log32(2.0f * x - 1.0f / (x + sqrt32(t - 1.0f)));
+    } else {
+        // NOTE(michiel): 1 < x <= 2
+        f32 t = x - 1.0f;
+        return log1p32(t + sqrt32(2.0f * t + t * t));
+    }
+}
+
+internal f32
+asinh32(f32 x)
+{
+    s32 jx = (s32)u32f32(x).u;
+    s32 ix = jx & 0x7FFFFFFF;
+
+    f32 result;
+    if (!FLT_UWORD_IS_FINITE(ix)) {
+        // NOTE(michiel): Inf or NaN
+        return x + x;
+    } else if (ix < 0x31800000) {
+        // NOTE(michiel): |x| < 2^-28
+        return x;
+    } else if (ix >= 0x4D800000) {
+        // NOTE(michiel): x > 2^28
+        result = log32(absolute32(x)) + gLn2F32;
+    } else if (ix > 0x40000000) {
+        // NOTE(michiel): 2 < x < 2^28
+        f32 t = absolute32(x);
+        result = log32(2.0f * t + 1.0f / (sqrt32(x * x + 1.0f) + t));
+    } else {
+        // NOTE(michiel): 2^-28 <= |x| <= 2
+        f32 t = x * x;
+        result = log1p32(absolute32(x) + t / (1.0f + sqrt32(1.0f + t)));
+    }
+
+    return jx > 0 ? result : -result;
+}
+
+internal f32
+atanh32(f32 x)
+{
+    s32 jx = (s32)u32f32(x).u;
+    s32 ix = jx & 0x7FFFFFFF;
+
+    if (ix > 0x3F800000) {
+        // NOTE(michiel): |x| > 1
+        return (x - x) / (x - x);
+    } else if (ix == 0x3F800000) {
+        // NOTE(michiel): |x| == 1
+        return x / 0.0f;
+    } else if (ix < 0x31800000) {
+        // NOTE(michiel): |x| < 2^-28
+        return x;
+    } else {
+        x = u32f32((u32)ix).f;
+        f32 result;
+        if (ix < 0x3F000000) {
+            // NOTE(michiel): |x| < 0.5
+            f32 t = x + x;
+            result = 0.5f * log1p32(t + t * x / (1.0f - x));
+        } else {
+            result = 0.5f * log1p32((x + x) / (1.0f - x));
+        }
+        return jx >= 0 ? result : -result;
+    }
+}

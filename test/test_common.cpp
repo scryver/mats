@@ -215,7 +215,8 @@ update_comp(CompInfo *info, f64 origValue, f64 resultValue, f32 inputA, f32 inpu
     info->totalAbsErr += absolute(absErr);
     if (origValue)
     {
-        f64 relErr = (origValue - resultValue) / origValue;
+        //f64 relErr = (origValue - resultValue) / origValue;
+        f64 relErr = 1.0 - resultValue / origValue;
         if (absolute(info->minRelErr) > absolute(relErr))
         {
             info->minRelErr = relErr;

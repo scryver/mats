@@ -2,6 +2,9 @@
 // NOTE(michiel): This code was started based on the newlib code in mingw's source.
 //
 
+// NOTE(michiel): We don't raise errors, most signaling things are removed.
+
+
 // TODO(michiel): Add function list
 // NOTE(michiel): Sqrt
 /*
@@ -49,13 +52,19 @@
 #include "mats_defines.h"
 #include "mats_constants.h"
 
+// TODO(michiel)
+// - clean up all error returns
+// - remove all libberdip stuff and add a optional file for type defines
+// - 64bit
+
 // NOTE(michiel): absolute32
 #include "mats_common.h"
 // NOTE(michiel): floor32/ceil32/round32/trunc32/modulus32/remainder32
 #include "mats_rounding.h"
-// NOTE(michiel): sqrt32/hypot32/exp32/exp2_32/pow2_32/log32/log2_32/log10_32
+// NOTE(michiel): sqrt32/hypot32/exp32/exp2_32/pow2_32/log32/log2_32/log10_32/expm1_32/log1p32/log1p_fast32
 #include "mats_elem.h"
 // NOTE(michiel): pow32/pow10_32/exp10_32
 #include "mats_elem_ext.h"
 // NOTE(michiel): cos32/sin32/sincos32/tan32/acos32/asin32/atan32/atan2_32
+//                cosh32/sinh32/sinhcosh32/tanh32/acosh32/asinh32/atanh32
 #include "mats_trig.h"

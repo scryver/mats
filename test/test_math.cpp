@@ -8,8 +8,6 @@
 #include "../libberdip/src/common.h"
 #include "../libberdip/src/multilane.h"
 
-#include "../src/sun93.h"
-
 #if 0
 internal f32
 absolute(f32 x)
@@ -24,6 +22,8 @@ absolute(f32 x)
 #include "../mats/mats_common.h"
 #include "../mats/mats_constants.h"
 
+#include "../src/sun93.h"
+
 //#include "../src/constants.cpp"
 #include "../src/sun93_sincos.cpp"
 #include "../src/arm_sincos.cpp"
@@ -33,6 +33,9 @@ absolute(f32 x)
 
 #include "../mats/mats_elem.h"
 #include "../mats/mats_trig.h"
+#include "../mats/mats_elem_ext.h"
+#include "../mats/matc.h"
+
 
 #include "test_common.cpp"
 

@@ -334,3 +334,332 @@ log10_32(f32 x)
     f32 z = y * gLog10_2_lo + gInvLn10F32 * log32(x);
     return z + y * gLog10_2_hi;
 }
+
+internal f32
+expm1_32(f32 x)
+{
+    // NOTE(michiel): result = exp(x) - 1
+    u32 hx = u32f32(x).u;
+    f32 ln2_hi = gLn2HighF32s[0];
+    f32 ln2_lo = gLn2LowF32s[0];
+
+    s32 xSign = hx & 0x80000000;
+
+    hx &= 0x7FFFFFFF;
+
+    // NOTE(michiel): Filter out huge and non-finite values
+    if (hx >= 0x4195B844)
+    {
+        // NOTE(michiel): |x| >= 27 * ln(2)
+        if (FLT_UWORD_IS_NAN(hx)) {
+            return x + x;
+        }
+        if (FLT_UWORD_IS_INFINITE(hx)) {
+            return xSign ? -1.0f : x; // NOTE(michiel): exp(+inf) = inf - 1, exp(-inf) = 0 - 1
+        }
+        if (!xSign && (hx > FLT_UWORD_LOG_MAX)) {
+            return mats_overflow32(0);
+        }
+        if (xSign) {
+            // NOTE(michiel): This did raise an inexact signal
+            return -1.0f;
+        }
+    }
+
+    // NOTE(michiel): Argument reduction
+    f32 hi, lo, c;
+    s32 k = 0;
+    if (hx > 0x3EB17218)
+    {
+        // NOTE(michiel): |x| > 0.5*ln(2)
+        if (hx < 0x3F851592)
+        {
+            // NOTE(michiel): |x| < 1.5*ln(2)
+            if (xSign) {
+                hi = x + ln2_hi;
+                lo = -ln2_lo;
+                k  = -1;
+            } else {
+                hi = x - ln2_hi;
+                lo = ln2_lo;
+                k  = 1;
+            }
+        }
+        else
+        {
+            k = (s32)(gInvLn2F32 * x + (xSign ? -0.5f : 0.5f));
+            f32 t = (f32)k;
+            hi = x - t * ln2_hi;
+            lo = t * ln2_lo;
+        }
+        x = hi - lo;
+        c = (hi - x) - lo;
+    }
+    else if (hx < 0x33000000)
+    {
+        // NOTE(michiel): |x| < 2^-25
+        // NOTE(michiel): This did raise an inexact signal
+        return x;
+    }
+
+    // NOTE(michiel): x is in primary range
+    f32 hfx = 0.5f * x;
+    f32 hxs = x * hfx;
+#if 1
+    f32 r1 = 1.5807170421e-3f * hxs;
+    r1 = (r1 - 3.3333212137e-2) * hxs;
+#else
+    f32 r1 = -2.0109921195e-07f * hxs;
+    r1 = (r1 + 4.0082177293e-06f) * hxs;
+    r1 = (r1 - 7.9365076090e-05f) * hxs;
+    r1 = (r1 + 1.5873016091e-03f) * hxs;
+    r1 = (r1 - 3.3333335072e-02f) * hxs;
+#endif
+    r1 = (r1 + 1.0f);
+    f32 t = 3.0f - r1 * hfx;
+    f32 e = hxs * ((r1 - t) / (6.0f - x * t));
+
+    f32 result;
+    if (k == 0)
+    {
+        result = x - (x * e - hxs); // NOTE(michiel): c == 0
+    }
+    else
+    {
+        e = (x * (e - c) - c);
+        e -= hxs;
+        if (k == -1)
+        {
+            result = 0.5f * (x - e) - 0.5f;
+        }
+        else if (k == 1)
+        {
+            if (x < -0.25f) {
+                result = -2.0f * (e - (x + 0.5f));
+            } else {
+                result = 1.0f + 2.0f * (x - e);
+            }
+        }
+        else
+        {
+            if ((k <= -2) || (k > 56))
+            {
+                f32 y = 1.0f - (e - x);
+                u32 i = u32f32(y).u;
+                y = u32f32(i + (k << 23)).f;
+                result = y - 1.0f;
+            }
+            else if (k < 23)
+            {
+                f32 y = u32f32((u32)0x3F800000 - (0x01000000 >> k)).f;
+                y = y - (e - x);
+                u32 i = u32f32(y).u;
+                result = u32f32(i + (k << 23)).f;
+            }
+            else
+            {
+                f32 y = u32f32((u32)(0x7F - k) << 23).f;
+                y = x - (e + y);
+                y += 1.0f;
+                u32 i = u32f32(y).u;
+                result = u32f32(i + (k << 23)).f;
+            }
+        }
+    }
+    return result;
+}
+
+internal f32
+log1p32(f32 x)
+{
+    // NOTE(michiel): result = log(1 + x)
+    s32 hx = (s32)u32f32(x).u;
+    f32 ln2_hi = gLn2HighF32s[0];
+    f32 ln2_lo = gLn2LowF32s[0];
+
+    s32 ax = hx & 0x7FFFFFFF;
+
+    s32 k = 1;
+    if (!FLT_UWORD_IS_FINITE(hx)) {
+        return x + x;
+    }
+
+    s32 hu = 0;
+    f32 f = 0;
+    if (hx < 0x3ED413D7)
+    {
+        // NOTE(michiel): x < 0.41422
+        if (ax >= 0x3F800000)
+        {
+            // NOTE(michiel): x <= -1.0
+            if (x == -1.0f) {
+                return mats_divzero32(1); // NOTE(michiel): log1p(-1) = -inf
+            } else {
+                return mats_invalid32(x); // NOTE(michiel): log1p(x < -1) = NaN
+            }
+        }
+        if (ax < 0x31000000)
+        {
+            // NOTE(michiel): |x| < 2^-29
+            if (ax < 0x24800000) {
+                // NOTE(michiel): |x| < 2^-54
+                return x;
+            } else {
+                return x - x * x * 0.5f;
+            }
+        }
+        if ((hx > 0) || (hx < (s32)0xBE95F61F))
+        {
+            // NOTE(michiel): -0.2929 < x < 0.41422
+            k = 0;
+            f = x;
+            hu = 1;
+        }
+    }
+
+    f32 c = 0;
+    if (k != 0)
+    {
+        if (hx < 0x5A000000)
+        {
+            f32 u = 1.0f + x;
+            hu = (s32)u32f32(u).u;
+            k  = (hu >> 23) - 127;
+            // NOTE(michiel): Correction term
+            c = (k > 0) ? 1.0f - (u - x) : x - (u - 1.0f);
+            c /= u;
+        }
+        else
+        {
+            f32 u = x;
+            hu = (s32)u32f32(u).u;
+            k  = (hu >> 23) - 127;
+        }
+        hu &= 0x007FFFFF;
+        f32 u;
+        if (hu < 0x003504F7)
+        {
+            u = u32f32((u32)hu | 0x3F800000).f; // NOTE(michiel): Normalize
+        }
+        else
+        {
+            ++k;
+            u = u32f32((u32)hu | 0x3F000000).f;
+            hu = (0x00800000 - hu) >> 2;
+        }
+        f = u - 1.0f;
+    }
+
+    f32 hfSq = 0.5f * f * f;
+    if (hu == 0)
+    {
+        // NOTE(michiel): |f| < 2^-20
+        if (f == 0.0f)
+        {
+            if (k == 0) {
+                return 0.0f;
+            } else {
+                c += (f32)k * ln2_lo;
+                return (f32)k * ln2_hi + c;
+            }
+        }
+        f32 r = hfSq * (1.0f - 0.66666666666666666f * f);
+        if (k == 0) {
+            return f - r;
+        } else {
+            return (f32)k * ln2_hi - ((r - ((f32)k * ln2_lo + c)) - f);
+        }
+    }
+    f32 s = f / (2.0f + f);
+    f32 z = s * s;
+    f32 r = 1.4798198640e-01f * z;
+    r = (r + 1.5313838422e-01f) * z;
+    r = (r + 1.8183572590e-01f) * z;
+    r = (r + 2.2222198546e-01f) * z;
+    r = (r + 2.8571429849e-01f) * z;
+    r = (r + 4.0000000596e-01f) * z;
+    r = (r + 6.6666668653e-01f) * z;
+
+    if (k == 0) {
+        return f - (hfSq - s * (hfSq + r));
+    } else {
+        return (f32)k * ln2_hi - ((hfSq - (s * (hfSq + r) + ((f32)k * ln2_lo + c))) - f);
+    }
+}
+
+internal f32
+log1p_fast32(f32 x)
+{
+    // NOTE(michiel): Musl libc version
+    /* |(log(1+s)-log(1-s))/s - Lg(s)| < 2**-34.24 (~[-4.95e-11, 4.97e-11]). */
+    f32 ln2_hi = gLn2HighF32s[0];
+    f32 ln2_lo = gLn2LowF32s[0];
+    u32 ix = u32f32(x).u;
+
+    f32 c;
+    f32 f;
+    s32 k = 1;
+    if ((ix < 0x3ED413D0) || (ix >> 31))
+    {
+        // NOTE(michiel): 1 + x < sqrt(2)
+        if (ix >= 0xBF800000)
+        {
+            // NOTE(michiel): x <= -1
+            if (x == -1.0f) {
+                return x / 0.0f;
+            } else {
+                return (x - x) / 0.0f;
+            }
+        }
+        if ((ix << 1) < (0x33800000 << 1))
+        {
+            // NOTE(michiel): |x| < 2^-24
+            return x;
+        }
+        if (ix <= 0xBE95F619)
+        {
+            // NOTE(michiel): sqrt(2)/2 <= 1 + x < sqrt(2)
+            k = 0;
+            c = 0;
+            f = x;
+        }
+    }
+    else if (ix >= 0x7F800000)
+    {
+        return x;
+    }
+
+    if (k)
+    {
+        U32F32 u = u32f32(1.0f + x);
+        u32 iu = u.u;
+        iu += 0x3F800000 - 0x3F3504F3;
+        k = (s32)(iu >> 23) - 0x7F;
+        // NOTE(michiel): Correction term
+        if (k < 25)
+        {
+            c = k >= 2 ? 1.0f - (u.f - x) : x - (u.f - 1.0f);
+            c /= u.f;
+        }
+        else
+        {
+            c = 0.0f;
+        }
+
+        // NOTE(michiel): Reduce u into [sqrt(2)/2, sqrt(2)]
+        iu = (iu & 0x007FFFFF) + 0x3F3504F3;
+        u.u = iu;
+        f = u.f - 1.0f;
+    }
+
+    f32 s = f / (2.0f + f);
+    f32 z = s * s;
+    f32 w = z * z;
+    f32 t1 = w * (0xccce13.0p-25f + w * 0xf89e26.0p-26f);
+    f32 t2 = z * (0xaaaaaa.0p-24f + w * 0x91e9ee.0p-25f);
+    f32 r  = t1 + t2;
+    f32 hfSq = 0.5f * f * f;
+    f32 dk = (f32)k;
+    return s * (hfSq + r) + (dk * ln2_lo + c) - hfSq + f + dk * ln2_hi;
+}
+

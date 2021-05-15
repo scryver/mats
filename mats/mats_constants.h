@@ -7,6 +7,7 @@ global const f32 g2pow25F32     =  3.355443200e+07f;   /* 0x4c000000 = 2^25 */
 global const f32 g2powMin8F32   =  3.9062500000e-03f;  /* 0x3b800000 = 2^-8 */
 global const f32 g2powMin25F32  =  2.9802322388e-08f;  /* 0x33000000 = 2^-25 */
 global const f32 g2powMin100F32 =  7.8886090522e-31f;  /* 0x0d800000 = 2^-100 */
+global const f32 gLn2F32        =  6.9314718246e-01f;  /* 0x3f317218 = ln(2) */
 global const f32 gInvLn2F32     =  1.4426950216e+00f;  /* 0x3fb8aa3b = 1/ln(2) */
 global const f32 gInvLn10F32    =  4.3429449201e-01f;  /* 0x3ede5bd9 = 1/ln(10) */
 global const f32 gHugeF32       =  1.0e+30f;
