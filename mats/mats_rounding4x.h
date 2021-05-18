@@ -54,9 +54,9 @@ modulus32_nosafe(f32 num, f32 den)
     s32 hnum = (s32)u32f32(num).u;
     s32 hden = (s32)u32f32(den).u;
 
-    u32 signNum = hnum & 0x80000000;
-    hnum &= 0x7FFFFFFF; // |num|
-    hden &= 0x7FFFFFFF; // |den|
+    u32 signNum = hnum & MATS_F32_SIGN_MASK;
+    hnum &= MATS_F32_ABS_MASK; // |num|
+    hden &= MATS_F32_ABS_MASK; // |den|
 
     if (hnum < hden) {
         return num;               // NOTE(michiel): |num| < |den|, return num
@@ -66,14 +66,14 @@ modulus32_nosafe(f32 num, f32 den)
     }
 
     /* determine ix = ilogb(x) */
-    s32 expNum = (s32)(hnum >> 23) - 127;
+    s32 expNum = (s32)(hnum >> MATS_F32_EXP_SHIFT) - MATS_F32_EXP_BIAS;
 
     /* determine iy = ilogb(y) */
-    s32 expDen = (s32)(hden >> 23) - 127;
+    s32 expDen = (s32)(hden >> MATS_F32_EXP_SHIFT) - MATS_F32_EXP_BIAS;
 
     /* set up {hnum,lx}, {hden,ly} and align den to num */
-    hnum = 0x00800000 | (0x007FFFFF & hnum);
-    hden = 0x00800000 | (0x007FFFFF & hden);
+    hnum = 0x00800000 | (MATS_F32_MANT_MASK & hnum);
+    hden = 0x00800000 | (MATS_F32_MANT_MASK & hden);
 
     /* fixed point fmod */
 	s32 n = expNum - expDen;
@@ -106,7 +106,7 @@ modulus32_nosafe(f32 num, f32 den)
         --expDen;
 	}
 
-    hnum = ((hnum - 0x00800000) | ((expDen + 127) << 23));
+    hnum = ((hnum - 0x00800000) | ((expDen + MATS_F32_EXP_BIAS) << MATS_F32_EXP_SHIFT));
     f32 result = u32f32(signNum | hnum).f;
 	return result;		/* exact output */
 }

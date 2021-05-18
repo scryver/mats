@@ -25,3 +25,15 @@ union WideMath
     u64 ud[2];
 };
 #endif
+
+#define MATS_F32_SIGN_MASK    0x80000000
+#define MATS_F32_EXP_MASK     0x7F800000
+#define MATS_F32_MANT_MASK    0x007FFFFF
+
+#define MATS_F32_SIGN_SHIFT   31
+#define MATS_F32_EXP_SHIFT    23
+
+#define MATS_F32_ABS_MASK     0x7FFFFFFF
+#define MATS_F32_EXP_BIAS     127
+#define MATS_F32_EXP_MAX      127
+#define MATS_F32_EXP_MIN     -126

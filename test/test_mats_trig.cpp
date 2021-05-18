@@ -4,6 +4,9 @@
 #include <x86intrin.h>
 #include <xmmintrin.h>
 
+#define cosf_arm  arm_cosf
+#define sinf_arm  arm_sinf
+
 #define NO_INTRINSICS 1
 #define STR_FMT(x)   safe_truncate_to_s32(x.size), (char *)x.data
 #include "../libberdip/src/common.h"
@@ -13,9 +16,9 @@
 #define MATS_USE_SSE4 1
 #define MATS_USE_SSE2 1
 #define IEEE_754_2008_SNAN 1
+#include "../mats/mats_defines.h"
 #include "../mats/mats_common.h"
 #include "../mats/mats_constants.h"
-#include "../mats/mats_defines.h"
 #include "../mats/mats_elem.h"
 #include "../mats/mats_elem_ext.h"
 #include "../mats/mats_elem4x.h"
@@ -27,31 +30,31 @@
 #include "test_common.cpp"
 
 internal f64
-sincos_match64(f64 val)
+sincos_match(f64 val)
 {
     return 1.0;
 }
 
 internal f32
-sincosf_match(f32 val)
+sincos_matchf(f32 val)
 {
     return square(sinf(val)) + square(cosf(val));
 }
 
 internal f32
-sincos32_match(f32 val)
+sincos_match32(f32 val)
 {
     return square(sin32(val)) + square(cos32(val));
 }
 
 internal f32
-arm_sincosf_match(f32 val)
+sincos_matchf_arm(f32 val)
 {
     return square(arm_sinf(val)) + square(arm_cosf(val));
 }
 
 internal f32
-sincos_pi_match(f32 val)
+sincos_match_pi(f32 val)
 {
     return square(sin_pi(val)) + square(cos_pi(val));
 }
@@ -157,6 +160,19 @@ atan32_temp_4x(f32_4x x)
 
 enum DoTestFlag
 {
+    DoTest_cos        = 0x00000001,
+    DoTest_sin        = 0x00000002,
+    DoTest_tan        = 0x00000004,
+    DoTest_acos       = 0x00000008,
+    DoTest_asin       = 0x00000010,
+    DoTest_atan       = 0x00000020,
+    DoTest_atan2      = 0x00000040,
+    DoTest_cosh       = 0x00000080,
+    DoTest_sinh       = 0x00000100,
+    DoTest_tanh       = 0x00000200,
+    DoTest_acosh      = 0x00000400,
+    DoTest_asinh      = 0x00000800,
+    DoTest_atanh      = 0x00001000,
     DoTest_Cos        = 0x00000001,
     DoTest_Sin        = 0x00000002,
     DoTest_Tan        = 0x00000004,
@@ -207,31 +223,31 @@ s32 main(s32 argc, char **argv)
                     ++str;
                 }
             } else if (strings_are_equal("cos", argv[index])) {
-                tests |= DoTest_Cos;
+                tests |= DoTest_cos;
             } else if (strings_are_equal("sin", argv[index])) {
-                tests |= DoTest_Sin;
+                tests |= DoTest_sin;
             } else if (strings_are_equal("tan", argv[index])) {
-                tests |= DoTest_Tan;
+                tests |= DoTest_tan;
             } else if (strings_are_equal("acos", argv[index])) {
-                tests |= DoTest_ACos;
+                tests |= DoTest_acos;
             } else if (strings_are_equal("asin", argv[index])) {
-                tests |= DoTest_ASin;
+                tests |= DoTest_asin;
             } else if (strings_are_equal("atan", argv[index])) {
-                tests |= DoTest_ATan;
+                tests |= DoTest_atan;
             } else if (strings_are_equal("atan2", argv[index])) {
-                tests |= DoTest_ATan2;
+                tests |= DoTest_atan2;
             } else if (strings_are_equal("cosh", argv[index])) {
-                tests |= DoTest_CosH;
+                tests |= DoTest_cosh;
             } else if (strings_are_equal("sinh", argv[index])) {
-                tests |= DoTest_SinH;
+                tests |= DoTest_sinh;
             } else if (strings_are_equal("tanh", argv[index])) {
-                tests |= DoTest_TanH;
+                tests |= DoTest_tanh;
             } else if (strings_are_equal("acosh", argv[index])) {
-                tests |= DoTest_ACosH;
+                tests |= DoTest_acosh;
             } else if (strings_are_equal("asinh", argv[index])) {
-                tests |= DoTest_ASinH;
+                tests |= DoTest_asinh;
             } else if (strings_are_equal("atanh", argv[index])) {
-                tests |= DoTest_ATanH;
+                tests |= DoTest_atanh;
             }
         }
 
@@ -266,35 +282,27 @@ s32 main(s32 argc, char **argv)
     {
         fprintf(stdout, "\nCorrectness\n\n");
 
-        if (doTests & DoTest_Cos)
-        {
-            fprintf(stdout, "Cos\n");
-            f32 stdSecCos32 = run_comp_f32_x(string("stdlib cos"), 15, "cos", tests, minVal, maxVal, cos, cosf, 0.0f);
-            run_comp_f32_x(string("mats cos"), 15, "cos", tests, minVal, maxVal, cos, cos32, stdSecCos32);
-            run_comp_f32_x(string("arm cos"), 15, "cos", tests, minVal, maxVal, cos, arm_cosf, stdSecCos32);
-            run_comp_f32_x(string("dip cos"), 15, "cos", tests, minVal, maxVal, cos, cos_pi, stdSecCos32);
-            run_comp_f32_4x_x(string("mats cos 4x"), 15, "cos_4x", tests, minVal, maxVal, cos, cos32_4x, stdSecCos32);
-            fprintf(stdout, "\n");
-        }
+        BEGIN_TEST(doTests, cos, call_comp_x);
+        call_comp_x(mats, cos, 32, stdSec);
+        call_comp_x(arm, cos, f_arm, stdSec);
+        call_comp_x(dip, cos, _pi, stdSec);
+        call_comp_x_4x(mats, cos, 32_4x, stdSec);
+        END_TEST();
 
-        if (doTests & DoTest_Sin)
-        {
-            fprintf(stdout, "Sin\n");
-            f32 stdSecSin32 = run_comp_f32_x(string("stdlib sin"), 15, "sin", tests, minVal, maxVal, sin, sinf, 0.0f);
-            run_comp_f32_x(string("mats sin"), 15, "sin", tests, minVal, maxVal, sin, sin32, stdSecSin32);
-            run_comp_f32_x(string("arm sin"), 15, "sin", tests, minVal, maxVal, sin, arm_sinf, stdSecSin32);
-            run_comp_f32_x(string("dip sin"), 15, "sin", tests, minVal, maxVal, sin, sin_pi, stdSecSin32);
-            run_comp_f32_4x_x(string("mats sin 4x"), 15, "sin_4x", tests, minVal, maxVal, sin, sin32_4x, stdSecSin32);
-            fprintf(stdout, "\n");
-        }
+        BEGIN_TEST(doTests, sin, call_comp_x);
+        call_comp_x(mats, sin, 32, stdSec);
+        call_comp_x(arm, sin, f_arm, stdSec);
+        call_comp_x(dip, sin, _pi, stdSec);
+        call_comp_x_4x(mats, sin, 32_4x, stdSec);
+        END_TEST();
 
         if ((doTests & (DoTest_Sin | DoTest_Cos)) == (DoTest_Sin | DoTest_Cos))
         {
             fprintf(stdout, "Sin Cos matching\n");
-            f32 stdSCMatchSin32 = run_comp_f32_x(string("stdlib match"), 15, "match", tests, minVal, maxVal, sincos_match64, sincosf_match, 0.0f);
-            run_comp_f32_x(string("mats match"), 15, "match", tests, minVal, maxVal, sincos_match64, sincos32_match, stdSCMatchSin32);
-            run_comp_f32_x(string("arm match"), 15, "match", tests, minVal, maxVal, sincos_match64, arm_sincosf_match, stdSCMatchSin32);
-            run_comp_f32_x(string("dip match"), 15, "match", tests, minVal, maxVal, sincos_match64, sincos_pi_match, stdSCMatchSin32);
+            f32 stdSec = call_comp_x(stdlib, sincos_match, f, 0.0f);
+            call_comp_x(mats, sincos_match, 32, stdSec);
+            call_comp_x(arm, sincos_match, f_arm, stdSec);
+            call_comp_x(dip, sincos_match, _pi, stdSec);
             // TODO(michiel): Add 4x
             fprintf(stdout, "\n");
 
@@ -306,121 +314,78 @@ s32 main(s32 argc, char **argv)
 #endif
         }
 
-        if (doTests & DoTest_Tan)
-        {
-            fprintf(stdout, "Tan\n");
-            f32 stdSecTan32 = run_comp_f32_x(string("stdlib tan"), 15, "tan", tests, minVal, maxVal, tan, tanf, 0.0f);
-            run_comp_f32_x(string("mats tan"), 15, "tan", tests, minVal, maxVal, tan, tan32, stdSecTan32);
-            run_comp_f32_4x_x(string("mats tan 4x"), 15, "tan_4x", tests, minVal, maxVal, tan, tan32_4x, stdSecTan32);
-            fprintf(stdout, "\n");
-        }
+        BEGIN_TEST(doTests, tan, call_comp_x);
+        call_comp_x(mats, tan, 32, stdSec);
+        call_comp_x_4x(mats, tan, 32_4x, stdSec);
+        END_TEST();
 
         minVal = -1.2f;
         maxVal =  1.2f;
 
-        if (doTests & DoTest_ACos)
-        {
-            fprintf(stdout, "ACos\n");
-            f32 stdSecACos32 = run_comp_f32_x(string("stdlib acos"), 15, "acos", tests, minVal, maxVal, acos, acosf, 0.0f);
-            run_comp_f32_x(string("mats acos"), 15, "acos", tests, minVal, maxVal, acos, acos32, stdSecACos32);
-            run_comp_f32_4x_x(string("mats acos 4x"), 15, "acos_4x", tests, minVal, maxVal, acos, acos32_4x, stdSecACos32);
-            fprintf(stdout, "\n");
-        }
+        BEGIN_TEST(doTests, acos, call_comp_x);
+        call_comp_x(mats, acos, 32, stdSec);
+        call_comp_x_4x(mats, acos, 32_4x, stdSec);
+        END_TEST();
 
-        if (doTests & DoTest_ASin)
-        {
-            fprintf(stdout, "ASin\n");
-            f32 stdSecASin32 = run_comp_f32_x(string("stdlib asin"), 15, "asin", tests, minVal, maxVal, asin, asinf, 0.0f);
-            run_comp_f32_x(string("mats asin"), 15, "asin", tests, minVal, maxVal, asin, asin32, stdSecASin32);
-            run_comp_f32_4x_x(string("mats asin 4x"), 15, "asin_4x", tests, minVal, maxVal, asin, asin32_4x, stdSecASin32);
-            fprintf(stdout, "\n");
-        }
+        BEGIN_TEST(doTests, asin, call_comp_x);
+        call_comp_x(mats, asin, 32, stdSec);
+        call_comp_x_4x(mats, asin, 32_4x, stdSec);
+        END_TEST();
 
         minVal = -100.0f;
         maxVal = 100.0f;
 
-        if (doTests & DoTest_ATan)
-        {
-            fprintf(stdout, "ATan\n");
-            f32 stdSecATan32 = run_comp_f32_x(string("stdlib atan"), 15, "atan", tests, minVal, maxVal, atan, atanf, 0.0f);
-            run_comp_f32_x(string("mats atan"), 15, "atan", tests, minVal, maxVal, atan, atan32, stdSecATan32);
-            run_comp_f32_4x_x(string("mats atan 4x"), 15, "atan_4x", tests, minVal, maxVal, atan, atan32_4x, stdSecATan32);
-            fprintf(stdout, "\n");
-        }
+        BEGIN_TEST(doTests, atan, call_comp_x);
+        call_comp_x(mats, atan, 32, stdSec);
+        call_comp_x_4x(mats, atan, 32_4x, stdSec);
+        END_TEST();
 
-        if (doTests & DoTest_ATan2)
-        {
-            fprintf(stdout, "ATan2\n");
-            f32 stdSecATan232 = call_comp_x2(stdlib, atan2, f, 0.0f);
-            call_comp_x2(mats, atan2, _32, stdSecATan232);
-            fprintf(stdout, "\n");
-        }
+        BEGIN_TEST(doTests, atan2, call_comp_x2);
+        call_comp_x2(mats, atan2, _32, stdSec);
+        END_TEST();
 
         minVal = -22.0f;
         maxVal = 22.0f;
 
-        if (doTests & DoTest_CosH)
-        {
-            fprintf(stdout, "CosH\n");
-            f32 stdSec = run_comp_f32_x(string("stdlib cosh"), 15, "cosh", tests, minVal, maxVal, cosh, coshf, 0.0f);
-            run_comp_f32_x(string("mats cosh"), 15, "cosh", tests, minVal, maxVal, cosh, cosh32, stdSec);
-            //run_comp_f32_4x_x(string("mats cosh 4x"), 15, "cosh_4x", tests, minVal, maxVal, cosh, cosh32_4x, stdSec);
-            fprintf(stdout, "\n");
-        }
+        BEGIN_TEST(doTests, cosh, call_comp_x);
+        call_comp_x(mats, cosh, 32, stdSec);
+        //call_comp_x_4x(mats, cosh, 32_4x, stdSec);
+        END_TEST();
 
-        if (doTests & DoTest_SinH)
-        {
-            fprintf(stdout, "SinH\n");
-            f32 stdSec = run_comp_f32_x(string("stdlib sinh"), 15, "sinh", tests, minVal, maxVal, sinh, sinhf, 0.0f);
-            run_comp_f32_x(string("mats sinh"), 15, "sinh", tests, minVal, maxVal, sinh, sinh32, stdSec);
-            //run_comp_f32_4x_x(string("mats sinh 4x"), 15, "sinh_4x", tests, minVal, maxVal, sinh, sinh32_4x, stdSec);
-            fprintf(stdout, "\n");
-        }
+        BEGIN_TEST(doTests, sinh, call_comp_x);
+        call_comp_x(mats, sinh, 32, stdSec);
+        //call_comp_x_4x(mats, sinh, 32_4x, stdSec);
+        END_TEST();
 
-        if (doTests & DoTest_TanH)
-        {
-            fprintf(stdout, "TanH\n");
-            f32 stdSec = run_comp_f32_x(string("stdlib tanh"), 15, "tanh", tests, minVal, maxVal, tanh, tanhf, 0.0f);
-            run_comp_f32_x(string("mats tanh"), 15, "tanh", tests, minVal, maxVal, tanh, tanh32, stdSec);
-            //run_comp_f32_4x_x(string("mats tanh 4x"), 15, "tanh_4x", tests, minVal, maxVal, tanh, tanh32_4x, stdSec);
-            fprintf(stdout, "\n");
-        }
+        BEGIN_TEST(doTests, tanh, call_comp_x);
+        call_comp_x(mats, tanh, 32, stdSec);
+        //call_comp_x_4x(mats, tanh, 32_4x, stdSec);
+        END_TEST();
 
         minVal = 1.0f;
         maxVal = 100.0f;
 
-        if (doTests & DoTest_ACosH)
-        {
-            fprintf(stdout, "ACosH\n");
-            f32 stdSec = run_comp_f32_x(string("stdlib acosh"), 15, "acosh", tests, minVal, maxVal, acosh, acoshf, 0.0f);
-            run_comp_f32_x(string("mats acosh"), 15, "acosh", tests, minVal, maxVal, acosh, acosh32, stdSec);
-            //run_comp_f32_4x_x(string("mats acosh 4x"), 15, "acosh_4x", tests, minVal, maxVal, acosh, acosh32_4x, stdSec);
-            fprintf(stdout, "\n");
-        }
+        BEGIN_TEST(doTests, acosh, call_comp_x);
+        call_comp_x(mats, acosh, 32, stdSec);
+        //call_comp_x_4x(mats, acosh, 32_4x, stdSec);
+        END_TEST();
 
         minVal = -100.0f;
         maxVal = 100.0f;
 
-        if (doTests & DoTest_ASinH)
-        {
-            fprintf(stdout, "ASinH\n");
-            f32 stdSec = run_comp_f32_x(string("stdlib asinh"), 15, "asinh", tests, minVal, maxVal, asinh, asinhf, 0.0f);
-            run_comp_f32_x(string("mats asinh"), 15, "asinh", tests, minVal, maxVal, asinh, asinh32, stdSec);
-            //run_comp_f32_4x_x(string("mats asinh 4x"), 15, "asinh_4x", tests, minVal, maxVal, asinh, asinh32_4x, stdSec);
-            fprintf(stdout, "\n");
-        }
+        BEGIN_TEST(doTests, asinh, call_comp_x);
+        call_comp_x(mats, asinh, 32, stdSec);
+        //call_comp_x_4x(mats, asinh, 32_4x, stdSec);
+        END_TEST();
 
         minVal = -1.0f;
         maxVal = 1.0f;
 
-        if (doTests & DoTest_ATanH)
-        {
-            fprintf(stdout, "ATanH\n");
-            f32 stdSec = run_comp_f32_x(string("stdlib atanh"), 15, "atanh", tests, minVal, maxVal, atanh, atanhf, 0.0f);
-            run_comp_f32_x(string("mats atanh"), 15, "atanh", tests, minVal, maxVal, atanh, atanh32, stdSec);
-            //run_comp_f32_4x_x(string("mats atanh 4x"), 15, "atanh_4x", tests, minVal, maxVal, atanh, atanh32_4x, stdSec);
-            fprintf(stdout, "\n");
-        }
+        BEGIN_TEST(doTests, atanh, call_comp_x);
+        call_comp_x(mats, atanh, 32, stdSec);
+        //call_comp_x_4x(mats, atanh, 32_4x, stdSec);
+        END_TEST();
+
     }
 
     if (doTests & DoTest_Speed)
@@ -429,27 +394,19 @@ s32 main(s32 argc, char **argv)
         minVal = -100.0f;
         maxVal = 100.0f;
 
-        if (doTests & DoTest_Cos)
-        {
-            fprintf(stdout, "Cos\n");
-            f32 spdSecCos32 = run_speed_f32(string("stdlib cos"), 15, "cos", tests, minVal, maxVal, cosf, 0.0f);
-            run_speed_f32(string("mats cos"), 15, "cos", tests, minVal, maxVal, cos32, spdSecCos32);
-            run_speed_f32(string("arm cos"), 15, "cos", tests, minVal, maxVal, arm_cosf, spdSecCos32);
-            run_speed_f32(string("dip cos"), 15, "cos", tests, minVal, maxVal, cos_pi, spdSecCos32);
-            run_speed_f32_4x(string("mats cos 4x"), 15, "cos", tests, minVal, maxVal, cos32_4x, spdSecCos32);
-            fprintf(stdout, "\n");
-        }
+        BEGIN_TEST(doTests, cos, call_spd);
+        call_spd(mats, cos, 32, stdSec);
+        call_spd(arm, cos, f_arm, stdSec);
+        call_spd(dip, cos, _pi, stdSec);
+        call_spd_4x(mats, cos, 32_4x, stdSec);
+        END_TEST();
 
-        if (doTests & DoTest_Sin)
-        {
-            fprintf(stdout, "Sin\n");
-            f32 spdSecSin32 = run_speed_f32(string("stdlib sin"), 15, "sin", tests, minVal, maxVal, sinf, 0.0f);
-            run_speed_f32(string("mats sin"), 15, "sin", tests, minVal, maxVal, sin32, spdSecSin32);
-            run_speed_f32(string("arm sin"), 15, "sin", tests, minVal, maxVal, arm_sinf, spdSecSin32);
-            run_speed_f32(string("dip sin"), 15, "sin", tests, minVal, maxVal, sin_pi, spdSecSin32);
-            run_speed_f32_4x(string("mats sin 4x"), 15, "sin", tests, minVal, maxVal, sin32_4x, spdSecSin32);
-            fprintf(stdout, "\n");
-        }
+        BEGIN_TEST(doTests, sin, call_spd);
+        call_spd(mats, sin, 32, stdSec);
+        call_spd(arm, sin, f_arm, stdSec);
+        call_spd(dip, sin, _pi, stdSec);
+        call_spd_4x(mats, sin, 32_4x, stdSec);
+        END_TEST();
 
 #if 0
         if ((doTests & (DoTest_Sin | DoTest_Cos)) == (DoTest_Sin | DoTest_Cos))
@@ -461,118 +418,77 @@ s32 main(s32 argc, char **argv)
         }
 #endif
 
-        if (doTests & DoTest_Tan)
-        {
-            fprintf(stdout, "Tan\n");
-            f32 spdSecTan32 = run_speed_f32(string("stdlib tan"), 15, "tan", tests, minVal, maxVal, tanf, 0.0f);
-            run_speed_f32(string("mats tan"), 15, "tan", tests, minVal, maxVal, tan32, spdSecTan32);
-            run_speed_f32_4x(string("mats tan 4x"), 15, "tan", tests, minVal, maxVal, tan32_4x, spdSecTan32);
-            fprintf(stdout, "\n");
-        }
+        BEGIN_TEST(doTests, tan, call_spd);
+        call_spd(mats, tan, 32, stdSec);
+        call_spd_4x(mats, tan, 32_4x, stdSec);
+        END_TEST();
 
         minVal = -1.2f;
         maxVal = 1.2f;
 
-        if (doTests & DoTest_ACos)
-        {
-            fprintf(stdout, "ACos\n");
-            f32 spdSecACos32 = run_speed_f32(string("stdlib acos"), 15, "acos", tests, minVal, maxVal, acosf, 0.0f);
-            run_speed_f32(string("mats acos"), 15, "acos", tests, minVal, maxVal, acos32, spdSecACos32);
-            run_speed_f32_4x(string("mats acos 4x"), 15, "acos", tests, minVal, maxVal, acos32_4x, spdSecACos32);
-            run_speed_f32_4x(string("mats tcos 4x"), 15, "acos", tests, minVal, maxVal, acos32_temp_4x, spdSecACos32);
-            fprintf(stdout, "\n");
-        }
+        BEGIN_TEST(doTests, acos, call_spd);
+        call_spd(mats, acos, 32, stdSec);
+        call_spd_4x(mats, acos, 32_4x, stdSec);
+        call_spd_4x(tats, acos, 32_temp_4x, stdSec);
+        END_TEST();
 
-        if (doTests & DoTest_ASin)
-        {
-            fprintf(stdout, "ASin\n");
-            f32 spdSecASin32 = run_speed_f32(string("stdlib asin"), 15, "asin", tests, minVal, maxVal, asinf, 0.0f);
-            run_speed_f32(string("mats asin"), 15, "asin", tests, minVal, maxVal, asin32, spdSecASin32);
-            run_speed_f32_4x(string("mats asin 4x"), 15, "asin", tests, minVal, maxVal, asin32_4x, spdSecASin32);
-            run_speed_f32_4x(string("mats tsin 4x"), 15, "asin", tests, minVal, maxVal, asin32_temp_4x, spdSecASin32);
-            fprintf(stdout, "\n");
-        }
+        BEGIN_TEST(doTests, asin, call_spd);
+        call_spd(mats, asin, 32, stdSec);
+        call_spd_4x(mats, asin, 32_4x, stdSec);
+        call_spd_4x(tats, asin, 32_temp_4x, stdSec);
+        END_TEST();
 
         minVal = -100.0f;
         maxVal = 100.0f;
 
-        if (doTests & DoTest_ATan)
-        {
-            fprintf(stdout, "ATan\n");
-            f32 spdSecATan32 = run_speed_f32(string("stdlib atan"), 15, "atan", tests, minVal, maxVal, atanf, 0.0f);
-            run_speed_f32(string("mats atan"), 15, "atan", tests, minVal, maxVal, atan32, spdSecATan32);
-            run_speed_f32_4x(string("mats atan 4x"), 15, "atan", tests, minVal, maxVal, atan32_4x, spdSecATan32);
-            run_speed_f32_4x(string("mats ttan 4x"), 15, "atan", tests, minVal, maxVal, atan32_temp_4x, spdSecATan32);
-            fprintf(stdout, "\n");
-        }
+        BEGIN_TEST(doTests, atan, call_spd);
+        call_spd(mats, atan, 32, stdSec);
+        call_spd_4x(mats, atan, 32_4x, stdSec);
+        call_spd_4x(tats, atan, 32_temp_4x, stdSec);
+        END_TEST();
 
-        if (doTests & DoTest_ATan2)
-        {
-            fprintf(stdout, "ATan2\n");
-            f32 spdSecATan232 = call_spd2(stdlib, atan2, f, 0.0f);
-            call_spd2(mats, atan2, _32, spdSecATan232);
-            fprintf(stdout, "\n");
-        }
+        BEGIN_TEST(doTests, atan2, call_spd2);
+        call_spd2(mats, atan2, _32, stdSec);
+        END_TEST();
 
-        if (doTests & DoTest_CosH)
-        {
-            fprintf(stdout, "CosH\n");
-            f32 spdSecCosH32 = run_speed_f32(string("stdlib cosh"), 15, "cosh", tests, minVal, maxVal, coshf, 0.0f);
-            run_speed_f32(string("mats cosh"), 15, "cosh", tests, minVal, maxVal, cosh32, spdSecCosH32);
-            //run_speed_f32_4x(string("mats cosh 4x"), 15, "cosh", tests, minVal, maxVal, cosh32_4x, spdSecCosH32);
-            fprintf(stdout, "\n");
-        }
+        BEGIN_TEST(doTests, cosh, call_spd);
+        call_spd(mats, cosh, 32, stdSec);
+        //call_spd_4x(mats, cosh, 32_4x, stdSec);
+        END_TEST();
 
-        if (doTests & DoTest_SinH)
-        {
-            fprintf(stdout, "SinH\n");
-            f32 spdSecSinH32 = run_speed_f32(string("stdlib sinh"), 15, "sinh", tests, minVal, maxVal, sinhf, 0.0f);
-            run_speed_f32(string("mats sinh"), 15, "sinh", tests, minVal, maxVal, sinh32, spdSecSinH32);
-            //run_speed_f32_4x(string("mats sinh 4x"), 15, "sinh", tests, minVal, maxVal, sinh32_4x, spdSecSinH32);
-            fprintf(stdout, "\n");
-        }
+        BEGIN_TEST(doTests, sinh, call_spd);
+        call_spd(mats, sinh, 32, stdSec);
+        //call_spd_4x(mats, sinh, 32_4x, stdSec);
+        END_TEST();
 
-        if (doTests & DoTest_TanH)
-        {
-            fprintf(stdout, "TanH\n");
-            f32 spdSecTanH32 = run_speed_f32(string("stdlib tanh"), 15, "tanh", tests, minVal, maxVal, tanhf, 0.0f);
-            run_speed_f32(string("mats tanh"), 15, "tanh", tests, minVal, maxVal, tanh32, spdSecTanH32);
-            //run_speed_f32_4x(string("mats tanh 4x"), 15, "tanh", tests, minVal, maxVal, tanh32_4x, spdSecTanH32);
-            fprintf(stdout, "\n");
-        }
+        BEGIN_TEST(doTests, tanh, call_spd);
+        call_spd(mats, tanh, 32, stdSec);
+        //call_spd_4x(mats, tanh, 32_4x, stdSec);
+        END_TEST();
 
         minVal = 1.0f;
         maxVal = 100.0f;
 
-        if (doTests & DoTest_ACosH)
-        {
-            fprintf(stdout, "ACosH\n");
-            f32 stdSec = run_speed_f32(string("stdlib acosh"), 15, "acosh", tests, minVal, maxVal, acoshf, 0.0f);
-            run_speed_f32(string("mats acosh"), 15, "acosh", tests, minVal, maxVal, acosh32, stdSec);
-            fprintf(stdout, "\n");
-        }
+        BEGIN_TEST(doTests, acosh, call_spd);
+        call_spd(mats, acosh, 32, stdSec);
+        //call_spd_4x(mats, acosh, 32_4x, stdSec);
+        END_TEST();
 
         minVal = -100.0f;
         maxVal = 100.0f;
 
-        if (doTests & DoTest_ASinH)
-        {
-            fprintf(stdout, "ASinH\n");
-            f32 stdSec = run_speed_f32(string("stdlib asinh"), 15, "asinh", tests, minVal, maxVal, asinhf, 0.0f);
-            run_speed_f32(string("mats asinh"), 15, "asinh", tests, minVal, maxVal, asinh32, stdSec);
-            fprintf(stdout, "\n");
-        }
+        BEGIN_TEST(doTests, asinh, call_spd);
+        call_spd(mats, asinh, 32, stdSec);
+        //call_spd_4x(mats, asinh, 32_4x, stdSec);
+        END_TEST();
 
         minVal = -1.0f;
         maxVal = 1.0f;
 
-        if (doTests & DoTest_ATanH)
-        {
-            fprintf(stdout, "ATanH\n");
-            f32 stdSec = run_speed_f32(string("stdlib atanh"), 15, "atanh", tests, minVal, maxVal, atanhf, 0.0f);
-            run_speed_f32(string("mats atanh"), 15, "atanh", tests, minVal, maxVal, atanh32, stdSec);
-            fprintf(stdout, "\n");
-        }
+        BEGIN_TEST(doTests, atanh, call_spd);
+        call_spd(mats, atanh, 32, stdSec);
+        //call_spd_4x(mats, atanh, 32_4x, stdSec);
+        END_TEST();
 
         if (doTests & DoTest_Wide)
         {
@@ -580,62 +496,38 @@ s32 main(s32 argc, char **argv)
             minVal = -100.0f;
             maxVal = 100.0f;
 
-            if (doTests & DoTest_Cos)
-            {
-                fprintf(stdout, "Cos wide\n");
-                f32 spdSecCos4x = run_speed_f32_4x(string("stdlib cos 4x"), 15, "cos_4x", tests, minVal, maxVal, cosf_4x, 0.0f);
-                run_speed_f32_4x(string("mats cos 4x"), 15, "cos_4x", tests, minVal, maxVal, cos32_4x, spdSecCos4x);
-                fprintf(stdout, "\n");
-            }
+            BEGIN_TEST_WIDE(doTests, cos, call_spd_4x);
+            call_spd_4x(mats, cos, 32_4x, stdSec);
+            END_TEST();
 
-            if (doTests & DoTest_Sin)
-            {
-                fprintf(stdout, "Sin wide\n");
-                f32 spdSecSin4x = run_speed_f32_4x(string("stdlib sin 4x"), 15, "sin_4x", tests, minVal, maxVal, sinf_4x, 0.0f);
-                run_speed_f32_4x(string("mats sin 4x"), 15, "sin_4x", tests, minVal, maxVal, sin32_4x, spdSecSin4x);
-                fprintf(stdout, "\n");
-            }
+            BEGIN_TEST_WIDE(doTests, sin, call_spd_4x);
+            call_spd_4x(mats, sin, 32_4x, stdSec);
+            END_TEST();
 
-            if (doTests & DoTest_Tan)
-            {
-                fprintf(stdout, "Tan wide\n");
-                f32 spdSecTan4x = run_speed_f32_4x(string("stdlib tan 4x"), 15, "tan_4x", tests, minVal, maxVal, tanf_4x, 0.0f);
-                run_speed_f32_4x(string("mats tan 4x"), 15, "tan_4x", tests, minVal, maxVal, tan32_4x, spdSecTan4x);
-                fprintf(stdout, "\n");
-            }
+            BEGIN_TEST_WIDE(doTests, tan, call_spd_4x);
+            call_spd_4x(mats, tan, 32_4x, stdSec);
+            END_TEST();
 
             minVal = -1.2f;
             maxVal = 1.2f;
 
-            if (doTests & DoTest_ACos)
-            {
-                fprintf(stdout, "ACos wide\n");
-                f32 spdSecACos4x = run_speed_f32_4x(string("stdlib acos 4x"), 15, "acos_4x", tests, minVal, maxVal, acosf_4x, 0.0f);
-                run_speed_f32_4x(string("mats acos 4x"), 15, "acos_4x", tests, minVal, maxVal, acos32_4x, spdSecACos4x);
-                run_speed_f32_4x(string("mats tcos 4x"), 15, "acos_4x", tests, minVal, maxVal, acos32_temp_4x, spdSecACos4x);
-                fprintf(stdout, "\n");
-            }
+            BEGIN_TEST_WIDE(doTests, acos, call_spd_4x);
+            call_spd_4x(mats, acos, 32_4x, stdSec);
+            call_spd_4x(tats, acos, 32_temp_4x, stdSec);
+            END_TEST();
 
-            if (doTests & DoTest_ASin)
-            {
-                fprintf(stdout, "ASin wide\n");
-                f32 spdSecASin4x = run_speed_f32_4x(string("stdlib asin 4x"), 15, "asin_4x", tests, minVal, maxVal, asinf_4x, 0.0f);
-                run_speed_f32_4x(string("mats asin 4x"), 15, "asin_4x", tests, minVal, maxVal, asin32_4x, spdSecASin4x);
-                run_speed_f32_4x(string("mats tsin 4x"), 15, "asin_4x", tests, minVal, maxVal, asin32_temp_4x, spdSecASin4x);
-                fprintf(stdout, "\n");
-            }
+            BEGIN_TEST_WIDE(doTests, asin, call_spd_4x);
+            call_spd_4x(mats, asin, 32_4x, stdSec);
+            call_spd_4x(tats, asin, 32_temp_4x, stdSec);
+            END_TEST();
 
             minVal = -100.0f;
             maxVal = 100.0f;
 
-            if (doTests & DoTest_ATan)
-            {
-                fprintf(stdout, "ATan wide\n");
-                f32 spdSecATan4x = run_speed_f32_4x(string("stdlib atan 4x"), 15, "atan_4x", tests, minVal, maxVal, atanf_4x, 0.0f);
-                run_speed_f32_4x(string("mats atan 4x"), 15, "atan_4x", tests, minVal, maxVal, atan32_4x, spdSecATan4x);
-                run_speed_f32_4x(string("mats ttan 4x"), 15, "atan_4x", tests, minVal, maxVal, atan32_temp_4x, spdSecATan4x);
-                fprintf(stdout, "\n");
-            }
+            BEGIN_TEST_WIDE(doTests, atan, call_spd_4x);
+            call_spd_4x(mats, atan, 32_4x, stdSec);
+            call_spd_4x(tats, atan, 32_temp_4x, stdSec);
+            END_TEST();
         }
     }
 

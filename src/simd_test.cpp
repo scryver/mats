@@ -69,7 +69,7 @@ tan_kernel_logic_4x(f32_4x x, f32_4x mod)
 
     f32_4x hxGreat = s32_4x_less(S32_4x(0x3F2CA140), hx);
     f32_4x xLessZero = s32_4x_less(x, zero_f32_4x());
-    xLessZero = s32_4x_and(hxGreat, s32_4x_and(xLessZero, S32_4x(0x80000000)));
+    xLessZero = s32_4x_and(hxGreat, s32_4x_and(xLessZero, S32_4x(MATS_F32_SIGN_MASK)));
     x = x ^ xLessZero;
     f32_4x xPre = F32_4x(2.0f) * x;
 #if MATS_USE_SSE4

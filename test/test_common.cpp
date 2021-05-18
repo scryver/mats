@@ -31,6 +31,20 @@ run_comp_f32_f32_4x_x(string(#lib " " #name), 20, #name "_4x", testsA, minValA, 
 #define call_spd2_4x(lib, name, suf, sec) \
 run_speed_f32_f32_4x(string(#lib " " #name), 20, #name "_4x", testsA, minValA, maxValA, testsB, minValB, maxValB, name ## suf, sec)
 
+#define BEGIN_TEST(d, name, func) \
+if (d & DoTest_##name) { \
+fprintf(stdout, #name "\n"); \
+f32 stdSec = func(stdlib, name, f, 0.0f)
+
+#define BEGIN_TEST_WIDE(d, name, func) \
+if (d & DoTest_##name) { \
+fprintf(stdout, #name " wide\n"); \
+f32 stdSec = func(stdlib, name, f_4x, 0.0f)
+
+#define END_TEST() \
+fprintf(stdout, "\n"); \
+}
+
 internal void
 set_default_fp_behavior(void)
 {
@@ -148,14 +162,15 @@ struct CompInfo
 };
 
 internal void
-print_comp_info(String name, u32 maxNameSize, char *func, u32 tests, f32 seconds, CompInfo *info, f32 secondsRatio)
+print_comp_info(String name, u32 maxNameSize, char *func, u32 tests, f32 seconds, CompInfo *info, f32 secondsBase)
 {
+    f64 secondsRatio =  secondsBase == 0.0f ? 1.0 : (f64)secondsBase / (f64)seconds;
     f64 testCalls = (f64)tests;
     f64 oneOverTestCalls = 1.0 / testCalls;
     persist char *spaces = "                                                                ";
     if (info->numInputs == 1)
     {
-        fprintf(stdout, "%.*s%.*s: %f, %f sec, %10.0f %s/sec, avg %f usec\n    abs %e (min(%a): %e, max(%a): %e)\n    rel %e (min(%a): %e, max(%a): %e)\n",
+        fprintf(stdout, "%.*s%.*s: %9.6f, %9.6f sec, %10.0f %s/sec, avg %f usec\n    abs %g (min(%g): %a, max(%g): %a)\n    rel %g (min(%g): %a, max(%g): %a)\n",
                 STR_FMT(name), (u32)(maxNameSize - name.size), spaces, secondsRatio,
                 seconds, testCalls / seconds, func, seconds / (testCalls / 1000000.0),
                 info->totalAbsErr * oneOverTestCalls, info->minAbsInputA, info->minAbsErr, info->maxAbsInputA, info->maxAbsErr,
@@ -165,7 +180,7 @@ print_comp_info(String name, u32 maxNameSize, char *func, u32 tests, f32 seconds
     {
         i_expect(info->numInputs == 2);
 
-        fprintf(stdout, "%.*s%.*s: %f, %f sec, %10.0f %s/sec, avg %f usec\n    abs %e (min(%a, %a): %e, max(%a, %a): %e)\n    rel %e (min(%a, %a): %e, max(%a, %a): %e)\n",
+        fprintf(stdout, "%.*s%.*s: %9.6f, %9.6f sec, %10.0f %s/sec, avg %f usec\n    abs %g (min(%g, %g): %a, max(%g, %g): %a)\n    rel %g (min(%g, %g): %a, max(%g, %g): %a)\n",
                 STR_FMT(name), (u32)(maxNameSize - name.size), spaces, secondsRatio,
                 seconds, testCalls / seconds, func, seconds / (testCalls / 1000000.0),
                 info->totalAbsErr * oneOverTestCalls,
@@ -176,21 +191,22 @@ print_comp_info(String name, u32 maxNameSize, char *func, u32 tests, f32 seconds
 }
 
 internal void
-print_speed_info(String name, u32 maxNameSize, char *func, u32 tests, f32 seconds, f64 sum, f32 secondsRatio, f64 extraCall = 0.0)
+print_speed_info(String name, u32 maxNameSize, char *func, u32 tests, f32 seconds, f64 sum, f32 secondsBase, f64 extraCall = 0.0)
 {
+    f64 secondsRatio = secondsBase == 0.0f ? 1.0 : (f64)secondsBase / (f64)seconds;
     volatile f64 x = sum;
     unused(x);
     f64 testCalls = (f64)tests;
     persist char *spaces = "                                                                ";
     if (extraCall)
     {
-        fprintf(stdout, "%.*s%.*s: %f, %f sec, %10.0f %s/sec, avg %f usec (%f usec/call)\n",
+        fprintf(stdout, "%.*s%.*s: %9.6f, %9.6f sec, %10.0f %s/sec, avg %f usec (%f usec/call)\n",
                 STR_FMT(name), (u32)(maxNameSize - name.size), spaces, secondsRatio,
                 seconds, testCalls / seconds, func, seconds / (testCalls / 1000000.0), seconds / (extraCall * testCalls / 1000000.0));
     }
     else
     {
-        fprintf(stdout, "%.*s%.*s: %f, %f sec, %10.0f %s/sec, avg %f usec\n",
+        fprintf(stdout, "%.*s%.*s: %9.6f, %9.6f sec, %10.0f %s/sec, avg %f usec\n",
                 STR_FMT(name), (u32)(maxNameSize - name.size), spaces, secondsRatio,
                 seconds, testCalls / seconds, func, seconds / (testCalls / 1000000.0));
     }
@@ -254,11 +270,7 @@ run_comp_f32(String name, u32 maxNameSize, char *func, u32 tests, f32 minVal, f3
     }
     f32 seconds = linux_get_seconds_elapsed(start, linux_get_wall_clock());
 
-    if (secondsBase == 0.0f) {
-        print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, 1.0f);
-    } else {
-        print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, seconds / secondsBase);
-    }
+    print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, secondsBase);
     return seconds;
 }
 
@@ -283,11 +295,7 @@ run_comp_f32_x(String name, u32 maxNameSize, char *func, u32 tests, f32 minVal, 
     }
     f32 seconds = linux_get_seconds_elapsed(start, linux_get_wall_clock());
 
-    if (secondsBase == 0.0f) {
-        print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, 1.0f);
-    } else {
-        print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, seconds / secondsBase);
-    }
+    print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, secondsBase);
     return seconds;
 }
 
@@ -314,11 +322,7 @@ run_speed_f32(String name, u32 maxNameSize, char *func, u32 tests, f32 minVal, f
     }
     f32 seconds = linux_get_seconds_elapsed(start, linux_get_wall_clock());
 
-    if (secondsBase == 0.0f) {
-        print_speed_info(name, maxNameSize, func, 4*tests, seconds, gRunSpeedSum, 1.0f);
-    } else {
-        print_speed_info(name, maxNameSize, func, 4*tests, seconds, gRunSpeedSum, seconds / secondsBase);
-    }
+    print_speed_info(name, maxNameSize, func, tests, seconds, gRunSpeedSum, secondsBase);
     return seconds;
 }
 
@@ -345,11 +349,7 @@ run_comp_f32_4x(String name, u32 maxNameSize, char *func, u32 tests, f32 minVal,
     }
     f32 seconds = linux_get_seconds_elapsed(start, linux_get_wall_clock());
 
-    if (secondsBase == 0.0f) {
-        print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, 1.0f);
-    } else {
-        print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, seconds / secondsBase);
-    }
+    print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, secondsBase);
     return seconds;
 }
 
@@ -375,11 +375,7 @@ run_comp_f32_4x_x(String name, u32 maxNameSize, char *func, u32 tests, f32 minVa
     }
     f32 seconds = linux_get_seconds_elapsed(start, linux_get_wall_clock());
 
-    if (secondsBase == 0.0f) {
-        print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, 1.0f);
-    } else {
-        print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, seconds / secondsBase);
-    }
+    print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, secondsBase);
     return seconds;
 }
 
@@ -407,11 +403,7 @@ run_speed_f32_4x(String name, u32 maxNameSize, char *func, u32 tests, f32 minVal
     }
     f32 seconds = linux_get_seconds_elapsed(start, linux_get_wall_clock());
 
-    if (secondsBase == 0.0f) {
-        print_speed_info(name, maxNameSize, func, 4*tests, seconds, gRunSpeedSum4x.e[0], 1.0f, 4.0);
-    } else {
-        print_speed_info(name, maxNameSize, func, 4*tests, seconds, gRunSpeedSum4x.e[0], seconds / secondsBase, 4.0);
-    }
+    print_speed_info(name, maxNameSize, func, tests, seconds, gRunSpeedSum4x.e[0], secondsBase, 4.0);
     return seconds;
 }
 
@@ -441,11 +433,7 @@ run_comp_f32_f32(String name, u32 maxNameSize, char *func, u32 testsA, f32 minVa
     f32 seconds = linux_get_seconds_elapsed(start, linux_get_wall_clock());
 
     u32 tests = testsA * testsB;
-    if (secondsBase == 0.0f) {
-        print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, 1.0f);
-    } else {
-        print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, seconds / secondsBase);
-    }
+    print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, secondsBase);
     return seconds;
 }
 
@@ -475,11 +463,7 @@ run_comp_f32_f32_x(String name, u32 maxNameSize, char *func, u32 testsA, f32 min
     f32 seconds = linux_get_seconds_elapsed(start, linux_get_wall_clock());
 
     u32 tests = testsA * testsB;
-    if (secondsBase == 0.0f) {
-        print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, 1.0f);
-    } else {
-        print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, seconds / secondsBase);
-    }
+    print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, secondsBase);
     return seconds;
 }
 
@@ -512,11 +496,7 @@ run_speed_f32_f32(String name, u32 maxNameSize, char *func, u32 testsA, f32 minV
     f32 seconds = linux_get_seconds_elapsed(start, linux_get_wall_clock());
 
     u32 tests = testsA * testsB;
-    if (secondsBase == 0.0f) {
-        print_speed_info(name, maxNameSize, func, 4*tests, seconds, gRunSpeedSumF32F32, 1.0f);
-    } else {
-        print_speed_info(name, maxNameSize, func, 4*tests, seconds, gRunSpeedSumF32F32, seconds / secondsBase);
-    }
+    print_speed_info(name, maxNameSize, func, tests, seconds, gRunSpeedSumF32F32, secondsBase);
     return seconds;
 }
 
@@ -549,11 +529,7 @@ run_comp_f32_f32_4x(String name, u32 maxNameSize, char *func,
     f32 seconds = linux_get_seconds_elapsed(start, linux_get_wall_clock());
 
     u32 tests = testsA * testsB;
-    if (secondsBase == 0.0f) {
-        print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, 1.0f);
-    } else {
-        print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, seconds / secondsBase);
-    }
+    print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, secondsBase);
     return seconds;
 }
 
@@ -586,11 +562,7 @@ run_comp_f32_f32_4x_x(String name, u32 maxNameSize, char *func,
     f32 seconds = linux_get_seconds_elapsed(start, linux_get_wall_clock());
 
     u32 tests = testsA * testsB;
-    if (secondsBase == 0.0f) {
-        print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, 1.0f);
-    } else {
-        print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, seconds / secondsBase);
-    }
+    print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, secondsBase);
     return seconds;
 }
 
@@ -624,10 +596,7 @@ run_speed_f32_f32_4x(String name, u32 maxNameSize, char *func, u32 testsA, f32 m
     f32 seconds = linux_get_seconds_elapsed(start, linux_get_wall_clock());
 
     u32 tests = testsA * testsB;
-    if (secondsBase == 0.0f) {
-        print_speed_info(name, maxNameSize, func, 4*tests, seconds, gRunSpeedSumF32F324x.e[0], 1.0f, 4.0);
-    } else {
-        print_speed_info(name, maxNameSize, func, 4*tests, seconds, gRunSpeedSumF32F324x.e[0], seconds / secondsBase, 4.0);
-    }
+    print_speed_info(name, maxNameSize, func, tests, seconds, gRunSpeedSumF32F324x.e[0], secondsBase, 4.0);
     return seconds;
 }
+

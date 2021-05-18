@@ -23,8 +23,8 @@ hypot32_fast_4x(f32_4x x, f32_4x y)
 internal f32_4x
 hypot32_4x(f32_4x x, f32_4x y)
 {
-    f32_4x xu = s32_4x_and(x, S32_4x(0x7FFFFFFF));
-    f32_4x yu = s32_4x_and(y, S32_4x(0x7FFFFFFF));
+    f32_4x xu = s32_4x_and(x, S32_4x(MATS_F32_ABS_MASK));
+    f32_4x yu = s32_4x_and(y, S32_4x(MATS_F32_ABS_MASK));
 
     f32_4x xLessY = s32_4x_less(xu, yu);
 
@@ -47,8 +47,8 @@ hypot32_4x(f32_4x x, f32_4x y)
     f32_4x yBig = y * zMax;
     f32_4x ySmall = y * zMin;
 
-    f32_4x xOkay = s32_4x_less(xu, S32_4x((0x7F + 60) << 23));
-    f32_4x yLess = s32_4x_less(yu, S32_4x((0x7F - 60) << 23));
+    f32_4x xOkay = s32_4x_less(xu, S32_4x((MATS_F32_EXP_BIAS + 60) << MATS_F32_EXP_SHIFT));
+    f32_4x yLess = s32_4x_less(yu, S32_4x((MATS_F32_EXP_BIAS - 60) << MATS_F32_EXP_SHIFT));
 
     z = select(z, yLess, zMin);
     z = select(zMax, xOkay, z);
@@ -291,10 +291,10 @@ log32_fast_4x(f32_4x x)
     f64_2x poly2 = F64_2x(gLogF32_Poly[2]);
 
     f32_4x temp = s32_4x_sub(x, S32_4x(0x3F330000));
-    f32_4x index = s32_4x_and(s32_4x_srl(temp, 23 - LOGF_TABLE_BITS),
+    f32_4x index = s32_4x_and(s32_4x_srl(temp, MATS_F32_EXP_SHIFT - LOGF_TABLE_BITS),
                               S32_4x((1 << LOGF_TABLE_BITS) - 1));
-    f32_4x k = s32_4x_sra(temp, 23);
-    f32_4x iz = s32_4x_sub(x, s32_4x_and(temp, S32_4x(0x1FF << 23)));
+    f32_4x k = s32_4x_sra(temp, MATS_F32_EXP_SHIFT);
+    f32_4x iz = s32_4x_sub(x, s32_4x_and(temp, S32_4x(0x1FF << MATS_F32_EXP_SHIFT)));
 
     // TODO(michiel): Hmm...
     f64_2x invCLo = F64_2x(gLogF32_Table[index.u[0]].invC, gLogF32_Table[index.u[1]].invC);
@@ -333,12 +333,12 @@ internal f32_4x
 log32_4x(f32_4x x)
 {
     f32_4x lowExpBit = S32_4x(0x00800000);
-    f32_4x fullExp   = S32_4x(0x7F800000);
-    f32_4x signMask  = S32_4x(0x80000000);
+    f32_4x fullExp   = S32_4x(MATS_F32_EXP_MASK);
+    f32_4x signMask  = S32_4x(MATS_F32_SIGN_MASK);
     f32_4x maxExp    = S32_4x(0xFF000000);
     f32_4x fullBits  = S32_4x(0xFFFFFFFF);
 
-    f32_4x maxX      = S32_4x(0x7F800000 - 0x00800000);
+    f32_4x maxX      = S32_4x(MATS_F32_EXP_MASK - 0x00800000);
 
     f32_4x xuTimes2  = s32_4x_add(x, x);
     f32_4x xuMinLowExp = s32_4x_sub(x, lowExpBit);
@@ -355,7 +355,7 @@ log32_4x(f32_4x x)
                                         noErrorMask);
 
     f32_4x subNormalFix = x * F32_4x(0x1p23f);
-    subNormalFix = s32_4x_sub(subNormalFix, S32_4x(23 << 23));
+    subNormalFix = s32_4x_sub(subNormalFix, S32_4x(MATS_F32_EXP_SHIFT << MATS_F32_EXP_SHIFT));
 
 #if MATS_USE_SSE4
     x.m = _mm_blendv_ps(subNormalFix.m, x.m, noErrorMask.m);
@@ -392,10 +392,10 @@ log2_32_fast_4x(f32_4x x)
     f64_2x poly3 = F64_2x(gLog2F32_Poly[3]);
 
     f32_4x temp = s32_4x_sub(x, S32_4x(0x3F330000));
-    f32_4x index = s32_4x_and(s32_4x_srl(temp, 23 - LOG2F_TABLE_BITS),
+    f32_4x index = s32_4x_and(s32_4x_srl(temp, MATS_F32_EXP_SHIFT - LOG2F_TABLE_BITS),
                               S32_4x((1 << LOG2F_TABLE_BITS) - 1));
-    f32_4x k = s32_4x_sra(temp, 23);
-    f32_4x iz = s32_4x_sub(x, s32_4x_and(temp, S32_4x(0x1FF << 23)));
+    f32_4x k = s32_4x_sra(temp, MATS_F32_EXP_SHIFT);
+    f32_4x iz = s32_4x_sub(x, s32_4x_and(temp, S32_4x(0x1FF << MATS_F32_EXP_SHIFT)));
 
     // TODO(michiel): Hmm...
     f64_2x invCLo = F64_2x(gLog2F32_Table[index.u[0]].invC, gLog2F32_Table[index.u[1]].invC);
@@ -436,12 +436,12 @@ internal f32_4x
 log2_32_4x(f32_4x x)
 {
     f32_4x lowExpBit = S32_4x(0x00800000);
-    f32_4x fullExp   = S32_4x(0x7F800000);
-    f32_4x signMask  = S32_4x(0x80000000);
+    f32_4x fullExp   = S32_4x(MATS_F32_EXP_MASK);
+    f32_4x signMask  = S32_4x(MATS_F32_SIGN_MASK);
     f32_4x maxExp    = S32_4x(0xFF000000);
     f32_4x fullBits  = S32_4x(0xFFFFFFFF);
 
-    f32_4x maxX      = S32_4x(0x7F800000 - 0x00800000);
+    f32_4x maxX      = S32_4x(MATS_F32_EXP_MASK - 0x00800000);
 
     f32_4x xuTimes2  = s32_4x_add(x, x);
     f32_4x xuMinLowExp = s32_4x_sub(x, lowExpBit);
@@ -458,7 +458,7 @@ log2_32_4x(f32_4x x)
                                         noErrorMask);
 
     f32_4x subNormalFix = x * F32_4x(0x1p23f);
-    subNormalFix = s32_4x_sub(subNormalFix, S32_4x(23 << 23));
+    subNormalFix = s32_4x_sub(subNormalFix, S32_4x(MATS_F32_EXP_SHIFT << MATS_F32_EXP_SHIFT));
 
     x = select(subNormalFix, noErrorMask, x);
 
@@ -477,9 +477,9 @@ log10_32_fast_4x(f32_4x x, f32_4x k = zero_f32_4x())
     f32_4x log10_2hi  = F32_4x(gLog10_2_hi);
     f32_4x log10_2lo  = F32_4x(gLog10_2_lo);
 
-    k = s32_4x_add(k, s32_4x_sub(s32_4x_sra(x, 23), S32_4x(127)));
+    k = s32_4x_add(k, s32_4x_sub(s32_4x_sra(x, MATS_F32_EXP_SHIFT), S32_4x(MATS_F32_EXP_BIAS)));
     f32_4x i = s32_4x_srl(k, 31);
-    x = s32_4x_and(x, S32_4x(0x007FFFFF)) | s32_4x_sll(s32_4x_sub(S32_4x(0x7F), i), 23);
+    x = s32_4x_and(x, S32_4x(MATS_F32_MANT_MASK)) | s32_4x_sll(s32_4x_sub(S32_4x(MATS_F32_EXP_BIAS), i), MATS_F32_EXP_SHIFT);
     f32_4x y = f32_4x_from_s32(s32_4x_add(k, i));
     f32_4x z = y * log10_2lo + invLn10 * log32_fast_4x(x);
 
@@ -492,15 +492,15 @@ log10_32_4x(f32_4x x)
 {
     f32_4x zero4x     = zero_f32_4x();
     f32_4x fullBits   = S32_4x(0xFFFFFFFF);
-    f32_4x fullExp    = S32_4x(0x7F800000);
+    f32_4x fullExp    = S32_4x(MATS_F32_EXP_MASK);
     f32_4x lowExpBit  = S32_4x(0x00800000);
     f32_4x pow2_25    = F32_4x(g2pow25F32);
 
     f32_4x zeroResult = F32_4x(-F32_INF);
-    f32_4x negResult  = F32_4x(F32_NAN) ^ (x & S32_4x(0x80000000));
+    f32_4x negResult  = F32_4x(F32_NAN) ^ (x & S32_4x(MATS_F32_SIGN_MASK));
     f32_4x infResult  = x + x;
 
-    f32_4x zeroMask   = s32_4x_equal(s32_4x_and(x, S32_4x(0x7FFFFFFF)), zero4x);
+    f32_4x zeroMask   = s32_4x_equal(s32_4x_and(x, S32_4x(MATS_F32_ABS_MASK)), zero4x);
     f32_4x errorMask  = zeroMask;
     f32_4x negMask    = and_not(s32_4x_less(x, zero4x), errorMask);
     errorMask         = s32_4x_or(errorMask, negMask);
@@ -536,10 +536,10 @@ pow32_log2_4x(f32_4x x, f64_2x *dstLo, f64_2x *dstHi)
     f64_2x poly3 = F64_2x(gPowF32_Log2Poly[3]);
     f64_2x poly4 = F64_2x(gPowF32_Log2Poly[4]);
     f32_4x temp = s32_4x_sub(x, S32_4x(0x3F330000));
-    f32_4x index = s32_4x_and(s32_4x_srl(temp, 23 - POWF_LOG2_TABLE_BITS),
+    f32_4x index = s32_4x_and(s32_4x_srl(temp, MATS_F32_EXP_SHIFT - POWF_LOG2_TABLE_BITS),
                               S32_4x((1 << POWF_LOG2_TABLE_BITS) - 1));
     f32_4x iz = s32_4x_sub(x, s32_4x_and(temp, S32_4x(0xFF800000)));
-    f32_4x k = s32_4x_sra(temp, 23);
+    f32_4x k = s32_4x_sra(temp, MATS_F32_EXP_SHIFT);
     f64_2x k64Lo; k64Lo.md = _mm_cvtepi32_pd(k.mi);
     f64_2x k64Hi; k64Hi.md = _mm_cvtepi32_pd(_mm_castps_si128(_mm_shuffle_ps(k.m, k.m, MULTILANE_SHUFFLE_MASK(2, 3, 2, 3))));
 
@@ -626,7 +626,7 @@ pow32_4x(f32_4x x, f32_4x y)
 {
     // NOTE(michiel): We don't really care about the results for bad inputs!
     f32_4x signBias = zero_f32_4x();
-    f32_4x expManMask = S32_4x(0x7FFFFFFF);
+    f32_4x expManMask = S32_4x(MATS_F32_ABS_MASK);
 
     f32_4x xu = x & expManMask;
     f32_4x yu = y & expManMask;
@@ -642,10 +642,10 @@ pow32_4x(f32_4x x, f32_4x y)
 
     f32_4x xZeroResult = select(x, ySign, oneOverX);
 
-    //s32 e = (yu & 0x7F800000) >> 23;
+    //s32 e = (yu & MATS_F32_EXP_MASK >> MATS_F32_EXP_SHIFT;
     //s32 m = (1 << (150 - e));
-    f32_4x e = s32_4x_srl(yu, 23);
-    f32_4x shiftCount = s32_4x_sub(S32_4x(0x7F + 23), e);
+    f32_4x e = s32_4x_srl(yu, MATS_F32_EXP_SHIFT);
+    f32_4x shiftCount = s32_4x_sub(S32_4x(MATS_F32_EXP_BIAS + MATS_F32_EXP_SHIFT), e);
     // TODO(michiel): Ieuw
     f32_4x yMask;
     yMask.u[0] = 1 << shiftCount.u[0];

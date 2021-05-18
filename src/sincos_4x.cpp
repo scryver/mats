@@ -99,7 +99,7 @@ arm_cosf_4x(f32_4x y)
 
     __m128 final = _mm_blendv_ps(cosV, sinV, _mm_castsi128_ps(sel0));
 
-    __m128 signMask = _mm_castsi128_ps(_mm_set1_epi32(0x80000000));
+    __m128 signMask = _mm_castsi128_ps(_mm_set1_epi32(MATS_F32_SIGN_MASK));
     __m128 selSign = _mm_castsi128_ps(_mm_xor_si128(sel0, sel1));
     __m128 minResult = _mm_xor_ps(final, signMask);
     final = _mm_blendv_ps(final, minResult, selSign);
@@ -148,7 +148,7 @@ arm_sinf_4x(f32_4x y)
 
     __m128 final = _mm_blendv_ps(sinV, cosV, _mm_castsi128_ps(sel0));
 
-    __m128 signMask = _mm_castsi128_ps(_mm_set1_epi32(0x80000000));
+    __m128 signMask = _mm_castsi128_ps(_mm_set1_epi32(MATS_F32_SIGN_MASK));
     __m128 selSign = _mm_castsi128_ps(sel1);
     __m128 minResult = _mm_xor_ps(final, signMask);
     final = _mm_blendv_ps(final, minResult, selSign);
@@ -199,7 +199,7 @@ arm_sincosf_4x(f32_4x y)
     __m128 sin = _mm_blendv_ps(sinV, cosV, _mm_castsi128_ps(sel0));
     __m128 cos = _mm_blendv_ps(cosV, sinV, _mm_castsi128_ps(sel0));
 
-    __m128 signMask = _mm_castsi128_ps(_mm_set1_epi32(0x80000000));
+    __m128 signMask = _mm_castsi128_ps(_mm_set1_epi32(MATS_F32_SIGN_MASK));
     __m128 minSin = _mm_xor_ps(sin, signMask);
     sin = _mm_blendv_ps(sin, minSin, _mm_castsi128_ps(sel1));
     sin = _mm_blendv_ps(sin, y.m, smallestMask);

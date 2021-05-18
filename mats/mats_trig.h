@@ -126,7 +126,7 @@ internal f32
 tan32_kernel(f32 x, s32 mod)
 {
 	s32 ix = (s32)u32f32(x).u;
-    u32 hx = ix & 0x7FFFFFFF;
+    u32 hx = ix & MATS_F32_ABS_MASK;
     if (hx < 0x31800000)
     {
         if ((s32)x == 0) {
@@ -194,7 +194,7 @@ tan32(f32 y)
 {
     i_expect(absolute32(y) < 120.0f);
     f32 result;
-    u32 uy = u32f32(y).u & 0x7FFFFFFF;
+    u32 uy = u32f32(y).u & MATS_F32_ABS_MASK;
     if (uy < 0x3F490FDA)
     {
         result = tan32_kernel(y, 1);
@@ -260,7 +260,7 @@ acos32(f32 x)
 #define pio2_lo   7.5497894159e-08f
 
 	s32 ix = (s32)u32f32(x).u;
-    u32 hx = ix & 0x7FFFFFFF;
+    u32 hx = ix & MATS_F32_ABS_MASK;
 
     if (hx == 0x3F800000) {
         if (ix > 0) {
@@ -313,7 +313,7 @@ asin32(f32 x)
 #define pio4_hi 0.785398185253143310546875f
 
     s32 ix = (s32)u32f32(x).u;
-    u32 hx = ix & 0x7FFFFFFF;
+    u32 hx = ix & MATS_F32_ABS_MASK;
 
     if (hx == 0x3F800000) {
         return x * pio2_hi + x * pio2_lo;
@@ -391,7 +391,7 @@ internal f32
 atan32(f32 x)
 {
     s32 ix = (s32)u32f32(x).u;
-    u32 hx = ix & 0x7FFFFFFF;
+    u32 hx = ix & MATS_F32_ABS_MASK;
 
     if (hx >= 0x50800000)
     {
@@ -497,9 +497,9 @@ internal f32
 atan2_32(f32 y, f32 x)
 {
     s32 ix = (s32)u32f32(x).u;
-    u32 hx = ix & 0x7FFFFFFF;
+    u32 hx = ix & MATS_F32_ABS_MASK;
     s32 iy = (s32)u32f32(y).u;
-    u32 hy = iy & 0x7FFFFFFF;
+    u32 hy = iy & MATS_F32_ABS_MASK;
     if (FLT_UWORD_IS_NAN(hx) || FLT_UWORD_IS_NAN(hy)) {
         return x + y;
     }
@@ -552,7 +552,7 @@ atan2_32(f32 y, f32 x)
     }
 
     f32 result;
-    s32 k = ((s32)hy - (s32)hx) >> 23;
+    s32 k = ((s32)hy - (s32)hx) >> MATS_F32_EXP_SHIFT;
     if (k > 60) {
         result = gPiOver2F32 + 0.5f * gPiF32_lo;
     } else if ((ix < 0) && (k < -60)) {
@@ -563,7 +563,7 @@ atan2_32(f32 y, f32 x)
     switch (m)
     {
         case 0: {} break;
-        case 1: { result = u32f32(u32f32(result).u ^ 0x80000000).f; } break;
+        case 1: { result = u32f32(u32f32(result).u ^ MATS_F32_SIGN_MASK).f; } break;
         case 2: { result = gPiF32 - (result - gPiF32_lo); } break;
         case 3: { result = (result - gPiF32_lo) - gPiF32; } break;
     }
@@ -578,7 +578,7 @@ internal f32
 cosh32(f32 x)
 {
     s32 ix = (s32)u32f32(x).u;
-    ix &= 0x7FFFFFFF;
+    ix &= MATS_F32_ABS_MASK;
 
     if (!FLT_UWORD_IS_FINITE(ix)) {
         return x * x;
@@ -624,7 +624,7 @@ internal f32
 sinh32(f32 x)
 {
     s32 jx = (s32)u32f32(x).u;
-    s32 ix = jx & 0x7FFFFFFF;
+    s32 ix = jx & MATS_F32_ABS_MASK;
 
     if (!FLT_UWORD_IS_FINITE(ix)) {
         return x + x;
@@ -689,7 +689,7 @@ internal f32
 tanh32(f32 x)
 {
     s32 jx = (s32)u32f32(x).u;
-    s32 ix = jx & 0x7FFFFFFF;
+    s32 ix = jx & MATS_F32_ABS_MASK;
 
     if (!FLT_UWORD_IS_FINITE(ix))
     {
@@ -763,7 +763,7 @@ internal f32
 asinh32(f32 x)
 {
     s32 jx = (s32)u32f32(x).u;
-    s32 ix = jx & 0x7FFFFFFF;
+    s32 ix = jx & MATS_F32_ABS_MASK;
 
     f32 result;
     if (!FLT_UWORD_IS_FINITE(ix)) {
@@ -792,7 +792,7 @@ internal f32
 atanh32(f32 x)
 {
     s32 jx = (s32)u32f32(x).u;
-    s32 ix = jx & 0x7FFFFFFF;
+    s32 ix = jx & MATS_F32_ABS_MASK;
 
     if (ix > 0x3F800000) {
         // NOTE(michiel): |x| > 1

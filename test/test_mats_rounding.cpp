@@ -14,6 +14,7 @@
 #include "../libberdip/src/multilane.h"
 
 #define IEEE_754_2008_SNAN 1
+#define MATS_F32_ABS_MASK  0x7FFFFFFF
 #include "../mats/mats_common.h"
 #include "../mats/mats_constants.h"
 

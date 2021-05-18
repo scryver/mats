@@ -11,11 +11,11 @@ floor32(f32 x)
     m.m = _mm_floor_ss(_mm_set_ss(x), _mm_set_ss(x));
     result = m.e[0];
 #else
-    s32 i0 = (s32)u32f32(x).u;
-    u32 ix = i0 & 0x7FFFFFFF;
-    s32 j0 = (ix >> 23) - 0x7F;
+    s32 i0 = MATS_S32_FROM_F32(x);
+    u32 ix = i0 & MATS_F32_ABS_MASK;
+    s32 j0 = (ix >> MATS_F32_EXP_SHIFT) - MATS_F32_EXP_BIAS;
 
-    if (j0 < 23)
+    if (j0 < MATS_F32_EXP_SHIFT)
     {
         if (j0 < 0)
         {
@@ -30,7 +30,7 @@ floor32(f32 x)
         }
         else
         {
-            u32 i = 0x007FFFFF >> j0;
+            u32 i = MATS_F32_MANT_MASK >> j0;
             if ((i0 & i) == 0) {
                 return x;
             }
@@ -41,7 +41,7 @@ floor32(f32 x)
                 i0 &= ~i;
             }
         }
-        result = u32f32((u32)i0).f;
+        result = MATS_F32_FROM_S32(i0);
     }
     else
     {
@@ -64,18 +64,18 @@ ceil32(f32 x)
     m.m = _mm_ceil_ss(_mm_set_ss(x), _mm_set_ss(x));
     result = m.e[0];
 #else
-    s32 i0 = (s32)u32f32(x).u;
-    u32 ix = i0 & 0x7FFFFFFF;
-    s32 j0 = (ix >> 23) - 0x7F;
+    s32 i0 = MATS_S32_FROM_F32(x);
+    u32 ix = i0 & MATS_F32_ABS_MASK;
+    s32 j0 = (ix >> MATS_F32_EXP_SHIFT) - MATS_F32_EXP_BIAS;
 
-    if (j0 < 23)
+    if (j0 < MATS_F32_EXP_SHIFT)
     {
         if (j0 < 0)
         {
             if ((gHugeF32 + x) > 0.0f)
             {
                 if (i0 < 0) {
-                    i0 = 0x80000000;
+                    i0 = MATS_F32_SIGN_MASK;
                 } else if (!FLT_UWORD_IS_ZERO(ix)) {
                     i0 = 0x3F800000;
                 }
@@ -83,7 +83,7 @@ ceil32(f32 x)
         }
         else
         {
-            u32 i = 0x007FFFFF >> j0;
+            u32 i = MATS_F32_MANT_MASK >> j0;
             if ((i0 & i) == 0) {
                 return x;
             }
@@ -94,7 +94,7 @@ ceil32(f32 x)
                 i0 &= ~i;
             }
         }
-        result = u32f32((u32)i0).f;
+        result = MATS_F32_FROM_S32(i0);
     }
     else
     {
@@ -119,28 +119,28 @@ round32(f32 x)
     result = m.e[0];
 #else
     // TODO(michiel): Should we do here the same round-to-even instead of round-away-from-zero to break ties?
-    u32 w = u32f32(x).u;
+    u32 w = MATS_U32_FROM_F32(x);
 
-    s32 exponentLess127 = (s32)((w & 0x7F800000) >> 23) - 127;
-    if (exponentLess127 < 23)
+    s32 exponentLess127 = (s32)((w & MATS_F32_EXP_MASK) >> MATS_F32_EXP_SHIFT) - MATS_F32_EXP_BIAS;
+    if (exponentLess127 < MATS_F32_EXP_SHIFT)
     {
         if (exponentLess127 < 0) {
-            w &= 0x80000000;
+            w &= MATS_F32_SIGN_MASK;
             if (exponentLess127 == -1) {
                 // NOTE(michiel): Result is +/- 1.0
-                w |= (127 << 23);
+                w |= (MATS_F32_EXP_BIAS << MATS_F32_EXP_SHIFT);
             }
         }
         else
         {
-            u32 exponentMask = 0x007FFFFF >> exponentLess127;
+            u32 exponentMask = MATS_F32_MANT_MASK >> exponentLess127;
             if ((w & exponentMask) == 0) {
                 return x;
             }
             w += 0x00400000 >> exponentLess127;
             w &= ~exponentMask;
         }
-        result = u32f32(w).f;
+        result = MATS_F32_FROM_U32(w);
     }
     else
     {
@@ -167,20 +167,20 @@ trunc32(f32 x)
     // TODO(michiel): Or should we just do this?
     result = (f32)(s32)x;
 #else
-    u32 w = u32f32(x).u;
-    s32 signBit = w & 0x80000000;
+    u32 w = MATS_U32_FROM_F32(x);
+    s32 signBit = w & MATS_F32_SIGN_MASK;
 
-    s32 exponentLess127 = ((w & 0x7F800000) >> 23) - 127;
-    if (exponentLess127 < 23)
+    s32 exponentLess127 = ((w & MATS_F32_EXP_MASK) >> MATS_F32_EXP_SHIFT) - MATS_F32_EXP_BIAS;
+    if (exponentLess127 < MATS_F32_EXP_SHIFT)
     {
         if (exponentLess127 < 0)
         {
             // NOTE(michiel): -1 < x < 1, so result is +0 or -0
-            result = u32f32((u32)signBit).f;
+            result = MATS_F32_FROM_S32(signBit);
         }
         else
         {
-            result = u32f32((u32)signBit | (w & ~(0x007fffff >> exponentLess127))).f;
+            result = MATS_F32_FROM_U32((u32)signBit | (w & ~(MATS_F32_MANT_MASK >> exponentLess127)));
         }
     }
     else
@@ -209,9 +209,9 @@ modulus32(f32 num, f32 den)
     s32 hnum = (s32)u32f32(num).u;
     s32 hden = (s32)u32f32(den).u;
 
-    u32 signNum = hnum & 0x80000000;
-    hnum &= 0x7FFFFFFF; // |num|
-    hden &= 0x7FFFFFFF; // |den|
+    u32 signNum = hnum & MATS_F32_SIGN_MASK;
+    hnum &= MATS_F32_ABS_MASK; // |num|
+    hden &= MATS_F32_ABS_MASK; // |den|
 
     /* purge off exception values */
     if (FLT_UWORD_IS_ZERO(hden) ||
@@ -224,7 +224,7 @@ modulus32(f32 num, f32 den)
         return num;               // NOTE(michiel): |num| < |den|, return num
     }
     if (hnum == hden) {
-        return u32f32(signNum).f; // NOTE(michiel): |num| == |den|, return 0 with the correct sign
+        return MATS_F32_FROM_U32(signNum); // NOTE(michiel): |num| == |den|, return 0 with the correct sign
     }
 
     /* Note: den cannot be zero if we reach here. */
@@ -234,7 +234,7 @@ modulus32(f32 num, f32 den)
     s32 expNum;
     if (FLT_UWORD_IS_SUBNORMAL(hnum))
     {
-        for (expNum = -126, i = (hnum << 8);
+        for (expNum = MATS_F32_EXP_MIN, i = (hnum << 8);
              i > 0;
              i <<= 1)
         {
@@ -243,14 +243,14 @@ modulus32(f32 num, f32 den)
     }
     else
     {
-        expNum = (s32)(hnum >> 23) - 127;
+        expNum = (s32)(hnum >> MATS_F32_EXP_SHIFT) - MATS_F32_EXP_BIAS;
     }
 
     /* determine iy = ilogb(y) */
     s32 expDen;
     if (FLT_UWORD_IS_SUBNORMAL(hden))
     {
-        for (expDen = -126, i = (hden << 8);
+        for (expDen = MATS_F32_EXP_MIN, i = (hden << 8);
              i >= 0;
              i <<= 1)
         {
@@ -259,20 +259,20 @@ modulus32(f32 num, f32 den)
     }
     else
     {
-        expDen = (s32)(hden >> 23) - 127;
+        expDen = (s32)(hden >> MATS_F32_EXP_SHIFT) - MATS_F32_EXP_BIAS;
     }
 
     /* set up {hnum,lx}, {hden,ly} and align den to num */
-	if(expNum >= -126) {
-	    hnum = 0x00800000 | (0x007FFFFF & hnum);
+	if(expNum >= MATS_F32_EXP_MIN) {
+	    hnum = 0x00800000 | (MATS_F32_MANT_MASK & hnum);
     } else {		/* subnormal x, shift x to normal */
-	    s32 n = -126 - expNum;
+	    s32 n = MATS_F32_EXP_MIN - expNum;
 	    hnum = hnum << n;
 	}
-    if (expDen >= -126) {
-        hden = 0x00800000 | (0x007FFFFF & hden);
+    if (expDen >= MATS_F32_EXP_MIN) {
+        hden = 0x00800000 | (MATS_F32_MANT_MASK & hden);
     } else {
-        s32 n = -126 - expDen;
+        s32 n = MATS_F32_EXP_MIN - expDen;
         hden = hden << n;
     }
 
@@ -308,13 +308,13 @@ modulus32(f32 num, f32 den)
 	}
 
     f32 result;
-	if (expDen >= -126) {		/* normalize output */
-        hnum = ((hnum - 0x00800000) | ((expDen + 127) << 23));
+	if (expDen >= MATS_F32_EXP_MIN) {		/* normalize output */
+        hnum = ((hnum - 0x00800000) | ((expDen + MATS_F32_EXP_BIAS) << MATS_F32_EXP_SHIFT));
         result = u32f32(signNum | hnum).f;
 	} else {		/* subnormal output */
 	    /* If denormals are not supported, this code will generate a
 	       zero representation.  */
-	    s32 n = -126 - expDen;
+	    s32 n = MATS_F32_EXP_MIN - expDen;
 	    hnum >>= n;
         result = u32f32(signNum | hnum).f;
 	    //result *= 1.0f;		/* create necessary signal */
@@ -332,9 +332,9 @@ remainder32(f32 num, f32 den)
     u32 hnum = u32f32(num).u;
     u32 hden = u32f32(den).u;
 
-    u32 signNum = hnum & 0x80000000;
+    u32 signNum = hnum & MATS_F32_SIGN_MASK;
     hnum ^= signNum;    // |num|
-    hden &= 0x7FFFFFFF; // |den|
+    hden &= MATS_F32_ABS_MASK; // |den|
 
     /* purge off exception values */
     if (FLT_UWORD_IS_ZERO(hden) ||

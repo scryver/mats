@@ -26,6 +26,8 @@ pushd "$buildDir" > /dev/null
     clang++ -DLIBBERDIP_EXPECT=0 $opts "$testDir/test_mats_trig.cpp"     -o test-mats-trig &
     g++ -DLIBBERDIP_EXPECT=0 $optsGcc  "$testDir/test_mats_trig.cpp"     -o test-mats-trig-gcc &
     g++ -DLIBBERDIP_EXPECT=0 $optsGcc  "$testDir/test_mats_elem.cpp"     -o test-mats-elem-gcc &
+
+    clang++ -DLIBBERDIP_EXPECT=0 $opts "$testDir/test_specials.cpp"      -o test-mats-special &
 popd > /dev/null
 
 wait

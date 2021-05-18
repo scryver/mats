@@ -6,10 +6,10 @@ internal f64
 pow32_log2(u32 xu)
 {
     u32 temp = xu - 0x3F330000;
-    u32 index = (temp >> (23 - POWF_LOG2_TABLE_BITS)) % (1 << POWF_LOG2_TABLE_BITS);
+    u32 index = (temp >> (MATS_F32_EXP_SHIFT - POWF_LOG2_TABLE_BITS)) % (1 << POWF_LOG2_TABLE_BITS);
     u32 top = temp & 0xFF800000;
     u32 iz = xu - top;
-    s32 k = (s32)temp >> 23;
+    s32 k = (s32)temp >> MATS_F32_EXP_SHIFT;
     f64 invC = gPowF32_Log2Table[index].invC;
     f64 logC = gPowF32_Log2Table[index].logC;
     f64 z = (f64)u32f32(iz).f;
@@ -49,17 +49,17 @@ pow32_exp2(f64 xd, u32 signBias)
 internal s32
 pow32_checkint(u32 xu)
 {
-    s32 e = (xu >> 23) & 0xFF;
-    if (e < 0x7F) {
+    s32 e = (xu & MATS_F32_EXP_MASK) >> MATS_F32_EXP_SHIFT;
+    if (e < MATS_F32_EXP_BIAS) {
         return 0;
     }
-    if (e > 0x7F + 23) {
+    if (e > MATS_F32_EXP_BIAS + MATS_F32_EXP_SHIFT) {
         return 2;
     }
-    if (xu & ((1 << (0x7F + 23 - e)) - 1)) {
+    if (xu & ((1 << (MATS_F32_EXP_BIAS + MATS_F32_EXP_SHIFT - e)) - 1)) {
         return 0;
     }
-    if (xu & (1 << (0x7F + 23 - e))) {
+    if (xu & (1 << (MATS_F32_EXP_BIAS + MATS_F32_EXP_SHIFT - e))) {
         return 1;
     }
     return 2;
@@ -68,7 +68,7 @@ pow32_checkint(u32 xu)
 internal s32
 pow32_zeroinfnan(u32 ix)
 {
-    return 2 * ix - 1 >= 2u * 0x7F800000 - 1;
+    return 2 * ix - 1 >= 2u * MATS_F32_EXP_MASK - 1;
 }
 
 internal f32
@@ -79,7 +79,7 @@ pow32(f32 x, f32 y)
     u32 xu = u32f32(x).u;
     u32 yu = u32f32(y).u;
 
-    if (((xu - 0x00800000) >= (0x7f800000 - 0x00800000)) || pow32_zeroinfnan(yu))
+    if (((xu - 0x00800000) >= (MATS_F32_EXP_MASK - 0x00800000)) || pow32_zeroinfnan(yu))
     {
         /* Either (x < 0x1p-126 or inf or nan) or (y is 0 or inf or nan).  */
         if (pow32_zeroinfnan(yu))
@@ -90,14 +90,14 @@ pow32(f32 x, f32 y)
             if (xu == 0x3F800000) {
                 return issignaling32(y) ? x + y : 1.0f;
             }
-            if (((2 * xu) > (2u * 0x7F800000)) ||
-                ((2 * yu) > (2u * 0x7F800000))) {
+            if (((2 * xu) > (2u * MATS_F32_EXP_MASK)) ||
+                ((2 * yu) > (2u * MATS_F32_EXP_MASK))) {
                 return x + y;
             }
             if ((2 * xu) == 0x3F800000) {
                 return 1.0f;
             }
-            if (((2 * xu) < (2 * 0x3F800000)) == !(yu & 0x80000000)) {
+            if (((2 * xu) < (2 * 0x3F800000)) == !(yu & MATS_F32_SIGN_MASK)) {
                 return 0.0f; // NOTE(michiel): |x| < 1 && y == inf or |x| > 1 && y == -inf
             }
             return y * y;
@@ -105,16 +105,16 @@ pow32(f32 x, f32 y)
         if (pow32_zeroinfnan(xu))
         {
             f32 x2 = x * x;
-            if ((xu & 0x80000000) &&
+            if ((xu & MATS_F32_SIGN_MASK) &&
                 (pow32_checkint(yu) == 1))
             {
                 x2 = -x2;
                 signBias = 1;
             }
-            return yu & 0x80000000 ? 1.0f / x2 : x2;
+            return yu & MATS_F32_SIGN_MASK? 1.0f / x2 : x2;
         }
         /* x and y are non-zero finite.  */
-        if (xu & 0x80000000)
+        if (xu & MATS_F32_SIGN_MASK)
         {
             s32 yInt = pow32_checkint(yu);
             if (yInt == 0) {
@@ -123,13 +123,13 @@ pow32(f32 x, f32 y)
             if (yInt == 1) {
                 signBias = (1 << (EXP2F_TABLE_BITS + 11));
             }
-            xu &= 0x7FFFFFFF;
+            xu &= MATS_F32_ABS_MASK;
         }
         if (xu < 0x00800000)
         {
             xu = u32f32(x * 0x1p23f).u;
-            xu &= 0x7FFFFFFF;
-            xu -= 23 << 23;
+            xu &= MATS_F32_ABS_MASK;
+            xu -= MATS_F32_EXP_SHIFT << MATS_F32_EXP_SHIFT;
         }
     }
 
