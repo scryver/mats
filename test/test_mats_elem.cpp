@@ -12,6 +12,7 @@
 #define IEEE_754_2008_SNAN 1
 #include "../mats/mats_common.h"
 #include "../mats/mats_constants.h"
+#include "../mats/mats4x.h"
 
 #define sqrt32   sqrt32_nonsse
 #define hypot32  hypot32_nonsse
@@ -553,13 +554,16 @@ s32 main(s32 argc, char **argv)
 
         BEGIN_TEST(doTests, sqrt, call_spd);
         call_spd(mats, sqrt, 32_nonsse, stdSec);
-        call_spd(mats, sqrt, 32_sse, stdSec);
+        call_spd(matsse, sqrt, 32_sse, stdSec);
+        call_spd_4x(mats4, sqrt, 32_4x, stdSec);
         END_TEST();
 
         BEGIN_TEST(doTests, hypot, call_spd2);
         call_spd2(mats, hypot, 32_nonsse, stdSec);
-        call_spd2(mats, hypot, 32_sse, stdSec);
+        call_spd2(matsse, hypot, 32_sse, stdSec);
         call_spd2(ieee754, hypot, _ieee754, stdSec);
+        call_spd2_4x(mats4, hypot, 32_4x, stdSec);
+        call_spd2_4x(mats4, hypot, 32_fast_4x, stdSec);
         END_TEST();
 
         minVal = -12.0f;
@@ -568,14 +572,19 @@ s32 main(s32 argc, char **argv)
         BEGIN_TEST(doTests, exp, call_spd);
         call_spd(mats, exp, 32_nonsse, stdSec);
         call_spd(matsse, exp, 32_sse, stdSec);
+        call_spd_4x(mats4, exp, 32_4x, stdSec);
+        call_spd_4x(mats4, exp, 32_fast_4x, stdSec);
         END_TEST();
 
         BEGIN_TEST(doTests, exp2, call_spd);
         call_spd(mats, exp2, _32_nonsse, stdSec);
+        call_spd_4x(mats4, exp2, _32_4x, stdSec);
+        call_spd_4x(mats4, exp2, _32_fast_4x, stdSec);
         END_TEST();
 
         BEGIN_TEST(doTests, expm1, call_spd);
         call_spd(mats, expm1, _32_nonsse, stdSec);
+        //call_spd_4x(mats, expm1, _32_4x, stdSec);
         END_TEST();
 
         minVal = 1.0e-9f;
@@ -583,23 +592,31 @@ s32 main(s32 argc, char **argv)
 
         BEGIN_TEST(doTests, log, call_spd);
         call_spd(mats, log, 32_nonsse, stdSec);
+        call_spd_4x(mats4, log, 32_4x, stdSec);
+        call_spd_4x(mats4, log, 32_fast_4x, stdSec);
         END_TEST();
 
         BEGIN_TEST(doTests, log2, call_spd);
         call_spd(mats, log2, _32_nonsse, stdSec);
+        call_spd_4x(mats4, log2, _32_4x, stdSec);
+        call_spd_4x(mats4, log2, _32_fast_4x, stdSec);
         END_TEST();
 
         BEGIN_TEST(doTests, log10, call_spd);
         call_spd(mats, log10, _32_nonsse, stdSec);
+        call_spd_4x(mats4, log10, _32_4x, stdSec);
+        call_spd_4x(mats4, log10, _32_fast_4x_t, stdSec);
         END_TEST();
 
         BEGIN_TEST(doTests, log1p, call_spd);
         call_spd(mats, log1p, 32_nonsse, stdSec);
         call_spd(mats, log1p, _fast32_nonsse, stdSec);
+        //call_spd_4x(mats, log1p, 32_4x, stdSec);
         END_TEST();
 
         BEGIN_TEST(doTests, pow, call_spd2);
         call_spd2(mats, pow, 32, stdSec);
+        call_spd2_4x(mats4, pow, 32_4x, stdSec);
         END_TEST();
 
         if (doTests & DoTest_Wide)

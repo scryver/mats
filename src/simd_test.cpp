@@ -7,6 +7,7 @@
 #include "../libberdip/src/multilane.h"
 
 #include "../mats/mats.h"
+#include "../mats/mats4x.h"
 #include "../mats/mats_elem4x.h"
 #include "../mats/mats_trig4x.h"
 

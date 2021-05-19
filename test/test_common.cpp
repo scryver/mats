@@ -391,7 +391,7 @@ run_speed_f32_4x(String name, u32 maxNameSize, char *func, u32 tests, f32 minVal
     for (u32 index = 0; index < tests; ++index)
     {
         f32 baseInput = (f32)index * scale + minVal;
-        f32_4x inputVal = F32_4x(baseInput, 1.0e-9f * baseInput, 1.0e9f * baseInput, -1.0e9f * baseInput);
+        f32_4x inputVal = F32_4x(baseInput, 1.0e-3f * baseInput, 1.0e3f * baseInput, -1.0e3f * baseInput);
         f32_4x testRes0 = testFunc(inputVal);
         inputVal = inputVal * testRes0 + inputVal;
         f32_4x testRes1 = testFunc(inputVal);

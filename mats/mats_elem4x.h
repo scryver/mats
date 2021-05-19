@@ -28,8 +28,8 @@ hypot32_4x(f32_4x x, f32_4x y)
 
     f32_4x xLessY = s32_4x_less(xu, yu);
 
-    x = select(xu, xLessY, yu);
-    y = select(yu, xLessY, xu);
+    x = select4x(xu, xLessY, yu);
+    y = select4x(yu, xLessY, xu);
 
     xu = x;
     yu = y;
@@ -50,14 +50,14 @@ hypot32_4x(f32_4x x, f32_4x y)
     f32_4x xOkay = s32_4x_less(xu, S32_4x((MATS_F32_EXP_BIAS + 60) << MATS_F32_EXP_SHIFT));
     f32_4x yLess = s32_4x_less(yu, S32_4x((MATS_F32_EXP_BIAS - 60) << MATS_F32_EXP_SHIFT));
 
-    z = select(z, yLess, zMin);
-    z = select(zMax, xOkay, z);
+    z = select4x(z, yLess, zMin);
+    z = select4x(zMax, xOkay, z);
 
-    x = select(x, yLess, xBig);
-    x = select(xSmall, xOkay, x);
+    x = select4x(x, yLess, xBig);
+    x = select4x(xSmall, xOkay, x);
 
-    y = select(y, yLess, yBig);
-    y = select(ySmall, xOkay, y);
+    y = select4x(y, yLess, yBig);
+    y = select4x(ySmall, xOkay, y);
 
     f64_2x xLo = F64_2x(x);
     f64_2x xHi = F64_2x(x, true);
@@ -75,7 +75,7 @@ hypot32_4x(f32_4x x, f32_4x y)
 
     f32_4x sqrtIn = F32_4x(preLo, preHi);
     f32_4x result = z * sqrt32_4x(sqrtIn);
-    result = select(result, yZero, zeroRes);
+    result = select4x(result, yZero, zeroRes);
 
     return result;
 }
@@ -162,17 +162,10 @@ exp32_4x(f32_4x x)
     f32_4x underflowMask = s32_4x_and(x < F32_4x(-0x1.9FE368p6f), errorMask);
 
     f32_4x result = exp32_fast_4x(x);
-#if MATS_USE_SSE4
-    result.m = _mm_blendv_ps(result.m, underflow.m, underflowMask.m);
-    result.m = _mm_blendv_ps(result.m, overflow.m, overflowMask.m);
-    result.m = _mm_blendv_ps(result.m, infOut.m, infOutMask.m);
-    result.m = _mm_blendv_ps(result.m, _mm_setzero_ps(), zeroMask.m);
-#else
-    result = select(result, underflowMask, underflow);
-    result = select(result, overflowMask, overflow);
-    result = select(result, infOutMask, infOut);
-    result = select(result, zeroMask, zero_f32_4x());
-#endif
+    result = select4x(result, underflowMask, underflow);
+    result = select4x(result, overflowMask, overflow);
+    result = select4x(result, infOutMask, infOut);
+    result = and_not(result, zeroMask);
 
     return result;
 }
@@ -261,17 +254,10 @@ exp2_32_4x(f32_4x x)
 
     f32_4x result = exp2_32_fast_4x(x);
 
-#if MATS_USE_SSE4
-    result.m = _mm_blendv_ps(result.m, underflow.m, underflowMask.m);
-    result.m = _mm_blendv_ps(result.m, overflow.m, overflowMask.m);
-    result.m = _mm_blendv_ps(result.m, infOut.m, infOutMask.m);
-    result.m = _mm_blendv_ps(result.m, _mm_setzero_ps(), zeroMask.m);
-#else
-    result = select(result, underflowMask, underflow);
-    result = select(result, overflowMask, overflow);
-    result = select(result, infOutMask, infOut);
-    result = select(result, zeroMask, zero_f32_4x());
-#endif
+    result = select4x(result, underflowMask, underflow);
+    result = select4x(result, overflowMask, overflow);
+    result = select4x(result, infOutMask, infOut);
+    result = select4x(result, zeroMask, zero_f32_4x());
 
     return result;
 }
@@ -357,22 +343,12 @@ log32_4x(f32_4x x)
     f32_4x subNormalFix = x * F32_4x(0x1p23f);
     subNormalFix = s32_4x_sub(subNormalFix, S32_4x(MATS_F32_EXP_SHIFT << MATS_F32_EXP_SHIFT));
 
-#if MATS_USE_SSE4
-    x.m = _mm_blendv_ps(subNormalFix.m, x.m, noErrorMask.m);
-#else
-    x = select(subNormalFix, noErrorMask, x);
-#endif
+    x = select4x(subNormalFix, noErrorMask, x);
 
     f32_4x result = log32_fast_4x(x);
-#if MATS_USE_SSE4
-    result.m = _mm_blendv_ps(result.m, invalidResult.m, invalidMask.m);
-    result.m = _mm_blendv_ps(result.m, infResult.m, infMask.m);
-    result.m = _mm_blendv_ps(result.m, divZeroResult.m, divZeroMask.m);
-#else
-    result = select(result, invalidMask, invalidResult);
-    result = select(result, infMask, infResult);
-    result = select(result, divZeroMask, divZeroResult);
-#endif
+    result = select4x(result, invalidMask, invalidResult);
+    result = select4x(result, infMask, infResult);
+    result = select4x(result, divZeroMask, divZeroResult);
 
     return result;
 }
@@ -460,12 +436,12 @@ log2_32_4x(f32_4x x)
     f32_4x subNormalFix = x * F32_4x(0x1p23f);
     subNormalFix = s32_4x_sub(subNormalFix, S32_4x(MATS_F32_EXP_SHIFT << MATS_F32_EXP_SHIFT));
 
-    x = select(subNormalFix, noErrorMask, x);
+    x = select4x(subNormalFix, noErrorMask, x);
 
     f32_4x result = log2_32_fast_4x(x);
-    result = select(result, invalidMask, invalidResult);
-    result = select(result, infMask, infResult);
-    result = select(result, divZeroMask, divZeroResult);
+    result = select4x(result, invalidMask, invalidResult);
+    result = select4x(result, infMask, infResult);
+    result = select4x(result, divZeroMask, divZeroResult);
 
     return result;
 }
@@ -515,11 +491,11 @@ log10_32_4x(f32_4x x)
     f32_4x kMod       = s32_4x_sub(k, S32_4x(25));
     f32_4x xMod       = x * pow2_25;
 
-    k = select(k, subNrmMask, kMod);
-    x = select(x, subNrmMask, xMod);
+    k = select4x(k, subNrmMask, kMod);
+    x = select4x(x, subNrmMask, xMod);
 
     f32_4x result = log10_32_fast_4x(x, k);
-    result = select(result, errorMask, errorRes);
+    result = select4x(result, errorMask, errorRes);
     return result;
 }
 
@@ -640,7 +616,7 @@ pow32_4x(f32_4x x, f32_4x y)
     f32_4x xSign = s32_4x_less(x, zero_s32_4x());
     f32_4x ySign = s32_4x_less(y, zero_s32_4x());
 
-    f32_4x xZeroResult = select(x, ySign, oneOverX);
+    f32_4x xZeroResult = select4x(x, ySign, oneOverX);
 
     //s32 e = (yu & MATS_F32_EXP_MASK >> MATS_F32_EXP_SHIFT;
     //s32 m = (1 << (150 - e));
@@ -664,8 +640,8 @@ pow32_4x(f32_4x x, f32_4x y)
 
     f32_4x result = pow32_exp2_4x(yLogXLo, yLogXHi, signBias);
 
-    result = select(result, xIsZero, xZeroResult);
-    result = select(result, yIsZero, one4x);
+    result = select4x(result, xIsZero, xZeroResult);
+    result = select4x(result, yIsZero, one4x);
 
     return result;
 }

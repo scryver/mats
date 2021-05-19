@@ -19,6 +19,7 @@
 #include "../mats/mats_defines.h"
 #include "../mats/mats_common.h"
 #include "../mats/mats_constants.h"
+#include "../mats/mats4x.h"
 #include "../mats/mats_elem.h"
 #include "../mats/mats_elem_ext.h"
 #include "../mats/mats_elem4x.h"
