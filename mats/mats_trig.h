@@ -350,12 +350,7 @@ asin32(f32 x)
         t = pio4_hi - (p - q);
     }
 
-    if (ix > 0) {
-        return t;
-    } else {
-        return -t;
-    }
-
+    return (ix < 0) ? -t : t;
 #undef pio4_hi
 #undef pio2_hi
 #undef pio2_lo
@@ -496,10 +491,11 @@ atan32(f32 x)
 internal f32
 atan2_32(f32 y, f32 x)
 {
-    s32 ix = (s32)u32f32(x).u;
+    s32 ix = MATS_S32_FROM_F32(x);
     u32 hx = ix & MATS_F32_ABS_MASK;
-    s32 iy = (s32)u32f32(y).u;
+    s32 iy = MATS_S32_FROM_F32(y);
     u32 hy = iy & MATS_F32_ABS_MASK;
+
     if (FLT_UWORD_IS_NAN(hx) || FLT_UWORD_IS_NAN(hy)) {
         return x + y;
     }

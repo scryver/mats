@@ -10,6 +10,9 @@
 
 #define MATS_USE_SSE4 1
 #include "../mats/mats.h"
+#include "../mats/mats4x.h"
+#include "../mats/mats_elem4x.h"
+#include "../mats/mats_trig4x.h"
 
 #include "test_common.cpp"
 //#include "../mats/mats.cpp"
@@ -32,6 +35,7 @@ s32 main(s32 argc, char **argv)
     char *spaces = "                                                  ";
     u32 maxNameSize = 10;
 
+    // TODO(michiel): 4x
 #define spec_f32(func, name) \
 String str##name = string(#name); \
 for (u32 index = 0; index < array_count(f32specs); ++index) { \

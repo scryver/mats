@@ -315,78 +315,58 @@ tan32_4x(f32_4x x)
     return result;
 }
 
-// NOTE(michiel): 4 calls to acos32/asin32/atan32 is faster at the moment
+// NOTE(michiel): 4 calls to acos32/asin32 is faster at the moment
 
-internal f32_4x
-acos32_4x(f32_4x x)
+#if 0
+// NOTE(michiel): Templates used to convert to 4x
+internal f32
+acos32_temp(f32 x)
 {
 #define pi        3.1415925026e+00f
 #define pio2_hi   1.5707962513e+00f
 #define pio2_lo   7.5497894159e-08f
-    f32_4x zero4x = F32_4x(0.0f);
-    f32_4x one4x  = F32_4x(1.0f);
-    f32_4x half4x = F32_4x(0.5f);
 
-    f32_4x hx = x & F32_4x(0x7FFFFFFFU);
-    f32_4x xSign = and_not(x, F32_4x(0x7FFFFFFFU));
+	s32 ix = (s32)u32f32(x).u;
+    u32 hx = ix & MATS_F32_ABS_MASK;
 
-    f32_4x greaterThanOne = s32_4x_greater(hx, one4x);
-    f32_4x lessThanHalf   = s32_4x_less(hx, half4x);
-    f32_4x lessThanZero   = s32_4x_less(x, zero4x);
-    f32_4x isOne          = s32_4x_equal(hx, one4x);
-    f32_4x greaterThanMin = s32_4x_greater(hx, S32_4x(0x23000000));
+    b32 hxEqOne = hx == 0x3F800000;
+    b32 hxLtHaf = hx <  0x3F000000;
+    b32 xLtZero = ix <  0;
 
-    f32_4x multIn = select4x(half4x, lessThanHalf, x);
-    f32_4x addIn  = and_not(S32_4x(MATS_F32_SIGN_MASK), s32_4x_or(lessThanHalf, lessThanZero));
-    addIn = s32_4x_xor(addIn, x);
-    f32_4x polyIn = and_not(one4x, lessThanHalf);
-    polyIn = (polyIn + addIn) * multIn;;
+    f32 polyIn = (1.0f - absolute32(x)) * 0.5f;
+    if (hxLtHaf) {
+        polyIn = x * x;
+    }
+    poly(polyIn);
 
-#if MATS_ASINCOS_USE_SMALL_POLY
-    f32_4x p = F32_4x(-8.6563630030e-03f) * polyIn;
-    f32_4x q = F32_4x(-7.0662963390e-01f) * polyIn;
-    p = (p - F32_4x(4.2743422091e-02f)) * polyIn;
-    q = (q + F32_4x(1.0f));
-    p = (p + F32_4x(1.6666586697e-01f)) * polyIn;
-#else
-    f32_4x p = F32_4x(3.4793309169e-05f) * polyIn;
-    f32_4x q = F32_4x(7.7038154006e-02f) * polyIn;
-    p = (p + F32_4x(7.9153501429e-04f)) * polyIn;
-    q = (q - F32_4x(6.8828397989e-01f)) * polyIn;
-    p = (p - F32_4x(4.0055535734e-02f)) * polyIn;
-    q = (q + F32_4x(2.0209457874e+00f)) * polyIn;
-    p = (p + F32_4x(2.0121252537e-01f)) * polyIn;
-    q = (q - F32_4x(2.4033949375e+00f)) * polyIn;
-    p = (p - F32_4x(3.2556581497e-01f)) * polyIn;
-    q = (q + F32_4x(1.0f));
-    p = (p + F32_4x(1.6666667163e-01f)) * polyIn;
-#endif
+    f32 result;
+    if (hxLtHaf)
+    {
+        result = pio2_hi - (x - (pio2_lo - x * r));
+    }
+    else
+    {
+        f32 s = sqrt32(polyIn);
+        f32 w = s * r;
+        f32 c = -pio2_lo;
+        if (hxEqOne)
+        {
+            w = 0.0f;
+            s = 0.0f;
+        }
+        else if (!xLtZero)
+        {
+            f32 df = u32f32(u32f32(s).u & 0xFFFFF000).f;
+            c = (polyIn - df * df) / (s + df);
+            s = df;
+        }
 
-    // NOTE(michiel): Result for |x| > 1.0
-    f32_4x r = p / q;
-
-    // NOTE(michiel): Result for 0.5 <= |x| <= 1.0
-    f32_4x s = sqrt32_4x(polyIn);
-    f32_4x sMask = s32_4x_or(S32_4x(0xFFFFF000), s32_4x_and(S32_4x(0x00000FFF), lessThanZero));
-    f32_4x m = s & sMask;
-    f32_4x c = (polyIn - m * m) / (s + m);
-    c = select4x(c, lessThanZero, F32_4x(-pio2_lo));
-    f32_4x w = r * s + c;
-    f32_4x mult = m + w;
-    mult = select4x(mult, isOne, lessThanZero & F32_4x(-pio2_lo));
-    f32_4x z = F32_4x(2.0f) * mult;
-
-    // NOTE(michiel): Result for |x| < 0.5
-    f32_4x smallResult = x * r;
-    smallResult = smallResult & greaterThanMin;
-    smallResult = F32_4x(pio2_lo) - smallResult;
-    smallResult = x - smallResult;
-    smallResult = F32_4x(pio2_hi) - smallResult;
-
-    f32_4x errorResult = s32_4x_and(s32_4x_xor(S32_4x(0x7F800010), xSign), greaterThanOne);
-    f32_4x normalResult = select4x(z, lessThanZero, F32_4x(pi) - z);
-    f32_4x result = select4x(normalResult, lessThanHalf, smallResult);
-    result = select4x(result, greaterThanOne, errorResult);
+        w = w + c;
+        result = 2.0f * (s + w);
+        f32 lessTZero = pi - result;
+        result = hxEqOne ? 0.0f : result;
+        result = xLtZero ? lessTZero : result;
+    }
 
     return result;
 #undef pio2_hi
@@ -394,9 +374,148 @@ acos32_4x(f32_4x x)
 #undef pi
 }
 
+internal f32
+asin32_temp(f32 x)
+{
+#define pio2_hi 1.57079637050628662109375f
+#define pio2_lo -4.37113900018624283e-8f
+#define pio4_hi 0.785398185253143310546875f
+
+    s32 ix = (s32)u32f32(x).u;
+    u32 hx = ix & MATS_F32_ABS_MASK;
+
+    b32 hxEqOne = hx == 0x3F800000;
+    b32 hxGtOne = hx >  0x3F800000;
+    b32 hxLtMax = hx <  0x3F79999A;
+    b32 hxLtHaf = hx <  0x3F000000;
+
+    f32 preW = 1.0f - u32f32(hx).f;
+    f32 polyIn = preW * 0.5f;
+    if (hxLtHaf) {
+        polyIn = x * x;
+    }
+    poly(polyIn);
+
+    f32 result;
+    if (hxGtOne)
+    {
+        result = (x - x) / (x - x);
+    }
+    else if (hxLtHaf)
+    {
+        result = x + x * r;
+    }
+    else
+    {
+        f32 s = sqrt32(polyIn);
+        f32 sr = s * r;
+        f32 a = pio2_hi;
+        f32 b = 2.0f * (s + sr);
+        f32 c = pio2_lo;
+        if (hxEqOne)
+        {
+            b = 0;
+        }
+        else if (hxLtMax)
+        {
+            f32 w = s;
+            u32 iw = u32f32(w).u;
+            w = u32f32(iw & 0xFFFFF000).f;
+            f32 correct = (polyIn - w * w) / (s + w);
+            b = 2.0f * sr - (pio2_lo - 2.0f * correct);
+            c = pio4_hi - 2.0f * w;
+            a = pio4_hi;
+        }
+        result = a - (b - c);
+
+        result = (ix < 0) ? -result : result;
+    }
+
+    return result;
+#undef pio4_hi
+#undef pio2_hi
+#undef pio2_lo
+}
+#endif
+
+internal f32_4x
+acos32_4x(f32_4x x)
+{
+    // NOTE(michiel): Function is unspecified out of the [-1, 1] domain
+    f32_4x pi4x     = F32_4x(3.1415925026e+00f);
+    f32_4x pio2Hi4x = F32_4x(1.5707962513e+00f);
+    f32_4x pio2Lo4x = F32_4x(7.5497894159e-08f);
+    f32_4x zero4x   = F32_4x(0.0f);
+    f32_4x one4x    = F32_4x(1.0f);
+    f32_4x two4x    = F32_4x(2.0f);
+    f32_4x half4x   = F32_4x(0.5f);
+
+    f32_4x preMask = S32_4x(0x7FFFFFFF);
+    f32_4x hx = x & preMask;
+
+    preMask.mi = _mm_slli_epi32(preMask.mi, 12);
+
+    f32_4x hxEqOne  = s32_4x_equal(hx, one4x);
+    f32_4x hxLtHalf = s32_4x_less(hx, half4x);
+    f32_4x xLtZero  = s32_4x_less(x, zero4x);
+
+    f32_4x polyIn   = (one4x - hx) * half4x;
+    polyIn = select4x(polyIn, hxLtHalf, x * x);
+
+    f32_4x s = sqrt32_4x(polyIn);
+    //f32_4x df = s & S32_4x(0xFFFFF000);
+    f32_4x df = s & preMask;
+    f32_4x cMod = (polyIn - df * df) / (s + df);
+
+#if MATS_ASINCOS_USE_SMALL_POLY
+    f32_4x p = F32_4x(-8.6563630030e-03f) * polyIn;
+    f32_4x q = F32_4x(-7.0662963390e-01f) * polyIn;
+    p = (p - F32_4x(4.2743422091e-02f)) * polyIn;
+    q = (q + F32_4x(1.0f));
+    p = (p + F32_4x(1.6666586697e-01f)) * polyIn;
+#else
+    f32_4x p = F32_4x(3.4793309169e-05f) * polyIn;
+    f32_4x q = F32_4x(7.7038154006e-02f) * polyIn;
+    p = (p + F32_4x(7.9153501429e-04f)) * polyIn;
+    q = (q - F32_4x(6.8828397989e-01f)) * polyIn;
+    p = (p - F32_4x(4.0055535734e-02f)) * polyIn;
+    q = (q + F32_4x(2.0209457874e+00f)) * polyIn;
+    p = (p + F32_4x(2.0121252537e-01f)) * polyIn;
+    q = (q - F32_4x(2.4033949375e+00f)) * polyIn;
+    p = (p - F32_4x(3.2556581497e-01f)) * polyIn;
+    q = (q + F32_4x(1.0f));
+    p = (p + F32_4x(1.6666667163e-01f)) * polyIn;
+#endif
+
+    f32_4x r = p / q;
+
+    f32_4x smallResult = pio2Hi4x - (x - (pio2Lo4x - x * r));
+
+    f32_4x w = s * r;
+    f32_4x c = -pio2Lo4x;
+
+    f32_4x xLtZeroOrOne = s32_4x_or(xLtZero, hxEqOne);
+    s = select4x(df, xLtZeroOrOne, s);
+    c = select4x(cMod, xLtZeroOrOne, c);
+
+    // NOTE(michiel): Zero out w and s, if |x| is 1.0
+    w = and_not(w, hxEqOne);
+    s = and_not(s, hxEqOne);
+
+    w = w + c;
+    f32_4x result = two4x * (s + w);
+    f32_4x negResult = pi4x - result;
+    result = and_not(result, hxEqOne);
+    result = select4x(result, xLtZero, negResult);
+    result = select4x(result, hxLtHalf, smallResult);
+
+    return result;
+}
+
 internal f32_4x
 asin32_4x(f32_4x x)
 {
+    // NOTE(michiel): Function is unspecified out of the [-1, 1] domain
     f32_4x one4x  = F32_4x(1.0f);
     f32_4x two4x  = F32_4x(2.0f);
     f32_4x half4x = F32_4x(0.5f);
@@ -404,18 +523,18 @@ asin32_4x(f32_4x x)
     f32_4x piOver2Lo = F32_4x(-4.37113900018624283e-8f);
     f32_4x piOver4Hi = F32_4x(0.785398185253143310546875f);
 
-    f32_4x hx = x & F32_4x(0x7FFFFFFFU);
-    f32_4x xSign = and_not(x, F32_4x(0x7FFFFFFFU));
+    f32_4x preMask = S32_4x(0x7FFFFFFF);
 
-    f32_4x greaterThanOne  = s32_4x_greater(hx, one4x);
-    f32_4x isOne           = s32_4x_equal(hx, one4x);
-    f32_4x lessThanHalf    = s32_4x_less(hx, half4x);
-    f32_4x lessThanMin     = s32_4x_less(hx, S32_4x(0x32000000));
-    f32_4x lessThanMax     = s32_4x_less(hx, S32_4x(0x3F79999A));
+    f32_4x hx = x & preMask;
+    f32_4x xSign = and_not(x, preMask);
 
-    x  = and_not(x, lessThanMin);
+    preMask.mi = _mm_slli_epi32(preMask.mi, 12);
 
-    f32_4x polyIn = select4x(half4x * (one4x - hx), lessThanHalf, x * x);
+    f32_4x hxEqOne  = s32_4x_equal(hx, one4x);
+    f32_4x hxLtMax  = s32_4x_less(hx, S32_4x(0x3F79999A));
+    f32_4x hxLtHalf = s32_4x_less(hx, half4x);
+
+    f32_4x polyIn = select4x(half4x * (one4x - hx), hxLtHalf, x * x);
 
 #if MATS_ASINCOS_USE_SMALL_POLY
     f32_4x p = F32_4x(-8.6563630030e-03f) * polyIn;
@@ -439,31 +558,33 @@ asin32_4x(f32_4x x)
 
     f32_4x r = p / q;
 
-    // NOTE(michiel): Result for |x| == 1.0
-    f32_4x oneResult = x * piOver2Hi + x * piOver2Lo;
+    f32_4x ltHalfRes = x + x * r;
 
-    // NOTE(michiel): Result for |x| < 0.5
-    f32_4x smallResult = x * r;
-    smallResult = x + smallResult;
+    f32_4x extraRes = ltHalfRes;
+    f32_4x extraMask = hxLtHalf;
 
-    // NOTE(michiel): Result for 0.5 <= |x| < 0.975
     f32_4x s = sqrt32_4x(polyIn);
-    f32_4x w = s & S32_4x(0xFFFFF000);
-    f32_4x c = (polyIn - w * w) / (s + w);
-    f32_4x p2 = two4x * s * r - (piOver2Lo - two4x * c);
-    f32_4x q2 = piOver4Hi - two4x * w;
-    f32_4x normalResult = piOver4Hi - (p2 - q2);
+    f32_4x sr = s * r;
 
-    // NOTE(michiel): Result for 0.975 <= |x| < 1.0
-    f32_4x result = piOver2Hi - (two4x * (s + s * r) - piOver2Lo);
+    //f32_4x w = s & S32_4x(0xFFFFF000);
+    f32_4x w = s & preMask;
+    f32_4x correct = (polyIn - w * w) / (s + w);
 
-    f32_4x errorMask = s32_4x_or(greaterThanOne, isOne);
-    f32_4x errorResult = s32_4x_xor(S32_4x(0x7F800010), xSign);
-    errorResult = select4x(errorResult, isOne, oneResult);
-    result = select4x(result, lessThanMax, normalResult);
+    //preMask.mi = _mm_srli_epi32(_mm_slli_epi32(preMask.mi, 19), 8);
+
+    f32_4x bLarge = and_not(two4x * (s + sr), hxEqOne);
+    f32_4x bSmall = two4x * sr - (piOver2Lo - two4x * correct);
+    f32_4x cSmall = piOver4Hi - two4x * w;
+
+    //f32_4x a = s32_4x_or(piOver4Hi, s32_4x_and_not(S32_4x(0x00800000), hxLtMax)); // select4x(piOver2Hi, hxLtMax, piOver4Hi);
+    //f32_4x a = piOver4Hi | and_not(preMask, hxLtMax);
+    f32_4x a = select4x(piOver2Hi, hxLtMax, piOver4Hi);
+    f32_4x b = select4x(bLarge, hxLtMax, bSmall);
+    f32_4x c = select4x(piOver2Lo, hxLtMax, cSmall);
+
+    f32_4x result = a - (b - c);
     result = result ^ xSign;
-    result = select4x(result, lessThanHalf, smallResult);
-    result = select4x(result, errorMask, errorResult);
+    result = select4x(result, extraMask, extraRes);
     return result;
 }
 
@@ -591,10 +712,94 @@ atan32_4x(f32_4x x)
 }
 
 #if 0
-// TODO(michiel): When atan32_4x is faster we can look into widening this function
+// NOTE(michiel): Atan2 template used for simd
+internal f32
+atan2_32_temp(f32 y, f32 x)
+{
+    s32 ix = MATS_S32_FROM_F32(x);
+    u32 hx = ix & MATS_F32_ABS_MASK;
+    s32 iy = MATS_S32_FROM_F32(y);
+    u32 hy = iy & MATS_F32_ABS_MASK;
+
+    b32 xIsOne  = ix == 0x3F800000;
+    b32 xLtZero = ix < 0;
+    b32 yLtZero = iy < 0;
+    b32 xIsZero = hx == 0;
+    b32 yIsZero = hy == 0;
+    b32 xIsInf  = hx == MATS_F32_EXP_MASK;
+    b32 yIsInf  = hy == MATS_F32_EXP_MASK;
+
+    f32 atanInput  = xIsOne ? y : absolute32(y / x);
+    f32 atanOutput = atan32(atanInput);
+
+    f32 result;
+    if (xIsOne)
+    {
+        result = atanOutput;
+    }
+    else
+    {
+        if (yIsZero || xIsZero || xIsInf || yIsInf)
+        {
+            f32 mult = 2.0f;
+            if (xIsInf || yIsZero)
+            {
+                mult = xLtZero ? 4.0f : 0.0f;
+            }
+            if (xIsInf && yIsInf)
+            {
+                mult = xLtZero ? 3.0f : 1.0f;
+            }
+            result = mult * gPiOver4F32;
+        }
+        else
+        {
+            result = atanOutput;
+
+            if (xLtZero) {
+                result = gPiF32 - (result - gPiF32_lo);
+            }
+        }
+        result = yLtZero ? -result : result;
+    }
+
+    return result;
+}
+#endif
+
 internal f32_4x
 atan2_32_4x(f32_4x y, f32_4x x)
 {
+    f32_4x hx = x & F32_4x(0x7FFFFFFFU);
+    f32_4x hy = y & F32_4x(0x7FFFFFFFU);
+    f32_4x ySign = and_not(y, F32_4x(0x7FFFFFFFU));
 
+    f32_4x xIsOne  = s32_4x_equal(x, S32_4x(0x3F800000));
+    f32_4x xLtZero = s32_4x_less(x, zero_s32_4x());
+    f32_4x xIsZero = s32_4x_equal(hx, zero_f32_4x());
+    f32_4x yIsZero = s32_4x_equal(hy, zero_f32_4x());
+    f32_4x xIsInf  = s32_4x_equal(hx, S32_4x(MATS_F32_EXP_MASK));
+    f32_4x yIsInf  = s32_4x_equal(hy, S32_4x(MATS_F32_EXP_MASK));
+
+    f32_4x atanIn  = select4x(absolute(y / x), xIsOne, y);
+    f32_4x atanOut = atan32_4x(atanIn);
+
+    f32_4x doSpecial = yIsZero | xIsZero | xIsInf | yIsInf;
+    f32_4x do40      = xIsInf | yIsZero;
+    f32_4x do31      = xIsInf & yIsInf;
+    f32_4x piMult    = F32_4x(2.0f);
+    f32_4x do40mul   = s32_4x_and(F32_4x(4.0f), xLtZero);
+    f32_4x do31mul   = s32_4x_and(F32_4x(2.0f), xLtZero) + F32_4x(1.0f);
+    piMult = select4x(piMult, do40, do40mul);
+    piMult = select4x(piMult, do31, do31mul);
+    f32_4x specialRes = piMult * F32_4x(gPiOver4F32);
+
+    f32_4x result = atanOut;
+    f32_4x negResult = F32_4x(gPiF32) - (result - F32_4x(gPiF32_lo));
+    result = select4x(result, xLtZero, negResult);
+    result = select4x(result, doSpecial, specialRes);
+    result = result ^ ySign;
+    result = select4x(result, xIsOne, atanOut);
+
+    return result;
 }
-#endif
