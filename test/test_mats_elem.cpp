@@ -244,110 +244,28 @@ exp32_sse(f32 x)
 
 #include "test_common.cpp"
 
-internal f32_4x
-sqrtf_4x(f32_4x x)
-{
-    f32_4x result;
-    result.e[0] = sqrtf(x.e[0]);
-    result.e[1] = sqrtf(x.e[1]);
-    result.e[2] = sqrtf(x.e[2]);
-    result.e[3] = sqrtf(x.e[3]);
-    return result;
-}
+WIDE_FUNC_FROM_F32(sqrtf)
+WIDE_FUNC_FROM_F32_F32(hypotf)
+WIDE_FUNC_FROM_F32(expf)
+WIDE_FUNC_FROM_F32(exp2f)
+WIDE_FUNC_FROM_F32(expm1f)
+WIDE_FUNC_FROM_F32(logf)
+WIDE_FUNC_FROM_F32(log2f)
+WIDE_FUNC_FROM_F32(log10f)
+WIDE_FUNC_FROM_F32(log1pf)
+WIDE_FUNC_FROM_F32_F32(powf)
 
-internal f32_4x
-hypotf_4x(f32_4x x, f32_4x y)
-{
-    f32_4x result;
-    result.e[0] = hypotf(x.e[0], y.e[0]);
-    result.e[1] = hypotf(x.e[1], y.e[1]);
-    result.e[2] = hypotf(x.e[2], y.e[2]);
-    result.e[3] = hypotf(x.e[3], y.e[3]);
-    return result;
-}
-
-internal f32_4x
-expf_4x(f32_4x x)
-{
-    f32_4x result;
-    result.e[0] = expf(x.e[0]);
-    result.e[1] = expf(x.e[1]);
-    result.e[2] = expf(x.e[2]);
-    result.e[3] = expf(x.e[3]);
-    return result;
-}
-
-internal f32_4x
-exp2f_4x(f32_4x x)
-{
-    f32_4x result;
-    result.e[0] = exp2f(x.e[0]);
-    result.e[1] = exp2f(x.e[1]);
-    result.e[2] = exp2f(x.e[2]);
-    result.e[3] = exp2f(x.e[3]);
-    return result;
-}
-
-internal f32_4x
-logf_4x(f32_4x x)
-{
-    f32_4x result;
-    result.e[0] = logf(x.e[0]);
-    result.e[1] = logf(x.e[1]);
-    result.e[2] = logf(x.e[2]);
-    result.e[3] = logf(x.e[3]);
-    return result;
-}
-
-internal f32_4x
-log2f_4x(f32_4x x)
-{
-    f32_4x result;
-    result.e[0] = log2f(x.e[0]);
-    result.e[1] = log2f(x.e[1]);
-    result.e[2] = log2f(x.e[2]);
-    result.e[3] = log2f(x.e[3]);
-    return result;
-}
-
-internal f32_4x
-log10f_4x(f32_4x x)
-{
-    f32_4x result;
-    result.e[0] = log10f(x.e[0]);
-    result.e[1] = log10f(x.e[1]);
-    result.e[2] = log10f(x.e[2]);
-    result.e[3] = log10f(x.e[3]);
-    return result;
-}
-
-internal f32_4x
-powf_4x(f32_4x a, f32_4x b)
-{
-    f32_4x result;
-    result.e[0] = powf(a.e[0], b.e[0]);
-    result.e[1] = powf(a.e[1], b.e[1]);
-    result.e[2] = powf(a.e[2], b.e[2]);
-    result.e[3] = powf(a.e[3], b.e[3]);
-    return result;
-}
-
-internal f32_4x
-pow32_4x_temp(f32_4x a, f32_4x b)
-{
-    f32_4x result;
-    result.e[0] = pow32(a.e[0], b.e[0]);
-    result.e[1] = pow32(a.e[1], b.e[1]);
-    result.e[2] = pow32(a.e[2], b.e[2]);
-    result.e[3] = pow32(a.e[3], b.e[3]);
-    return result;
-}
+#define pow32_temp pow32
+WIDE_FUNC_FROM_F32_F32(pow32_temp)
 
 internal f32_4x
 log10_32_fast_4x_t(f32_4x x)
 {
     return log10_32_fast_4x(x);
 }
+
+#define expm1_temp32 expm1_32_nonsse
+WIDE_FUNC_FROM_F32(expm1_temp32)
 
 enum DoTestFlag
 {
@@ -506,7 +424,7 @@ s32 main(s32 argc, char **argv)
 
         BEGIN_TEST(doTests, expm1, call_comp_x);
         call_comp_x(mats, expm1, _32_nonsse, stdSec);
-        //call_comp_x_4x(matsse, expm1, _32_4x, stdSec);
+        call_comp_x_4x(matsse, expm1, _32_4x, stdSec);
         //call_comp_x_4x(fatsse, expm1, _32_fast_4x_t, stdSec);
         END_TEST();
 
@@ -534,14 +452,14 @@ s32 main(s32 argc, char **argv)
         BEGIN_TEST(doTests, log1p, call_comp_x);
         call_comp_x(mats, log1p, 32_nonsse, stdSec);
         call_comp_x(mats, log1p, _fast32_nonsse, stdSec);
-        //call_comp_x_4x(matsse, log1p, _32_4x, stdSec);
+        call_comp_x_4x(mats4, log1p, 32_4x, stdSec);
         //call_comp_x_4x(fatsse, log1p, _32_fast_4x_t, stdSec);
         END_TEST();
 
         BEGIN_TEST(doTests, pow, call_comp_x2);
         call_comp_x2(mats, pow, 32, stdSec);
         call_comp_x2_4x(matsse, pow, 32_4x, stdSec);
-        call_comp_x2_4x(mats, pow, 32_4x_temp, stdSec);
+        call_comp_x2_4x(mats, pow, 32_temp_4x, stdSec);
         END_TEST();
     }
 
@@ -584,7 +502,7 @@ s32 main(s32 argc, char **argv)
 
         BEGIN_TEST(doTests, expm1, call_spd);
         call_spd(mats, expm1, _32_nonsse, stdSec);
-        //call_spd_4x(mats, expm1, _32_4x, stdSec);
+        call_spd_4x(mats, expm1, _32_4x, stdSec);
         END_TEST();
 
         minVal = 1.0e-9f;
@@ -611,7 +529,7 @@ s32 main(s32 argc, char **argv)
         BEGIN_TEST(doTests, log1p, call_spd);
         call_spd(mats, log1p, 32_nonsse, stdSec);
         call_spd(mats, log1p, _fast32_nonsse, stdSec);
-        //call_spd_4x(mats, log1p, 32_4x, stdSec);
+        call_spd_4x(mats4, log1p, 32_4x, stdSec);
         END_TEST();
 
         BEGIN_TEST(doTests, pow, call_spd2);
@@ -648,6 +566,11 @@ s32 main(s32 argc, char **argv)
             call_spd_4x(fats, exp2, _32_fast_4x, stdSec);
             END_TEST();
 
+            BEGIN_TEST_WIDE(doTests, expm1, call_spd_4x);
+            call_spd_4x(mats, expm1, _32_4x, stdSec);
+            call_spd_4x(matst, expm1, _temp32_4x, stdSec);
+            END_TEST();
+
             minVal = 1.0e-9f;
             maxVal = 123.8f;
 
@@ -666,9 +589,13 @@ s32 main(s32 argc, char **argv)
             call_spd_4x(fats, log10, _32_fast_4x_t, stdSec);
             END_TEST();
 
+            BEGIN_TEST_WIDE(doTests, log1p, call_spd_4x);
+            call_spd_4x(mats, log1p, 32_4x, stdSec);
+            END_TEST();
+
             BEGIN_TEST_WIDE(doTests, pow, call_spd2_4x);
             call_spd2_4x(mats, pow, 32_4x, stdSec);
-            call_spd2_4x(tats, pow, 32_4x_temp, stdSec);
+            call_spd2_4x(tats, pow, 32_temp_4x, stdSec);
             END_TEST();
         }
     }

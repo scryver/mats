@@ -499,6 +499,342 @@ log10_32_4x(f32_4x x)
     return result;
 }
 
+#if 0
+// NOTE(michiel): Template used for simd
+internal f32
+expm1_32_temp(f32 x)
+{
+    // NOTE(michiel): result = exp(x) - 1
+    u32 hx = u32f32(x).u;
+    f32 ln2_hi = gLn2HighF32s[0];
+    f32 ln2_lo = gLn2LowF32s[0];
+
+    s32 xSign = hx & MATS_F32_SIGN_MASK;
+
+    hx &= MATS_F32_ABS_MASK;
+
+    b32 hxValid        = hx < 0x4195B844;
+    b32 hxGtHalfLn2    = hx > 0x3EB17218;
+    b32 hxGeOneHalfLn2 = hx > 0x3F851591;
+
+    b32 isNan = hx > MATS_F32_EXP_MASK;
+    b32 isInfOrLtZero = xSign || (hx == MATS_F32_EXP_MASK);
+    b32 isTooBig = hx > FLT_UWORD_LOG_MAX;
+
+    // NOTE(michiel): Argument reduction
+    f32 c = 0.0f;
+    s32 k = 0;
+    if (hxGtHalfLn2)
+    {
+        // NOTE(michiel): |x| > 0.5*ln(2)
+        s32 xSignMod = hxGeOneHalfLn2 ? 0 : xSign;
+        f32 hi = u32f32(xSignMod ^ u32f32(-ln2_hi).u).f;
+        f32 lo = u32f32(xSignMod ^ u32f32(ln2_lo).u).f;
+        k      = 1 - ((u32)xSign >> 30);
+
+        if (hxGeOneHalfLn2)
+        {
+            k = (s32)(gInvLn2F32 * x + u32f32(xSign ^ u32f32(0.5f).u).f);
+            f32 t = (f32)k;
+            hi *= t;
+            lo *= t;
+        }
+        hi = x + hi;
+        x = hi - lo;
+        c = (hi - x) - lo;
+    }
+
+    // NOTE(michiel): x is in primary range
+    f32 hfx = 0.5f * x;
+    f32 hxs = x * hfx;
+#if 1
+    f32 r1 = 1.5807170421e-3f * hxs;
+    r1 = (r1 - 3.3333212137e-2f) * hxs;
+#else
+    f32 r1 = -2.0109921195e-07f * hxs;
+    r1 = (r1 + 4.0082177293e-06f) * hxs;
+    r1 = (r1 - 7.9365076090e-05f) * hxs;
+    r1 = (r1 + 1.5873016091e-03f) * hxs;
+    r1 = (r1 - 3.3333335072e-02f) * hxs;
+#endif
+    r1 = (r1 + 1.0f);
+
+    f32 t = 3.0f - r1 * hfx;
+    f32 e = hxs * ((r1 - t) / (6.0f - x * t));
+    f32 e2 = (x * (e - c) - c) - hxs;
+    f32 xMe2 = x - e2;
+
+    b32 kNotLarge = (k > -2) && (k < 57);
+    b32 kLarge = !kNotLarge;
+    b32 kIsZero = k == 0;
+    b32 kIsPOne = k == 1;
+    b32 kIsMOne = k == -1;
+    b32 kLtExpSh = k < MATS_F32_EXP_SHIFT;
+
+    f32 y = 1.0f;
+    f32 b = xMe2;
+    if (kNotLarge)
+    {
+        if (kLtExpSh) {
+            y = u32f32((u32)0x3F800000 - (0x01000000 >> k)).f;
+        } else {
+            f32 c = u32f32((u32)(MATS_F32_EXP_BIAS - k) << MATS_F32_EXP_SHIFT).f;
+            b = x - (e2 + c);
+        }
+    }
+    y = y + b;
+    u32 i = u32f32(y).u;
+    f32 result = u32f32(i + (k << MATS_F32_EXP_SHIFT)).f;
+    result = result - (kLarge ? 1.0f : 0.0f);
+
+    if (kIsZero)
+    {
+        result = xMe2;
+    }
+    else if (kIsMOne)
+    {
+        result = 0.5f * xMe2 - 0.5f;
+    }
+    else if (kIsPOne)
+    {
+        if (x < -0.25f) {
+            result = -2.0f * (e2 - (x + 0.5f));
+        } else {
+            result = 1.0f + 2.0f * xMe2;
+        }
+    }
+
+    if (!hxValid)
+    {
+        // NOTE(michiel): |x| >= 27 * ln(2)
+        if (isNan) {
+            result = u32f32((u32)MATS_F32_EXP_MASK | 0x100).f;
+        } else if (isInfOrLtZero) {
+            result = xSign ? -1.0f : F32_INF;
+        } else if (isTooBig) {
+            result = F32_INF;
+        }
+    }
+
+    return result;
+}
+#endif
+
+internal f32_4x
+expm1_32_4x(f32_4x x)
+{
+    f32_4x hx = x & S32_4x(0x7FFFFFFF);
+    f32_4x xSign = and_not(x, S32_4x(0x7FFFFFFF));
+
+    f32_4x ln2Hi = F32_4x(-gLn2HighF32s[0]);
+    f32_4x ln2Lo = F32_4x(gLn2LowF32s[0]);
+
+    f32_4x hxValid = s32_4x_less(hx, S32_4x(0x4195B844));
+    f32_4x hxGtHalfLn2 = s32_4x_greater(hx, S32_4x(0x3EB17218));
+    f32_4x hxGeOneHalfLn2 = s32_4x_greater(hx, S32_4x(0x3F851591));
+
+    f32_4x xLtZero = x < zero_f32_4x();
+
+    f32_4x isNan = s32_4x_greater(hx, S32_4x(MATS_F32_EXP_MASK));
+    f32_4x isInfOrLtZero = s32_4x_and_not(s32_4x_or(xLtZero, s32_4x_equal(x, S32_4x(MATS_F32_EXP_MASK))), hxValid);
+    f32_4x isTooBig = s32_4x_and_not(s32_4x_greater(hx, S32_4x(FLT_UWORD_LOG_MAX)), xLtZero);
+
+    f32_4x xSignMod = s32_4x_and_not(xSign, hxGeOneHalfLn2);
+    f32_4x hi = xSignMod ^ ln2Hi;
+    f32_4x lo = xSignMod ^ ln2Lo;
+
+    f32_4x minTwoOrZero; minTwoOrZero.mi = _mm_srli_epi32(xSign.mi, 30);
+    f32_4x k = s32_4x_sub(S32_4x(1), minTwoOrZero);
+
+    f32_4x kGe = s32_4x_from_f32_trunc(F32_4x(gInvLn2F32) * x + (xSign ^ F32_4x(0.5f)));
+    f32_4x tGe = f32_4x_from_s32(kGe);
+    tGe = select4x(F32_4x(1.0f), hxGeOneHalfLn2, tGe);
+    k   = select4x(k, hxGeOneHalfLn2, kGe);
+
+    hi = hi * tGe;
+    lo = lo * tGe;
+    hi = x + hi;
+    f32_4x xGt = hi - lo;
+    f32_4x c   = (hi - xGt) - lo;
+
+    c = s32_4x_and(c, hxGtHalfLn2);
+    k = s32_4x_and(k, hxGtHalfLn2);
+    x = select4x(x, hxGtHalfLn2, xGt);
+
+    f32_4x hfx = F32_4x(0.5f) * x;
+    f32_4x hxs = x * hfx;
+    f32_4x r1 = F32_4x(1.5807170421e-3f) * hxs;
+    r1 = (r1 - F32_4x(3.3333212137e-2f)) * hxs;
+    r1 = r1 + F32_4x(1.0f);
+
+
+    f32_4x t = F32_4x(3.0f) - r1 * hfx;
+    f32_4x e = hxs * ((r1 - t) / (F32_4x(6.0f) - x * t));
+    f32_4x e2 = (x * (e - c) - c) - hxs;
+    f32_4x xMe2 = x - e2;
+
+    f32_4x kNotLarge = s32_4x_and(s32_4x_greater(k, S32_4x(-2)),
+                                  s32_4x_less(k, S32_4x(57)));
+    f32_4x kIsZero   = s32_4x_equal(k, zero_s32_4x());
+    f32_4x kIsPOne   = s32_4x_equal(k, S32_4x(1));
+    f32_4x kIsMOne   = s32_4x_equal(k, S32_4x(-1));
+    f32_4x kLtExpSh  = s32_4x_less(k, S32_4x(MATS_F32_EXP_SHIFT));
+
+    f32_4x shifts = S32_4x(0x01000000 >> k.u[0], 0x01000000 >> k.u[1], 0x01000000 >> k.u[2], 0x01000000 >> k.u[3]);
+    f32_4x y = select4x(F32_4x(1.0f), s32_4x_and(kNotLarge, kLtExpSh), s32_4x_sub(F32_4x(1.0f), shifts));
+    f32_4x correct; correct.mi = _mm_slli_epi32(s32_4x_sub(S32_4x(MATS_F32_EXP_BIAS), k).mi, MATS_F32_EXP_SHIFT);;
+    f32_4x b = select4x(xMe2, s32_4x_and_not(kNotLarge, kLtExpSh), x - (e2 + correct));
+
+    y = y + b;
+    f32_4x kShifted; kShifted.mi = _mm_slli_epi32(k.mi, MATS_F32_EXP_SHIFT);
+    f32_4x result = s32_4x_add(y, kShifted);
+    result = result - s32_4x_and_not(F32_4x(1.0f), kNotLarge);
+
+    result = select4x(result, kIsZero, xMe2);
+    result = select4x(result, kIsMOne, F32_4x(0.5f) * xMe2 - F32_4x(0.5f));
+
+    f32_4x kPOneRes = select4x(F32_4x(1.0f) + F32_4x(2.0f) * xMe2,
+                               x < F32_4x(-0.25f),
+                               F32_4x(-2.0f) * (e2 - (x + F32_4x(0.5f))));
+    result = select4x(result, kIsPOne, kPOneRes);
+
+    f32_4x isNanRes = S32_4x(MATS_F32_EXP_MASK | 0x100);
+    f32_4x isInfRes = select4x(F32_4x(F32_INF), xLtZero, F32_4x(-1.0f));
+
+    f32_4x errorRes = F32_4x(F32_INF);
+    errorRes = select4x(errorRes, isInfOrLtZero, isInfRes);
+    errorRes = select4x(errorRes, isNan, isNanRes);
+
+    result = select4x(result, isTooBig | isInfOrLtZero | isNan, errorRes);
+
+    return result;
+}
+
+#if 0
+// NOTE(michiel): Template used for simd
+internal f32
+log1p32_temp(f32 x)
+{
+    // NOTE(michiel): Musl libc version
+    /* |(log(1+s)-log(1-s))/s - Lg(s)| < 2**-34.24 (~[-4.95e-11, 4.97e-11]). */
+    f32 ln2_hi = gLn2HighF32s[0];
+    f32 ln2_lo = gLn2LowF32s[0];
+    s32 sx = (s32)u32f32(x).u;
+
+    b32 xIsNotInfOrNan = (sx - (s32)0x80000000) < (s32)(MATS_F32_EXP_MASK - 0x80000000);
+    b32 xP1LtSqrt2     = (sx - (s32)0x80000000) < (s32)(0x3ED413D0 - 0x80000000);
+    b32 xLtZero        = sx < 0;
+    b32 xLtMOne        = sx < (s32)0xBF800000;
+    b32 xInRange       = sx > (s32)0xBE95F619;
+
+    b32 ltSqrOrZero = xP1LtSqrt2 || xLtZero;
+    b32 doNotRetX   = (xIsNotInfOrNan || ltSqrOrZero);
+    b32 doRetMinInf = ltSqrOrZero && xLtMOne;
+    s32 k = ltSqrOrZero && xInRange ? 0 : 0xFFFFFFFF;
+
+    f32 c = 0.0f;
+    f32 f = x;
+
+    if (k)
+    {
+        U32F32 u = u32f32(1.0f + x);
+        u32 iu = u.u;
+        iu += 0x3F800000 - 0x3F3504F3;
+        k = (s32)(iu >> MATS_F32_EXP_SHIFT) - MATS_F32_EXP_BIAS;
+        // NOTE(michiel): Correction term
+        if (k < 25)
+        {
+            f32 a = (k < 2) ?    x : 1.0f;
+            f32 b = (k < 2) ? 1.0f : x;
+            c = a - (u.f - b);
+            c /= u.f;
+        }
+
+        // NOTE(michiel): Reduce u into [sqrt(2)/2, sqrt(2)]
+        iu = (iu & MATS_F32_MANT_MASK) + 0x3F3504F3;
+        u.u = iu;
+        f = u.f - 1.0f;
+    }
+
+    f32 s = f / (2.0f + f);
+    f32 z = s * s;
+    f32 w = z * z;
+    f32 t1 = w * (0xccce13.0p-25f + w * 0xf89e26.0p-26f);
+    f32 t2 = z * (0xaaaaaa.0p-24f + w * 0x91e9ee.0p-25f);
+    f32 r  = t1 + t2;
+    f32 hfSq = 0.5f * f * f;
+    f32 dk = (f32)k;
+
+    f32 result = s * (hfSq + r) + (dk * ln2_lo + c) - hfSq + f + dk * ln2_hi;
+
+    if (doRetMinInf) {
+        result = -F32_INF;
+    }
+    if (!doNotRetX) {
+        result = x;
+    }
+    return result;
+}
+#endif
+
+internal f32_4x
+log1p32_4x(f32_4x x)
+{
+    f32_4x ln2Hi = F32_4x(gLn2HighF32s[0]);
+    f32_4x ln2Lo = F32_4x(gLn2LowF32s[0]);
+
+    f32_4x xUnsigned = s32_4x_sub(x, S32_4x(0x80000000));
+    f32_4x xIsNotInfOrNan = s32_4x_less(xUnsigned, S32_4x(MATS_F32_EXP_MASK - 0x80000000));
+    f32_4x xP1LtSqrt2     = s32_4x_less(xUnsigned, S32_4x(0x3ED413D0 - 0x80000000));
+    //f32_4x xLtZero        = x < zero_f32_4x();
+    //f32_4x xLtMOne        = x < F32_4x(-1.0f);
+    f32_4x xLtZero        = s32_4x_less(x, zero_s32_4x());
+    f32_4x xLtMOne        = s32_4x_less(x, S32_4x(0xBF800000));
+    f32_4x xInRange       = s32_4x_greater(x, S32_4x(0xBE95F619));
+
+    f32_4x ltSqrOrZero = xP1LtSqrt2 | xLtZero;
+    f32_4x doNotRetX   = xIsNotInfOrNan | ltSqrOrZero;
+    f32_4x doRetMinInf = ltSqrOrZero & xLtMOne;
+    f32_4x k = s32_4x_xor(ltSqrOrZero & xInRange, S32_4x(0xFFFFFFFF));
+
+    f32_4x xP1 = F32_4x(1.0f) + x;
+    f32_4x iu = s32_4x_add(xP1, S32_4x(0x3F800000 - 0x3F3504F3));
+
+    f32_4x shifted; shifted.mi = _mm_srli_epi32(iu.mi, MATS_F32_EXP_SHIFT);
+    f32_4x kMod = s32_4x_sub(shifted, S32_4x(MATS_F32_EXP_BIAS));
+
+    f32_4x kLt25 = s32_4x_less(k, S32_4x(25));
+    f32_4x kLt2  = s32_4x_less(k, S32_4x(2));
+
+    f32_4x a = select4x(F32_4x(1.0f), kLt2, x);
+    f32_4x b = select4x(x, kLt2, F32_4x(1.0f));
+
+    f32_4x c = a - (xP1 - b);
+    c = c / xP1;
+    c = c & kLt25;
+
+    iu = s32_4x_add(s32_4x_and(iu, S32_4x(MATS_F32_MANT_MASK)), S32_4x(0x3F3504F3));
+    f32_4x f = iu - F32_4x(1.0f);
+
+    c = c & k;
+    f = select4x(x, k, f);
+    k = k & kMod;
+
+    f32_4x s = f / (F32_4x(2.0f) + f);
+    f32_4x z = s * s;
+    f32_4x w = z * z;
+    f32_4x t1 = w * (F32_4x(0xccce13.0p-25f) + w * F32_4x(0xf89e26.0p-26f));
+    f32_4x t2 = z * (F32_4x(0xaaaaaa.0p-24f) + w * F32_4x(0x91e9ee.0p-25f));
+    f32_4x r = t1 + t2;
+    f32_4x hfSq = F32_4x(0.5f) * f * f;
+    f32_4x dk = f32_4x_from_s32(k);
+
+    f32_4x result = s * (hfSq + r) + (dk * ln2Lo + c) - hfSq + f + dk * ln2Hi;
+    result = select4x(result, doRetMinInf, F32_4x(-F32_INF));
+    result = select4x(x, doNotRetX, result);
+    return result;
+}
+
 //
 // NOTE(mich2iel): Pow
 //

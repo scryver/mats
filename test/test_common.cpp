@@ -45,6 +45,30 @@ f32 stdSec = func(stdlib, name, f_4x, 0.0f)
 fprintf(stdout, "\n"); \
 }
 
+#define WIDE_FUNC_FROM_F32(name) \
+internal f32_4x \
+name##_4x(f32_4x x) \
+{ \
+f32_4x result; \
+result.e[0] = name(x.e[0]); \
+result.e[1] = name(x.e[1]); \
+result.e[2] = name(x.e[2]); \
+result.e[3] = name(x.e[3]); \
+return result; \
+}
+
+#define WIDE_FUNC_FROM_F32_F32(name) \
+internal f32_4x \
+name##_4x(f32_4x x, f32_4x y) \
+{ \
+f32_4x result; \
+result.e[0] = name(x.e[0], y.e[0]); \
+result.e[1] = name(x.e[1], y.e[1]); \
+result.e[2] = name(x.e[2], y.e[2]); \
+result.e[3] = name(x.e[3], y.e[3]); \
+return result; \
+}
+
 internal void
 set_default_fp_behavior(void)
 {
