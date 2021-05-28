@@ -143,7 +143,8 @@ sin32_4x(f32_4x y)
     return result;
 }
 
-internal v2_4x
+// TODO(michiel): Rename to SinCos32_4x
+internal SinCos_4x
 sincos32_4x(f32_4x y)
 {
     // NOTE(michiel): absolute value of y should be smaller than 100.0f
@@ -209,9 +210,9 @@ sincos32_4x(f32_4x y)
     sinResult = select4x(sinResult, selSinSign, minSin);
     sinResult = select4x(sinResult, smallestMask, y);
 
-    v2_4x result;
-    result.x = cosResult;
-    result.y = sinResult;
+    SinCos_4x result;
+    result.cos = cosResult;
+    result.sin = sinResult;
     return result;
 }
 

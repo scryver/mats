@@ -490,7 +490,7 @@ atan32(c32 c)
 
     t = y + 1.0f;
     a = (x2 + (t * t)) / a;
-    result = complex32(w, 0.25f * log(a));
+    result = complex32(w, 0.25f * log32(a));
     return result;
 }
 

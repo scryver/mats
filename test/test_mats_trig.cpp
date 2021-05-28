@@ -487,10 +487,12 @@ s32 main(s32 argc, char **argv)
 
             BEGIN_TEST_WIDE(doTests, cos, call_spd_4x);
             call_spd_4x(mats4, cos, 32_4x, stdSec);
+            call_spd_4x(dip4, cos, _f32_4x, stdSec);
             END_TEST();
 
             BEGIN_TEST_WIDE(doTests, sin, call_spd_4x);
             call_spd_4x(mats4, sin, 32_4x, stdSec);
+            call_spd_4x(dip4, sin, _f32_4x, stdSec);
             END_TEST();
 
             BEGIN_TEST_WIDE(doTests, tan, call_spd_4x);
