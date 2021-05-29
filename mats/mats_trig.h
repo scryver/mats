@@ -391,7 +391,7 @@ atan32(f32 x)
     if (hx >= 0x50800000)
     {
         // NOTE(michiel): |x| >= 2^34
-        if (FLT_UWORD_IS_NAN(hx)) {
+        if (MATS_F32_UWORD_IS_NAN(hx)) {
             return x + x;
         } else if (ix > 0) {
             return 1.5707962513e+00f + 7.5497894159e-08f;
@@ -496,14 +496,14 @@ atan2_32(f32 y, f32 x)
     s32 iy = MATS_S32_FROM_F32(y);
     u32 hy = iy & MATS_F32_ABS_MASK;
 
-    if (FLT_UWORD_IS_NAN(hx) || FLT_UWORD_IS_NAN(hy)) {
+    if (MATS_F32_UWORD_IS_NAN(hx) || MATS_F32_UWORD_IS_NAN(hy)) {
         return x + y;
     }
     if (ix == 0x3F800000) {
         return atan32(y); // NOTE(michiel): x == 1.0f
     }
     s32 m = ((iy >> 31) & 1) | ((ix >> 30) & 2); // NOTE(michiel): 2 * sign(x) + sign(y)
-    if (FLT_UWORD_IS_ZERO(hy))
+    if (MATS_F32_UWORD_IS_ZERO(hy))
     {
         switch (m)
         {
@@ -514,14 +514,14 @@ atan2_32(f32 y, f32 x)
         }
     }
 
-    if (FLT_UWORD_IS_ZERO(hx))
+    if (MATS_F32_UWORD_IS_ZERO(hx))
     {
         return (iy < 0) ? -gPiOver2F32 - gTinyF32 : gPiOver2F32 + gTinyF32;
     }
 
-    if (FLT_UWORD_IS_INFINITE(hx))
+    if (MATS_F32_UWORD_IS_INFINITE(hx))
     {
-        if (FLT_UWORD_IS_INFINITE(hy))
+        if (MATS_F32_UWORD_IS_INFINITE(hy))
         {
             switch (m)
             {
@@ -543,7 +543,7 @@ atan2_32(f32 y, f32 x)
         }
     }
 
-    if (FLT_UWORD_IS_INFINITE(hy)) {
+    if (MATS_F32_UWORD_IS_INFINITE(hy)) {
         return (iy < 0) ? -gPiOver2F32 - gTinyF32 : gPiOver2F32 + gTinyF32;
     }
 
@@ -576,7 +576,7 @@ cosh32(f32 x)
     s32 ix = (s32)u32f32(x).u;
     ix &= MATS_F32_ABS_MASK;
 
-    if (!FLT_UWORD_IS_FINITE(ix)) {
+    if (!MATS_F32_UWORD_IS_FINITE(ix)) {
         return x * x;
     }
 
@@ -598,12 +598,12 @@ cosh32(f32 x)
         f32 t = exp32(absolute32(x));
         return 0.5f * t + 0.5f / t;
     }
-    else if (ix <= FLT_UWORD_LOG_MAX)
+    else if (ix <= MATS_F32_UWORD_LOG_MAX)
     {
         // NOTE(michiel): |x| in [22, log(FLT_MAX)], return exp(|x|)/2
         return 0.5f * exp32(absolute32(x));
     }
-    else if (ix <= FLT_UWORD_LOG_2MAX)
+    else if (ix <= MATS_F32_UWORD_LOG_2MAX)
     {
         // NOTE(michiel): |x| in[log(FLT_MAX), overflowThreshold], return exp(|x|/2)^2/2
         f32 w = exp32(0.5f*absolute32(x));
@@ -622,7 +622,7 @@ sinh32(f32 x)
     s32 jx = (s32)u32f32(x).u;
     s32 ix = jx & MATS_F32_ABS_MASK;
 
-    if (!FLT_UWORD_IS_FINITE(ix)) {
+    if (!MATS_F32_UWORD_IS_FINITE(ix)) {
         return x + x;
     }
 
@@ -642,12 +642,12 @@ sinh32(f32 x)
             return h * (t + t / (t + 1.0f));
         }
     }
-    else if (ix <= FLT_UWORD_LOG_MAX)
+    else if (ix <= MATS_F32_UWORD_LOG_MAX)
     {
         // NOTE(michiel): |x| in [22, log(FLT_MAX)], return exp(|x|)/2
         return h * exp32(absolute32(x));
     }
-    else if (ix <= FLT_UWORD_LOG_2MAX)
+    else if (ix <= MATS_F32_UWORD_LOG_2MAX)
     {
         // NOTE(michiel): |x| in[log(FLT_MAX), overflowThreshold], return exp(|x|/2)^2/2
         f32 w = exp32(0.5f*absolute32(x));
@@ -687,7 +687,7 @@ tanh32(f32 x)
     s32 jx = (s32)u32f32(x).u;
     s32 ix = jx & MATS_F32_ABS_MASK;
 
-    if (!FLT_UWORD_IS_FINITE(ix))
+    if (!MATS_F32_UWORD_IS_FINITE(ix))
     {
         if (jx >= 0) {
             return 1.0f / x + 1.0f; // NOTE(michiel): tanh(+/-inf) = +/-1
@@ -735,7 +735,7 @@ acosh32(f32 x)
         return (x - x) / (x - x);
     } else if (jx >= 0x4D800000) {
         // NOTE(michiel): x >= 2^28
-        if (!FLT_UWORD_IS_FINITE(jx)) {
+        if (!MATS_F32_UWORD_IS_FINITE(jx)) {
             // NOTE(michiel): Inf or NaN
             return x + x;
         } else {
@@ -762,7 +762,7 @@ asinh32(f32 x)
     s32 ix = jx & MATS_F32_ABS_MASK;
 
     f32 result;
-    if (!FLT_UWORD_IS_FINITE(ix)) {
+    if (!MATS_F32_UWORD_IS_FINITE(ix)) {
         // NOTE(michiel): Inf or NaN
         return x + x;
     } else if (ix < 0x31800000) {

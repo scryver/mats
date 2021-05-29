@@ -7,23 +7,50 @@ union mats_f32u
     s32 s;
 };
 
+union mats_f64u
+{
+    f64 f;
+    u64 u;
+    s64 s;
+    u32 u32s[2];
+    s32 s32s[2];
+};
+
 #define MATS_U32_FROM_F32(x)       ((mats_f32u){.f = (x)}).u
 #define MATS_S32_FROM_F32(x)       ((mats_f32u){.f = (x)}).s
 #define MATS_F32_FROM_U32(x)       ((mats_f32u){.u = (x)}).f
 #define MATS_F32_FROM_S32(x)       ((mats_f32u){.s = (x)}).f
 
-#define FLT_UWORD_IS_FINITE(x)     ((x) <  MATS_F32_EXP_MASK)
-#define FLT_UWORD_IS_NAN(x)        ((x) >  MATS_F32_EXP_MASK)
-#define FLT_UWORD_IS_INFINITE(x)   ((x) == MATS_F32_EXP_MASK)
-#define FLT_UWORD_LOG_MAX          0x42B17217
-#define FLT_UWORD_LOG_2MAX         0x42B2D4fC
-#define FLT_UWORD_HALF_MAX         (MATS_F32_ABS_MASK - (1L << MATS_F32_EXP_SHIFT))
-#define FLT_LARGEST_EXP            (MATS_F32_ABS_MASK >> MATS_F32_EXP_SHIFT)
-#define FLT_SMALLEST_EXP           -(MATS_F32_EXP_SHIFT - 1)
+#define MATS_U64_FROM_F64(x)       ((mats_f64u){.f = (x)}).u
+#define MATS_S64_FROM_F64(x)       ((mats_f64u){.f = (x)}).s
+#define MATS_F64_FROM_U64(x)       ((mats_f64u){.u = (x)}).f
+#define MATS_F64_FROM_S64(x)       ((mats_f64u){.s = (x)}).f
 
-#define FLT_UWORD_IS_ZERO(x)       ((x) == 0)
-#define FLT_UWORD_IS_SUBNORMAL(x)  ((x) <  0x00800000L)
-#define FLT_UWORD_LOG_MIN          0x42CFF1B5
+#define MATS_F32_UWORD_IS_FINITE(x)     ((x) <  MATS_F32_EXP_MASK)
+#define MATS_F32_UWORD_IS_NAN(x)        ((x) >  MATS_F32_EXP_MASK)
+#define MATS_F32_UWORD_IS_INFINITE(x)   ((x) == MATS_F32_EXP_MASK)
+#define MATS_F32_UWORD_LOG_MAX          0x42B17217
+#define MATS_F32_UWORD_LOG_2MAX         0x42B2D4fC
+#define MATS_F32_UWORD_HALF_MAX         (MATS_F32_ABS_MASK - (1L << MATS_F32_EXP_SHIFT))
+#define MATS_F32_LARGEST_EXP            (MATS_F32_ABS_MASK >> MATS_F32_EXP_SHIFT)
+#define MATS_F32_SMALLEST_EXP           -(MATS_F32_EXP_SHIFT - 1)
+
+#define MATS_F32_UWORD_IS_ZERO(x)       ((x) == 0)
+#define MATS_F32_UWORD_IS_SUBNORMAL(x)  ((x) <  0x00800000L)
+#define MATS_F32_UWORD_LOG_MIN          0x42CFF1B5
+
+#define MATS_F64_UWORD_IS_FINITE(x)     ((x) <  MATS_F64_EXP_MASK)
+#define MATS_F64_UWORD_IS_NAN(x)        ((x) >  MATS_F64_EXP_MASK)
+#define MATS_F64_UWORD_IS_INFINITE(x)   ((x) == MATS_F64_EXP_MASK)
+//#define MATS_F64_UWORD_LOG_MAX          0x42B17217
+//#define MATS_F64_UWORD_LOG_2MAX         0x42B2D4fC
+#define MATS_F64_UWORD_HALF_MAX         (MATS_F64_ABS_MASK - (1L << MATS_F64_EXP_SHIFT))
+#define MATS_F64_LARGEST_EXP            (MATS_F64_ABS_MASK >> MATS_F64_EXP_SHIFT)
+#define MATS_F64_SMALLEST_EXP           -(MATS_F64_EXP_SHIFT - 1)
+
+#define MATS_F64_UWORD_IS_ZERO(x)       ((x) == 0)
+#define MATS_F64_UWORD_IS_SUBNORMAL(x)  ((x) <  0x0080000000000000LL)
+//#define MATS_F64_UWORD_LOG_MIN          0x42CFF1B5
 
 struct SinCos32
 {
@@ -89,4 +116,10 @@ internal f32
 absolute32(f32 x)
 {
     return MATS_F32_FROM_U32(MATS_U32_FROM_F32(x) & MATS_F32_ABS_MASK);
+}
+
+internal f64
+absolute64(f64 x)
+{
+    return MATS_F64_FROM_U64(MATS_U64_FROM_F64(x) & MATS_F64_ABS_MASK);
 }

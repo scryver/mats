@@ -34,13 +34,6 @@ trunc32_4x(f32_4x x)
     return result;
 }
 
-internal f32_4x
-modulus32_4x(f32_4x num, f32_4x den)
-{
-    f32_4x result = num - (round32_4x(num / den) * den);
-    return result;
-}
-
 internal f32
 modulus32_nosafe(f32 num, f32 den)
 {
@@ -109,4 +102,36 @@ modulus32_nosafe(f32 num, f32 den)
     hnum = ((hnum - 0x00800000) | ((expDen + MATS_F32_EXP_BIAS) << MATS_F32_EXP_SHIFT));
     f32 result = u32f32(signNum | hnum).f;
 	return result;		/* exact output */
+}
+
+internal f64_2x
+floor64_2x(f64_2x x)
+{
+    f64_2x result;
+    result.md = _mm_floor_pd(x.md);
+    return result;
+}
+
+internal f64_2x
+ceil64_2x(f64_2x x)
+{
+    f64_2x result;
+    result.md = _mm_ceil_pd(x.md);
+    return result;
+}
+
+internal f64_2x
+round64_2x(f64_2x x)
+{
+    f64_2x result;
+    result.md = _mm_round_pd(x.md, _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC);
+    return result;
+}
+
+internal f64_2x
+trunc64_2x(f64_2x x)
+{
+    f64_2x result;
+    result.md = _mm_round_pd(x.md, _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    return result;
 }

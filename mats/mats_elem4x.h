@@ -637,7 +637,7 @@ expm1_32_4x(f32_4x x)
 
     f32_4x isNan = s32_4x_greater(hx, S32_4x(MATS_F32_EXP_MASK));
     f32_4x isInfOrLtZero = s32_4x_and_not(s32_4x_or(xLtZero, s32_4x_equal(x, S32_4x(MATS_F32_EXP_MASK))), hxValid);
-    f32_4x isTooBig = s32_4x_and_not(s32_4x_greater(hx, S32_4x(FLT_UWORD_LOG_MAX)), xLtZero);
+    f32_4x isTooBig = s32_4x_and_not(s32_4x_greater(hx, S32_4x(MATS_F32_UWORD_LOG_MAX)), xLtZero);
 
     f32_4x xSignMod = s32_4x_and_not(xSign, hxGeOneHalfLn2);
     f32_4x hi = xSignMod ^ ln2Hi;

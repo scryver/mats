@@ -1,5 +1,9 @@
 //
-// NOTE(michiel): Floor/Ceil/Round/Truncate
+// NOTE(michiel): Floor/Ceil/Round/Truncate/Modulus/Remainder
+//
+
+//
+// NOTE(michiel): 32-bit
 //
 
 internal f32
@@ -23,7 +27,7 @@ floor32(f32 x)
             {
                 if (i0 >= 0) {
                     i0 = 0;
-                } else if (!FLT_UWORD_IS_ZERO(ix)) {
+                } else if (!MATS_F32_UWORD_IS_ZERO(ix)) {
                     i0 = 0xBF800000;
                 }
             }
@@ -45,7 +49,7 @@ floor32(f32 x)
     }
     else
     {
-        if (!FLT_UWORD_IS_FINITE(ix)) {
+        if (!MATS_F32_UWORD_IS_FINITE(ix)) {
             result = x + x;
         } else {
             result = x;
@@ -76,7 +80,7 @@ ceil32(f32 x)
             {
                 if (i0 < 0) {
                     i0 = MATS_F32_SIGN_MASK;
-                } else if (!FLT_UWORD_IS_ZERO(ix)) {
+                } else if (!MATS_F32_UWORD_IS_ZERO(ix)) {
                     i0 = 0x3F800000;
                 }
             }
@@ -98,7 +102,7 @@ ceil32(f32 x)
     }
     else
     {
-        if (!FLT_UWORD_IS_FINITE(ix)) {
+        if (!MATS_F32_UWORD_IS_FINITE(ix)) {
             result = x + x;
         } else {
             result = x;
@@ -214,9 +218,9 @@ modulus32(f32 num, f32 den)
     hden &= MATS_F32_ABS_MASK; // |den|
 
     /* purge off exception values */
-    if (FLT_UWORD_IS_ZERO(hden) ||
-        !FLT_UWORD_IS_FINITE(hnum) ||
-        FLT_UWORD_IS_NAN(hden)) {
+    if (MATS_F32_UWORD_IS_ZERO(hden) ||
+        !MATS_F32_UWORD_IS_FINITE(hnum) ||
+        MATS_F32_UWORD_IS_NAN(hden)) {
         return (num * den) / (num * den);
     }
 
@@ -232,7 +236,7 @@ modulus32(f32 num, f32 den)
     s32 i;
     /* determine ix = ilogb(x) */
     s32 expNum;
-    if (FLT_UWORD_IS_SUBNORMAL(hnum))
+    if (MATS_F32_UWORD_IS_SUBNORMAL(hnum))
     {
         for (expNum = MATS_F32_EXP_MIN, i = (hnum << 8);
              i > 0;
@@ -248,7 +252,7 @@ modulus32(f32 num, f32 den)
 
     /* determine iy = ilogb(y) */
     s32 expDen;
-    if (FLT_UWORD_IS_SUBNORMAL(hden))
+    if (MATS_F32_UWORD_IS_SUBNORMAL(hden))
     {
         for (expDen = MATS_F32_EXP_MIN, i = (hden << 8);
              i >= 0;
@@ -337,14 +341,14 @@ remainder32(f32 num, f32 den)
     hden &= MATS_F32_ABS_MASK; // |den|
 
     /* purge off exception values */
-    if (FLT_UWORD_IS_ZERO(hden) ||
-        !FLT_UWORD_IS_FINITE(hnum) ||
-        FLT_UWORD_IS_NAN(hden))
+    if (MATS_F32_UWORD_IS_ZERO(hden) ||
+        !MATS_F32_UWORD_IS_FINITE(hnum) ||
+        MATS_F32_UWORD_IS_NAN(hden))
     {
         return (num * den) / (num * den);
     }
 
-    if (hden <= FLT_UWORD_HALF_MAX) {
+    if (hden <= MATS_F32_UWORD_HALF_MAX) {
         num = modulus32(num, den + den);
     }
     if ((hnum - hden) == 0) {
@@ -376,5 +380,215 @@ remainder32(f32 num, f32 den)
 
     hnum = u32f32(num).u;
     f32 result = u32f32(signNum ^ hnum).f;
+    return result;
+}
+
+//
+// NOTE(michiel): 64-bit
+//
+
+internal f64
+floor64(f64 x)
+{
+    f64 result;
+#if MATS_USE_SSE4
+    WideMath m;
+    m.md = _mm_floor_sd(_mm_set_sd(x), _mm_set_sd(x));
+    result = m.ed[0];
+#else
+    s64 i0 = MATS_S64_FROM_F64(x);
+    u64 ix = i0 & MATS_F64_ABS_MASK;
+    s32 j0 = (ix >> MATS_F64_EXP_SHIFT) - MATS_F64_EXP_BIAS;
+
+    if (j0 < MATS_F64_EXP_SHIFT)
+    {
+        if (j0 < 0)
+        {
+            if (i0 >= 0) {
+                i0 = 0;
+            } else if (!MATS_F64_UWORD_IS_ZERO(ix)) {
+                i0 = 0xBFF0000000000000LL;
+            }
+        }
+        else
+        {
+            u64 i = MATS_F64_MANT_MASK >> j0;
+            if ((i0 & i) == 0) {
+                return x;
+            }
+            if (i0 < 0) {
+                i0 += 0x0010000000000000LL >> j0;
+            }
+            i0 &= ~i;
+        }
+        result = MATS_F64_FROM_S64(i0);
+    }
+    else
+    {
+        if (!MATS_F64_UWORD_IS_FINITE(ix)) {
+            result = x + x;
+        } else {
+            result = x;
+        }
+    }
+#endif
+    return result;
+}
+
+internal f64
+ceil64(f64 x)
+{
+    f64 result;
+
+#if MATS_USE_SSE4
+    WideMath m;
+    m.md = _mm_ceil_sd(_mm_set_sd(x), _mm_set_sd(x));
+    result = m.ed[0];
+#else
+    s64 i0 = MATS_S64_FROM_F64(x);
+    u64 ix = i0 & MATS_F64_ABS_MASK;
+    s32 j0 = (ix >> MATS_F64_EXP_SHIFT) - MATS_F64_EXP_BIAS;
+
+    if (j0 < MATS_F64_EXP_SHIFT)
+    {
+        if (j0 < 0)
+        {
+            if (i0 < 0) {
+                i0 = MATS_F64_SIGN_MASK;
+            } else if (!MATS_F64_UWORD_IS_ZERO(ix)) {
+                i0 = 0x3FF0000000000000LL;
+            }
+        }
+        else
+        {
+            u64 i = MATS_F64_MANT_MASK >> j0;
+            if ((i0 & i) == 0) {
+                return x;
+            }
+            if (i0 > 0) {
+                i0 += 0x0010000000000000LL >> j0;
+            }
+            i0 &= ~i;
+        }
+        result = MATS_F64_FROM_S64(i0);
+    }
+    else
+    {
+        if (!MATS_F64_UWORD_IS_FINITE(ix)) {
+            result = x + x;
+        } else {
+            result = x;
+        }
+    }
+#endif
+    return result;
+}
+
+internal f64
+round64(f64 x)
+{
+    f64 result = 0.0;
+#if MATS_USE_SSE4
+    // NOTE(michiel): Does round-to-even to break ties (0.5f exact), so it will differ from the 'standard' c/c++ roundf
+    WideMath m;
+    m.md = _mm_round_sd(_mm_set_sd(x), _mm_set_sd(x), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC);
+    result = m.ed[0];
+#else
+    u64 w = MATS_U64_FROM_F64(x);
+
+    s32 j0 = (s32)((w & MATS_F64_EXP_MASK) >> MATS_F64_EXP_SHIFT) - MATS_F64_EXP_BIAS;
+    if (j0 < MATS_F64_EXP_SHIFT)
+    {
+        if (j0 < 0) {
+            w &= MATS_F32_SIGN_MASK;
+            if (j0 == -1) {
+                w |= (((u64)MATS_F64_EXP_BIAS) << MATS_F64_EXP_SHIFT);
+            }
+        }
+        else
+        {
+            u64 exponentMask = MATS_F64_MANT_MASK >> j0;
+            if ((w & exponentMask) == 0) {
+                return x;
+            }
+            w += 0x0008000000000000ULL >> j0;
+            w &= ~exponentMask;
+        }
+        result = MATS_F64_FROM_U64(w);
+    }
+    else
+    {
+        if (!MATS_F64_UWORD_IS_FINITE(w & MATS_F64_EXP_MASK)) {
+            result = x + x;
+        } else {
+            result = x;
+        }
+    }
+#endif
+    return result;
+}
+
+internal f64
+trunc64(f64 x)
+{
+    f64 result = 0.0;
+#if MATS_USE_SSE4
+    WideMath m;
+    m.md = _mm_round_sd(_mm_set_sd(x), _mm_set_sd(x), _MM_FROUND_TO_ZERO | _MM_FROUND_NO_EXC);
+    result = m.ed[0];
+#else
+#if 0
+    // TODO(michiel): Or should we just do this?
+    result = (f64)(s64)x;
+#else
+    u64 w = MATS_U64_FROM_F64(x);
+    s64 signBit = w & MATS_F64_SIGN_MASK;
+
+    s32 j0 = ((w & MATS_F64_EXP_MASK) >> MATS_F64_EXP_SHIFT) - MATS_F64_EXP_BIAS;
+    if (j0 < MATS_F64_EXP_SHIFT)
+    {
+        if (j0 < 0)
+        {
+            // NOTE(michiel): -1 < x < 1, so result is +0 or -0
+            result = MATS_F64_FROM_S64(signBit);
+        }
+        else
+        {
+            result = MATS_F64_FROM_U64((u64)signBit | (w & ~(MATS_F64_MANT_MASK >> j0)));
+        }
+    }
+    else
+    {
+        if (!MATS_F64_UWORD_IS_FINITE(w & MATS_F64_EXP_MASK)) {
+            result = x + x;
+        } else {
+            result = x;
+        }
+    }
+#endif
+#endif
+    return result;
+}
+
+internal f64
+modulus64(f64 num, f64 den)
+{
+    // NOTE(michiel): Returns 'num % den' where the returned value's sign is equal to the sign of the numerator,
+    // and the magnitude less than the magnitude of the denominator.
+    // This function computes the remainder from the division of numerator by denominator. Specifically, the return value
+    // is numerator - n * denominator, where n is the quotient of numerator divided by denominator, rounded towards zero.
+    // Thus, fmod (6.5, 2.3) returns 1.9, which is 6.5 minus 4.6.
+    f64 result = 0.0;
+	return result;
+}
+
+internal f64
+remainder64(f64 num, f64 den)
+{
+    // NOTE(michiel): Returns 'num % den' where the absolute value of the result is less than or equal to half the absolute value
+    // of the denominator. returned value's sign is equal to the sign of the numerator,
+    // This function is like modulus64 except that it rounds the internal quotient n to the nearest integer instead of towards
+    // zero. For example, remainder (6.5, 2.3) returns -0.4, which is 6.5 minus 6.9.
+    f64 result = 0.0;
     return result;
 }

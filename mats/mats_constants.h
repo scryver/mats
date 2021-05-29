@@ -13,6 +13,20 @@ global const f32 gInvLn10F32    =  4.3429449201e-01f;  /* 0x3ede5bd9 = 1/ln(10) 
 global const f32 gHugeF32       =  1.0e+30f;
 global const f32 gTinyF32       =  1.0e-30f;
 
+global const f64 gZeroF64       =  0.0;
+global const f64 gOneF64        =  1.0;
+global const f64 gHalfF64       =  0.5;
+//global const f64 g2pow8F64      =  2.5600000000e+02;  /* 0x43800000 = 2^8 */
+//global const f64 g2pow25F64     =  3.355446400e+07;   /* 0x4c000000 = 2^25 */
+//global const f64 g2powMin8F64   =  3.9062500000e-03;  /* 0x3b800000 = 2^-8 */
+//global const f64 g2powMin25F64  =  2.9802642388e-08;  /* 0x33000000 = 2^-25 */
+//global const f64 g2powMin100F64 =  7.8886090522e-31;  /* 0x0d800000 = 2^-100 */
+//global const f64 gLn2F64        =  6.9314718246e-01;  /* 0x3f317218 = ln(2) */
+//global const f64 gInvLn2F64     =  1.4426950216e+00;  /* 0x3fb8aa3b = 1/ln(2) */
+//global const f64 gInvLn10F64    =  4.3429449201e-01;  /* 0x3ede5bd9 = 1/ln(10) */
+global const f64 gHugeF64       =  1.0e+300;
+//global const f64 gTinyF64       =  1.0e-300;
+
 global const f32 gPiF32         =  3.1415927410e+00f; /* 0x40490fdb, 24 bits of pi */
 global const f32 gPiOver2F32    =  1.5707963705e+00f; /* 0x3fc90fdb, 24 bits of pi / 2 */
 global const f32 gPiOver4F32    =  7.8539818525e-01f; /* 0x3f490fdb, 24 bits of pi / 4 */

@@ -308,24 +308,24 @@ s32 main(s32 argc, char **argv)
     run_test_sincos_4x(string("sincos 4x"), 14, tests, scaler, arm_sincosf_4x, secondsStd);
 #endif
 
-    f32 stdSecSin = run_comp_f32(string("stdlib sinf"), 14, "sin", tests, -F32_TAU, F32_TAU, sinf, sinf, 0.0f);
-    run_comp_f32(string("trig sin"), 14, "sin", tests, -F32_TAU, F32_TAU, sinf, sin32, stdSecSin);
-    run_comp_f32(string("sun sinf"), 14, "sin", tests, -F32_TAU, F32_TAU, sinf, sun93_sinf, stdSecSin);
-    run_comp_f32(string("arm sinf"), 14, "sin", tests, -F32_TAU, F32_TAU, sinf, arm_sinf, stdSecSin);
-    run_comp_f32(string("aexp sinf"), 14, "sin", tests, -F32_TAU, F32_TAU, sinf, arm_exp_sinf, stdSecSin);
+    f32 stdSecSin = run_comp_f32(string("stdlib sinf"), 14, "sin", tests, -F32_TAU, F32_TAU, sin, sinf, 0.0f);
+    run_comp_f32(string("trig sin"), 14, "sin", tests, -F32_TAU, F32_TAU, sin, sin32, stdSecSin);
+    run_comp_f32(string("sun sinf"), 14, "sin", tests, -F32_TAU, F32_TAU, sin, sun93_sinf, stdSecSin);
+    run_comp_f32(string("arm sinf"), 14, "sin", tests, -F32_TAU, F32_TAU, sin, arm_sinf, stdSecSin);
+    run_comp_f32(string("aexp sinf"), 14, "sin", tests, -F32_TAU, F32_TAU, sin, arm_exp_sinf, stdSecSin);
 
-    stdSecSin = run_comp_f32(string("stdlib sinf"), 14, "sin", tests, -0.1f, 0.1f, sinf, sinf, 0.0f);
-    run_comp_f32(string("trig sin"), 14, "sin", tests, -0.1f, 0.1f, sinf, sin32, stdSecSin);
-    run_comp_f32(string("sun sinf"), 14, "sin", tests, -0.1f, 0.1f, sinf, sun93_sinf, stdSecSin);
-    run_comp_f32(string("arm sinf"), 14, "sin", tests, -0.1f, 0.1f, sinf, arm_sinf, stdSecSin);
-    run_comp_f32(string("aexp sinf"), 14, "sin", tests, -0.1f, 0.1f, sinf, arm_exp_sinf, stdSecSin);
+    stdSecSin = run_comp_f32(string("stdlib sinf"), 14, "sin", tests, -0.1f, 0.1f, sin, sinf, 0.0f);
+    run_comp_f32(string("trig sin"), 14, "sin", tests, -0.1f, 0.1f, sin, sin32, stdSecSin);
+    run_comp_f32(string("sun sinf"), 14, "sin", tests, -0.1f, 0.1f, sin, sun93_sinf, stdSecSin);
+    run_comp_f32(string("arm sinf"), 14, "sin", tests, -0.1f, 0.1f, sin, arm_sinf, stdSecSin);
+    run_comp_f32(string("aexp sinf"), 14, "sin", tests, -0.1f, 0.1f, sin, arm_exp_sinf, stdSecSin);
 
-    f32 stdSecSqrt = run_comp_f32(string("stdlib sqrtf"), 14, "sqrt", tests, 1.0e-5f, 100.0f, sqrtf, sqrtf, 0.0f);
-    run_comp_f32(string("sun sqrtf"), 14, "sqrt", tests, 1.0e-5f, 100.0f, sqrtf, sun93_sqrtf, stdSecSqrt);
-    run_comp_f32(string("sse sqrtf"), 14, "sqrt", tests, 1.0e-5f, 100.0f, sqrtf, sqrt32, stdSecSqrt);
+    f32 stdSecSqrt = run_comp_f32(string("stdlib sqrtf"), 14, "sqrt", tests, 1.0e-5f, 100.0f, sqrt, sqrtf, 0.0f);
+    run_comp_f32(string("sun sqrtf"), 14, "sqrt", tests, 1.0e-5f, 100.0f, sqrt, sun93_sqrtf, stdSecSqrt);
+    run_comp_f32(string("sse sqrtf"), 14, "sqrt", tests, 1.0e-5f, 100.0f, sqrt, sqrt32, stdSecSqrt);
 
-    f32 stdSecAtan = run_comp_f32(string("stdlib atanf"), 14, "atan", tests, -1.0f, 1.0f, atanf, atanf, 0.0f);
-    run_comp_f32(string("sun atanf"), 14, "atan", tests, -1.0f, 1.0f, atanf, sun93_atanf, stdSecAtan);
+    f32 stdSecAtan = run_comp_f32(string("stdlib atanf"), 14, "atan", tests, -1.0f, 1.0f, atan, atanf, 0.0f);
+    run_comp_f32(string("sun atanf"), 14, "atan", tests, -1.0f, 1.0f, atan, sun93_atanf, stdSecAtan);
 
     return 0;
 }

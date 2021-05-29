@@ -270,27 +270,27 @@ s32 main(s32 argc, char **argv)
     {
         fprintf(stdout, "\nCorrectness\n\n");
 
-        BEGIN_TEST(doTests, cos, call_comp_x);
-        call_comp_x(mats, cos, 32, stdSec);
-        call_comp_x(arm, cos, f_arm, stdSec);
-        call_comp_x(dip, cos, _pi, stdSec);
-        call_comp_x_4x(mats4, cos, 32_4x, stdSec);
+        BEGIN_TEST(doTests, cos, call_comp);
+        call_comp(mats, cos, 32, stdSec);
+        call_comp(arm, cos, f_arm, stdSec);
+        call_comp(dip, cos, _pi, stdSec);
+        call_comp_4x(mats4, cos, 32_4x, stdSec);
         END_TEST();
 
-        BEGIN_TEST(doTests, sin, call_comp_x);
-        call_comp_x(mats, sin, 32, stdSec);
-        call_comp_x(arm, sin, f_arm, stdSec);
-        call_comp_x(dip, sin, _pi, stdSec);
-        call_comp_x_4x(mats4, sin, 32_4x, stdSec);
+        BEGIN_TEST(doTests, sin, call_comp);
+        call_comp(mats, sin, 32, stdSec);
+        call_comp(arm, sin, f_arm, stdSec);
+        call_comp(dip, sin, _pi, stdSec);
+        call_comp_4x(mats4, sin, 32_4x, stdSec);
         END_TEST();
 
         if ((doTests & (DoTest_sin | DoTest_cos)) == (DoTest_sin | DoTest_cos))
         {
             fprintf(stdout, "Sin Cos matching\n");
-            f32 stdSec = call_comp_x(stdlib, sincos_match, f, 0.0f);
-            call_comp_x(mats, sincos_match, 32, stdSec);
-            call_comp_x(arm, sincos_match, f_arm, stdSec);
-            call_comp_x(dip, sincos_match, _pi, stdSec);
+            f32 stdSec = call_comp(stdlib, sincos_match, f, 0.0f);
+            call_comp(mats, sincos_match, 32, stdSec);
+            call_comp(arm, sincos_match, f_arm, stdSec);
+            call_comp(dip, sincos_match, _pi, stdSec);
             // TODO(michiel): Add 4x
             fprintf(stdout, "\n");
 
@@ -302,77 +302,77 @@ s32 main(s32 argc, char **argv)
 #endif
         }
 
-        BEGIN_TEST(doTests, tan, call_comp_x);
-        call_comp_x(mats, tan, 32, stdSec);
-        call_comp_x_4x(mats4, tan, 32_4x, stdSec);
+        BEGIN_TEST(doTests, tan, call_comp);
+        call_comp(mats, tan, 32, stdSec);
+        call_comp_4x(mats4, tan, 32_4x, stdSec);
         END_TEST();
 
         minVal = -1.2f;
         maxVal =  1.2f;
 
-        BEGIN_TEST(doTests, acos, call_comp_x);
-        call_comp_x(mats, acos, 32, stdSec);
-        call_comp_x_4x(mats4, acos, 32_4x, stdSec);
+        BEGIN_TEST(doTests, acos, call_comp);
+        call_comp(mats, acos, 32, stdSec);
+        call_comp_4x(mats4, acos, 32_4x, stdSec);
         END_TEST();
 
-        BEGIN_TEST(doTests, asin, call_comp_x);
-        call_comp_x(mats, asin, 32, stdSec);
-        call_comp_x_4x(mats4, asin, 32_4x, stdSec);
+        BEGIN_TEST(doTests, asin, call_comp);
+        call_comp(mats, asin, 32, stdSec);
+        call_comp_4x(mats4, asin, 32_4x, stdSec);
         END_TEST();
 
         minVal = -100.0f;
         maxVal = 100.0f;
 
-        BEGIN_TEST(doTests, atan, call_comp_x);
-        call_comp_x(mats, atan, 32, stdSec);
-        call_comp_x_4x(mats4, atan, 32_4x, stdSec);
+        BEGIN_TEST(doTests, atan, call_comp);
+        call_comp(mats, atan, 32, stdSec);
+        call_comp_4x(mats4, atan, 32_4x, stdSec);
         END_TEST();
 
-        BEGIN_TEST(doTests, atan2, call_comp_x2);
-        call_comp_x2(mats, atan2, _32, stdSec);
-        call_comp_x2_4x(mats4, atan2, _32_4x, stdSec);
+        BEGIN_TEST(doTests, atan2, call_comp2);
+        call_comp2(mats, atan2, _32, stdSec);
+        call_comp2_4x(mats4, atan2, _32_4x, stdSec);
         END_TEST();
 
         minVal = -22.0f;
         maxVal = 22.0f;
 
-        BEGIN_TEST(doTests, cosh, call_comp_x);
-        call_comp_x(mats, cosh, 32, stdSec);
-        //call_comp_x_4x(mats4, cosh, 32_4x, stdSec);
+        BEGIN_TEST(doTests, cosh, call_comp);
+        call_comp(mats, cosh, 32, stdSec);
+        //call_comp_4x(mats4, cosh, 32_4x, stdSec);
         END_TEST();
 
-        BEGIN_TEST(doTests, sinh, call_comp_x);
-        call_comp_x(mats, sinh, 32, stdSec);
-        //call_comp_x_4x(mats4, sinh, 32_4x, stdSec);
+        BEGIN_TEST(doTests, sinh, call_comp);
+        call_comp(mats, sinh, 32, stdSec);
+        //call_comp_4x(mats4, sinh, 32_4x, stdSec);
         END_TEST();
 
-        BEGIN_TEST(doTests, tanh, call_comp_x);
-        call_comp_x(mats, tanh, 32, stdSec);
-        //call_comp_x_4x(mats4, tanh, 32_4x, stdSec);
+        BEGIN_TEST(doTests, tanh, call_comp);
+        call_comp(mats, tanh, 32, stdSec);
+        //call_comp_4x(mats4, tanh, 32_4x, stdSec);
         END_TEST();
 
         minVal = 1.0f;
         maxVal = 100.0f;
 
-        BEGIN_TEST(doTests, acosh, call_comp_x);
-        call_comp_x(mats, acosh, 32, stdSec);
-        //call_comp_x_4x(mats4, acosh, 32_4x, stdSec);
+        BEGIN_TEST(doTests, acosh, call_comp);
+        call_comp(mats, acosh, 32, stdSec);
+        //call_comp_4x(mats4, acosh, 32_4x, stdSec);
         END_TEST();
 
         minVal = -100.0f;
         maxVal = 100.0f;
 
-        BEGIN_TEST(doTests, asinh, call_comp_x);
-        call_comp_x(mats, asinh, 32, stdSec);
-        //call_comp_x_4x(mats4, asinh, 32_4x, stdSec);
+        BEGIN_TEST(doTests, asinh, call_comp);
+        call_comp(mats, asinh, 32, stdSec);
+        //call_comp_4x(mats4, asinh, 32_4x, stdSec);
         END_TEST();
 
         minVal = -1.0f;
         maxVal = 1.0f;
 
-        BEGIN_TEST(doTests, atanh, call_comp_x);
-        call_comp_x(mats, atanh, 32, stdSec);
-        //call_comp_x_4x(mats4, atanh, 32_4x, stdSec);
+        BEGIN_TEST(doTests, atanh, call_comp);
+        call_comp(mats, atanh, 32, stdSec);
+        //call_comp_4x(mats4, atanh, 32_4x, stdSec);
         END_TEST();
 
     }
@@ -478,51 +478,51 @@ s32 main(s32 argc, char **argv)
         call_spd(mats, atanh, 32, stdSec);
         //call_spd_4x(mats4, atanh, 32_4x, stdSec);
         END_TEST();
+    }
 
-        if (doTests & DoTest_Wide)
-        {
-            tests = 5000000;
-            minVal = -100.0f;
-            maxVal = 100.0f;
+    if (doTests & DoTest_Wide)
+    {
+        tests = 5000000;
+        minVal = -100.0f;
+        maxVal = 100.0f;
 
-            BEGIN_TEST_WIDE(doTests, cos, call_spd_4x);
-            call_spd_4x(mats4, cos, 32_4x, stdSec);
-            call_spd_4x(dip4, cos, _f32_4x, stdSec);
-            END_TEST();
+        BEGIN_TEST_WIDE(doTests, cos, call_spd_4x);
+        call_spd_4x(mats4, cos, 32_4x, stdSec);
+        call_spd_4x(dip4, cos, _f32_4x, stdSec);
+        END_TEST();
 
-            BEGIN_TEST_WIDE(doTests, sin, call_spd_4x);
-            call_spd_4x(mats4, sin, 32_4x, stdSec);
-            call_spd_4x(dip4, sin, _f32_4x, stdSec);
-            END_TEST();
+        BEGIN_TEST_WIDE(doTests, sin, call_spd_4x);
+        call_spd_4x(mats4, sin, 32_4x, stdSec);
+        call_spd_4x(dip4, sin, _f32_4x, stdSec);
+        END_TEST();
 
-            BEGIN_TEST_WIDE(doTests, tan, call_spd_4x);
-            call_spd_4x(mats4, tan, 32_4x, stdSec);
-            END_TEST();
+        BEGIN_TEST_WIDE(doTests, tan, call_spd_4x);
+        call_spd_4x(mats4, tan, 32_4x, stdSec);
+        END_TEST();
 
-            minVal = -1.2f;
-            maxVal = 1.2f;
+        minVal = -1.2f;
+        maxVal = 1.2f;
 
-            BEGIN_TEST_WIDE(doTests, acos, call_spd_4x);
-            call_spd_4x(mats4, acos, 32_4x, stdSec);
-            call_spd_4x(tats4, acos, 32_temp_4x, stdSec);
-            END_TEST();
+        BEGIN_TEST_WIDE(doTests, acos, call_spd_4x);
+        call_spd_4x(mats4, acos, 32_4x, stdSec);
+        call_spd_4x(tats4, acos, 32_temp_4x, stdSec);
+        END_TEST();
 
-            BEGIN_TEST_WIDE(doTests, asin, call_spd_4x);
-            call_spd_4x(mats4, asin, 32_4x, stdSec);
-            call_spd_4x(tats4, asin, 32_temp_4x, stdSec);
-            END_TEST();
+        BEGIN_TEST_WIDE(doTests, asin, call_spd_4x);
+        call_spd_4x(mats4, asin, 32_4x, stdSec);
+        call_spd_4x(tats4, asin, 32_temp_4x, stdSec);
+        END_TEST();
 
-            minVal = -100.0f;
-            maxVal = 100.0f;
+        minVal = -100.0f;
+        maxVal = 100.0f;
 
-            BEGIN_TEST_WIDE(doTests, atan, call_spd_4x);
-            call_spd_4x(mats4, atan, 32_4x, stdSec);
-            END_TEST();
+        BEGIN_TEST_WIDE(doTests, atan, call_spd_4x);
+        call_spd_4x(mats4, atan, 32_4x, stdSec);
+        END_TEST();
 
-            BEGIN_TEST_WIDE(doTests, atan2, call_spd2_4x);
-            call_spd2_4x(mats4, atan2, _32_4x, stdSec);
-            END_TEST();
-        }
+        BEGIN_TEST_WIDE(doTests, atan2, call_spd2_4x);
+        call_spd2_4x(mats4, atan2, _32_4x, stdSec);
+        END_TEST();
     }
 
     return 0;

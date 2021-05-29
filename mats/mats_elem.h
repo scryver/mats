@@ -15,11 +15,11 @@ sqrt32(f32 x)
     u32 hx = ix & MATS_F32_ABS_MASK;
 
     /* take care of Inf and NaN */
-	if(!FLT_UWORD_IS_FINITE(hx)) {
+	if(!MATS_F32_UWORD_IS_FINITE(hx)) {
 	    return x * x + x;		// sqrt(NaN)=NaN, sqrt(+inf)=+inf, sqrt(-inf)=sNaN
     }
     /* take care of zero and -ves */
-	if (FLT_UWORD_IS_ZERO(hx)) {
+	if (MATS_F32_UWORD_IS_ZERO(hx)) {
         return x; // sqrt(+-0) = +-0
     }
 	if (ix < 0) {
@@ -28,7 +28,7 @@ sqrt32(f32 x)
 
     /* normalize x */
 	s32 m = (ix >> MATS_F32_EXP_SHIFT);
-	if (FLT_UWORD_IS_SUBNORMAL(hx))
+	if (MATS_F32_UWORD_IS_SUBNORMAL(hx))
     {   /* subnormal x */
         s32 i;
 	    for (i = 0; (ix & 0x00800000) == 0; ++i) {
@@ -314,13 +314,13 @@ log10_32(f32 x)
     s32 hx = (s32)u32f32(x).u;
 
     s32 k = 0;
-    if (FLT_UWORD_IS_ZERO(hx & MATS_F32_ABS_MASK)) {
+    if (MATS_F32_UWORD_IS_ZERO(hx & MATS_F32_ABS_MASK)) {
         return -g2pow25F32 / 0.0f; // NOTE(michiel): log10(+/-0) = -inf
     } else if (hx < 0) {
         return (x - x) / 0.0f;     // NOTE(michiel): log10(-X) = NaN
-    } else if (!FLT_UWORD_IS_FINITE(hx)) {
+    } else if (!MATS_F32_UWORD_IS_FINITE(hx)) {
         return x + x;
-    } else if (FLT_UWORD_IS_SUBNORMAL(hx)) {
+    } else if (MATS_F32_UWORD_IS_SUBNORMAL(hx)) {
         k -= 25;
         x *= g2pow25F32; // NOTE(michiel): x * 2^25
         hx = (s32)u32f32(x).u;
@@ -351,13 +351,13 @@ expm1_32(f32 x)
     if (hx >= 0x4195B844)
     {
         // NOTE(michiel): |x| >= 27 * ln(2)
-        if (FLT_UWORD_IS_NAN(hx)) {
+        if (MATS_F32_UWORD_IS_NAN(hx)) {
             return x + x;
         }
-        if (FLT_UWORD_IS_INFINITE(hx)) {
+        if (MATS_F32_UWORD_IS_INFINITE(hx)) {
             return xSign ? -1.0f : x; // NOTE(michiel): exp(+inf) = inf - 1, exp(-inf) = 0 - 1
         }
-        if (!xSign && (hx > FLT_UWORD_LOG_MAX)) {
+        if (!xSign && (hx > MATS_F32_UWORD_LOG_MAX)) {
             return mats_overflow32(0);
         }
         if (xSign) {
@@ -481,7 +481,7 @@ log1p32(f32 x)
     s32 ax = hx & MATS_F32_ABS_MASK;
 
     s32 k = 1;
-    if (!FLT_UWORD_IS_FINITE(hx)) {
+    if (!MATS_F32_UWORD_IS_FINITE(hx)) {
         return x + x;
     }
 
