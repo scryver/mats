@@ -130,11 +130,12 @@
 // - remove all libberdip stuff and add a optional file for type defines
 // - 64bit
 
-// NOTE(michiel): absolute32
+// NOTE(michiel): XX = 32 or 64
+// NOTE(michiel): absoluteXX
 #include "mats_common.h"
-// NOTE(michiel): floor32/ceil32/round32/trunc32/modulus32/remainder32
+// NOTE(michiel): floorXX/ceilXX/roundXX/truncXX/modulusXX/remainderXX
 #include "mats_rounding.h"
-// NOTE(michiel): sqrt32/hypot32/exp32/exp2_32/pow2_32/log32/log2_32/log10_32/expm1_32/log1p32/log1p_fast32
+// NOTE(michiel): sqrtXX/hypotXX/expXX/exp2_XX/pow2_32/logXX/log2_XX/log10_XX/expm1_XX/log1pXX/log1p_fast32
 #include "mats_elem.h"
 // NOTE(michiel): pow32/pow10_32/exp10_32
 #include "mats_elem_ext.h"

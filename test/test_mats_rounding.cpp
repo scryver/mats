@@ -233,7 +233,7 @@ s32 main(s32 argc, char **argv)
         BEGIN_TEST64(doTests, ceil, call_comp64);
         call_comp64(mats, ceil, 64_nonsse, stdSec);
         call_comp64(matsse, ceil, 64_sse, stdSec);
-        call_comp_4x(mats4, ceil, 64_2x, stdSec);
+        call_comp64_2x(mats4, ceil, 64_2x, stdSec);
         END_TEST();
 
         BEGIN_TEST64(doTests, round, call_comp64);
@@ -247,6 +247,14 @@ s32 main(s32 argc, char **argv)
         call_comp64(mats, trunc, 64_nonsse, stdSec);
         call_comp64(matsse, trunc, 64_sse, stdSec);
         call_comp64_2x(mats4, trunc, 64_2x, stdSec);
+        END_TEST();
+
+        BEGIN_TEST64(doTests, modulus, call_comp2);
+        call_comp64_2(mats, modulus, 64_nonsse, stdSec);
+        END_TEST();
+
+        BEGIN_TEST64(doTests, remainder, call_comp2);
+        call_comp64_2(mats, remainder, 64_nonsse, stdSec);
         END_TEST();
 
     }
@@ -315,6 +323,14 @@ s32 main(s32 argc, char **argv)
         call_spd64(mats, trunc, 64_nonsse, stdSec);
         call_spd64(matsse, trunc, 64_sse, stdSec);
         call_spd64_2x(mats4, trunc, 64_2x, stdSec);
+        END_TEST();
+
+        BEGIN_TEST64(doTests, modulus, call_spd64_2);
+        call_spd64_2(mats, modulus, 64_nonsse, stdSec);
+        END_TEST();
+
+        BEGIN_TEST64(doTests, remainder, call_spd64_2);
+        call_spd64_2(mats, remainder, 64_nonsse, stdSec);
         END_TEST();
 
     }

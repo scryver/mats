@@ -578,7 +578,115 @@ modulus64(f64 num, f64 den)
     // This function computes the remainder from the division of numerator by denominator. Specifically, the return value
     // is numerator - n * denominator, where n is the quotient of numerator divided by denominator, rounded towards zero.
     // Thus, fmod (6.5, 2.3) returns 1.9, which is 6.5 minus 4.6.
-    f64 result = 0.0;
+
+    s64 snum = MATS_S64_FROM_F64(num);
+    s64 sden = MATS_S64_FROM_F64(den);
+
+    s64 signNum = snum & MATS_F64_SIGN_MASK;
+
+    u64 anum = snum & MATS_F64_ABS_MASK;
+    u64 aden = sden & MATS_F64_ABS_MASK;
+
+    // NOTE(michiel): Exception values
+    if ((aden == 0) || (aden > 0x7FF0000000000000ULL) ||
+        (anum >= 0x7FF0000000000000ULL))
+    {
+        return (num * den) / (num * den);
+    }
+    if (anum < aden) {
+        return num;
+    }
+    if (anum == aden) {
+        return MATS_F64_FROM_S64(signNum);
+    }
+
+    s32 expNum;
+    if (anum < 0x0010000000000000ULL)
+    {
+        expNum = -MATS_F64_EXP_MIN;
+        for (s64 i = anum << 11; i > 0; i <<= 1) {
+            --expNum;
+        }
+    }
+    else
+    {
+        expNum = (s32)(anum >> MATS_F64_EXP_SHIFT) - MATS_F64_EXP_BIAS;
+    }
+
+    s32 expDen;
+    if (aden < 0x0010000000000000ULL)
+    {
+        expDen = -MATS_F64_EXP_MIN;
+        for (s64 i = aden << 11; i > 0; i <<= 1) {
+            --expDen;
+        }
+    }
+    else
+    {
+        expDen = (s32)(aden >> MATS_F64_EXP_SHIFT) - MATS_F64_EXP_BIAS;
+    }
+
+    if (expNum >= MATS_F64_EXP_MIN)
+    {
+        anum = 0x0010000000000000ULL | (anum & MATS_F64_MANT_MASK);
+    }
+    else
+    {
+        s32 n = MATS_F64_EXP_MIN - expNum;
+        anum = anum << n;
+    }
+
+    if (expDen >= MATS_F64_EXP_MIN)
+    {
+        aden = 0x0010000000000000ULL | (aden & MATS_F64_MANT_MASK);
+    }
+    else
+    {
+        s32 n = MATS_F64_EXP_MIN - expDen;
+        aden = aden << n;
+    }
+
+    s32 n = expNum - expDen;
+    while (n--)
+    {
+        s64 adiff = anum - aden;
+        if (adiff < 0) {
+            anum = anum + anum;
+        } else {
+            if (adiff == 0) {
+                return MATS_F64_FROM_S64(signNum);
+            }
+            anum = adiff + adiff;
+        }
+    }
+
+    s64 adiff = anum - aden;
+    if (adiff >= 0) {
+        anum = adiff;
+    }
+
+    if (anum == 0) {
+        return MATS_F64_FROM_S64(signNum);
+    }
+
+    while (anum < 0x0010000000000000ULL) {
+        anum = anum + anum;
+        --expDen;
+    }
+
+    f64 result;
+    if (expDen >= MATS_F64_EXP_MIN)
+    {
+        anum = ((anum - 0x0010000000000000ULL) | (((s64)expDen + MATS_F64_EXP_BIAS) << MATS_F64_EXP_SHIFT));
+        result = MATS_F64_FROM_U64(signNum | anum);
+    }
+    else
+    {
+        s32 n = MATS_F64_EXP_MIN - expDen;
+        anum >>= n;
+        result = MATS_F64_FROM_U64(signNum | anum);
+    }
+
 	return result;
 }
 
@@ -589,6 +697,50 @@ remainder64(f64 num, f64 den)
     // of the denominator. returned value's sign is equal to the sign of the numerator,
     // This function is like modulus64 except that it rounds the internal quotient n to the nearest integer instead of towards
     // zero. For example, remainder (6.5, 2.3) returns -0.4, which is 6.5 minus 6.9.
-    f64 result = 0.0;
+    s64 snum = MATS_S64_FROM_F64(num);
+    s64 sden = MATS_S64_FROM_F64(den);
+
+    s64 signNum = snum & MATS_F64_SIGN_MASK;
+
+    u64 anum = snum & MATS_F64_ABS_MASK;
+    u64 aden = sden & MATS_F64_ABS_MASK;
+
+    if ((aden == 0) || (aden > 0x7FF0000000000000ULL) ||
+        (anum >= 0x7FF0000000000000ULL))
+    {
+        return (num * den) / (num * den);
+    }
+
+    if (aden <= MATS_F64_UWORD_HALF_MAX) {
+        num = modulus64(num, den + den);
+    }
+    if (anum == aden) {
+        return MATS_F64_FROM_S64(signNum);
+    }
+
+    num = absolute64(num);
+    den = absolute64(den);
+
+    if (aden < 0x0020000000000000ULL)
+    {
+        if ((num + num) > den) {
+            num -= den;
+            if ((num + num) >= den) {
+                num -= den;
+            }
+        }
+    }
+    else
+    {
+        f64 denHalf = 0.5 * den;
+        if (num > denHalf) {
+            num -= den;
+            if (num >= denHalf) {
+                num -= den;
+            }
+        }
+    }
+
+    f64 result = MATS_F64_FROM_U64(signNum ^ MATS_U64_FROM_F64(num));
     return result;
 }

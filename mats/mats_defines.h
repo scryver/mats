@@ -13,6 +13,10 @@
 #define IEEE_754_2008_SNAN 1
 #endif
 
+#ifndef MATS_HAVE_FAST_FMA
+#define MATS_HAVE_FAST_FMA 0
+#endif
+
 #if MATS_USE_SSE
 union WideMath
 {

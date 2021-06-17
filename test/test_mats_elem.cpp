@@ -26,6 +26,17 @@
 #define expm1_32 expm1_32_nonsse
 #define log1p32  log1p32_nonsse
 #define log1p_fast32  log1p_fast32_nonsse
+#define sqrt64   sqrt64_nonsse
+#define hypot64  hypot64_nonsse
+#define exp64    exp64_nonsse
+#define exp2_64  exp2_64_nonsse
+#define pow2_64  pow2_64_nonsse
+#define log64    log64_nonsse
+#define log2_64  log2_64_nonsse
+#define log10_64 log10_64_nonsse
+#define expm1_64 expm1_64_nonsse
+#define log1p64  log1p64_nonsse
+#define log1p_fast64  log1p_fast64_nonsse
 #define MATS_USE_SSE2 0
 #define MATS_USE_SSE4 0
 #include "../mats/mats_defines.h"
@@ -41,6 +52,17 @@
 #undef expm1_32
 #undef log1p32
 #undef log1p_fast32
+#undef sqrt64
+#undef hypot64
+#undef exp64
+#undef exp2_64
+#undef pow2_64
+#undef log64
+#undef log2_64
+#undef log10_64
+#undef expm1_64
+#undef log1p64
+#undef log1p_fast64
 
 #define sqrt32   sqrt32_sse
 #define hypot32  hypot32_sse
@@ -53,6 +75,17 @@
 #define expm1_32 expm1_32_not_used
 #define log1p32  log1p32_not_used
 #define log1p_fast32  log1p_fast32_not_used
+#define sqrt64   sqrt64_sse
+#define hypot64  hypot64_sse
+#define exp64    exp64_not_used
+#define exp2_64  exp2_64_not_used
+#define log64    log64_not_used
+#define log2_64  log2_64_not_used
+#define pow2_64  pow2_64_not_used
+#define log10_64 log10_64_not_used
+#define expm1_64 expm1_64_not_used
+#define log1p64  log1p64_not_used
+#define log1p_fast64  log1p_fast64_not_used
 #undef  MATS_USE_SSE2
 #undef  MATS_USE_SSE4
 #define MATS_USE_SSE2 1
@@ -70,6 +103,17 @@
 #undef expm1_32
 #undef log1p32
 #undef log1p_fast32
+#undef sqrt64
+#undef hypot64
+#undef exp64
+#undef exp2_64
+#undef pow2_64
+#undef log64
+#undef log2_64
+#undef log10_64
+#undef expm1_64
+#undef log1p64
+#undef log1p_fast64
 
 internal f32
 hypot_ieee754(f32 x, f32 y)
@@ -209,22 +253,22 @@ exp32_sse(f32 x)
     kd.md = _mm_round_pd(z.md, _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC);
     u64 ki = (u64)_mm_cvtsd_si64(kd.md);
 
-    u64 t = gExp2F32_Table[ki % (1 << EXP2F_TABLE_BITS)];
-    t += ki << (52 - EXP2F_TABLE_BITS);
+    u64 t = gExp2F32_Table[ki % (1 << EXP2_32_TABLE_BITS)];
+    t += ki << (52 - EXP2_32_TABLE_BITS);
 
     WideMath r;
     r.md = _mm_sub_pd(z.md, kd.md);
     WideMath s;
     s.mi = _mm_set1_epi64x(t);
 
-#define EXP2F_N  ((f64)(1 << EXP2F_TABLE_BITS))
+#define EXP2_32_N  ((f64)(1 << EXP2_32_TABLE_BITS))
     WideMath poly0;
-    poly0.md = _mm_set_sd(0x1.c6af84b912394p-5 / EXP2F_N / EXP2F_N / EXP2F_N);
+    poly0.md = _mm_set_sd(0x1.c6af84b912394p-5 / EXP2_32_N / EXP2_32_N / EXP2_32_N);
     WideMath poly1;
-    poly1.md = _mm_set_sd(0x1.ebfce50fac4f3p-3 / EXP2F_N / EXP2F_N);
+    poly1.md = _mm_set_sd(0x1.ebfce50fac4f3p-3 / EXP2_32_N / EXP2_32_N);
     WideMath poly2;
-    poly2.md = _mm_set_sd(0x1.62e42ff0c52d6p-1 / EXP2F_N);
-#undef EXP2F_N
+    poly2.md = _mm_set_sd(0x1.62e42ff0c52d6p-1 / EXP2_32_N);
+#undef EXP2_32_N
     z.md = _mm_add_pd(_mm_mul_pd(poly0.md, r.md), poly1.md);
 
     WideMath r2;
@@ -462,6 +506,63 @@ s32 main(s32 argc, char **argv)
         call_comp2_4x(matsse, pow, 32_4x, stdSec);
         call_comp2_4x(mats, pow, 32_temp_4x, stdSec);
         END_TEST();
+
+        BEGIN_TEST64(doTests, sqrt, call_comp64);
+        //call_comp64(mats, sqrt, 64_nonsse, stdSec);
+        call_comp64(matsse, sqrt, 64_sse, stdSec);
+        END_TEST();
+
+        BEGIN_TEST64(doTests, hypot, call_comp64_2);
+        //call_comp64_2(mats, hypot, 64_nonsse, stdSec);
+        call_comp64_2(matsse, hypot, 64_sse, stdSec);
+        END_TEST();
+
+        minVal = -12.0f;
+        maxVal = 12.0f;
+
+        BEGIN_TEST64(doTests, exp, call_comp64);
+        call_comp64(mats, exp, 64_nonsse, stdSec);
+        //call_comp64(matsse, exp, 64_sse, stdSec);
+        END_TEST();
+
+        BEGIN_TEST64(doTests, exp2, call_comp64);
+        call_comp64(mats, exp2, _64_nonsse, stdSec);
+        //call_comp64(matsse, exp2, _64_sse, stdSec);
+        END_TEST();
+
+        BEGIN_TEST64(doTests, expm1, call_comp64);
+        call_comp64(mats, expm1, _64_nonsse, stdSec);
+        //call_comp64(matsse, expm1, _64_sse, stdSec);
+        END_TEST();
+
+        minVal = 1.0e-9f;
+        maxVal = 123.8f;
+
+        BEGIN_TEST64(doTests, log, call_comp64);
+        call_comp64(mats, log, 64_nonsse, stdSec);
+        //call_comp64(matsse, log, 64_sse, stdSec);
+        END_TEST();
+
+        BEGIN_TEST64(doTests, log2, call_comp64);
+        call_comp64(mats, log2, _64_nonsse, stdSec);
+        //call_comp64(matsse, log2, _64_sse, stdSec);
+        END_TEST();
+
+        BEGIN_TEST64(doTests, log10, call_comp64);
+        call_comp64(mats, log10, _64_nonsse, stdSec);
+        //call_comp64(matsse, log10, _64_sse, stdSec);
+        END_TEST();
+
+        BEGIN_TEST64(doTests, log1p, call_comp64);
+        call_comp64(mats, log1p, 64_nonsse, stdSec);
+        //call_comp64(matsse, log1p, 64_sse, stdSec);
+        END_TEST();
+
+        BEGIN_TEST64(doTests, pow, call_comp64_2);
+        call_comp64_2(mats, pow, 64, stdSec);
+        //call_comp64_2(matsse, pow, 64_sse, stdSec);
+        END_TEST();
+
     }
 
     minVal = 1.0e-9f;
@@ -537,6 +638,65 @@ s32 main(s32 argc, char **argv)
         call_spd2(mats, pow, 32, stdSec);
         call_spd2_4x(mats4, pow, 32_4x, stdSec);
         END_TEST();
+
+        BEGIN_TEST64(doTests, sqrt, call_spd64);
+        //call_spd64(mats, sqrt, 64_nonsse, stdSec);
+        call_spd64(matsse, sqrt, 64_sse, stdSec);
+        //call_spd64_2x(mats4, sqrt, 64_2x, stdSec);
+        END_TEST();
+
+        BEGIN_TEST64(doTests, hypot, call_spd64_2);
+        //call_spd64_2(mats, hypot, 64_nonsse, stdSec);
+        call_spd64_2(matsse, hypot, 64_sse, stdSec);
+        //call_spd64_2_2x(mats4, hypot, 64_2x, stdSec);
+        END_TEST();
+
+        minVal = -12.0f;
+        maxVal = 12.0f;
+
+        BEGIN_TEST64(doTests, exp, call_spd64);
+        call_spd64(mats, exp, 64_nonsse, stdSec);
+        //call_spd64(matsse, exp, 64_sse, stdSec);
+        END_TEST();
+
+        BEGIN_TEST64(doTests, exp2, call_spd64);
+        call_spd64(mats, exp2, _64_nonsse, stdSec);
+        //call_spd64(matsse, exp2, _64_sse, stdSec);
+        END_TEST();
+
+        BEGIN_TEST64(doTests, expm1, call_spd64);
+        call_spd64(mats, expm1, _64_nonsse, stdSec);
+        //call_spd64(matsse, expm1, _64_sse, stdSec);
+        END_TEST();
+
+        minVal = 1.0e-9f;
+        maxVal = 123.8f;
+
+        BEGIN_TEST64(doTests, log, call_spd64);
+        call_spd64(mats, log, 64_nonsse, stdSec);
+        //call_spd64(matsse, log, 64_sse, stdSec);
+        END_TEST();
+
+        BEGIN_TEST64(doTests, log2, call_spd64);
+        call_spd64(mats, log2, _64_nonsse, stdSec);
+        //call_spd64(matsse, log2, _64_sse, stdSec);
+        END_TEST();
+
+        BEGIN_TEST64(doTests, log10, call_spd64);
+        call_spd64(mats, log10, _64_nonsse, stdSec);
+        //call_spd64(matsse, log10, _64_sse, stdSec);
+        END_TEST();
+
+        BEGIN_TEST64(doTests, log1p, call_spd64);
+        call_spd64(mats, log1p, 64_nonsse, stdSec);
+        //call_spd64(matsse, log1p, 64_sse, stdSec);
+        END_TEST();
+
+        BEGIN_TEST64(doTests, pow, call_spd64_2);
+        call_spd64_2(mats, pow, 64, stdSec);
+        //call_spd64_2(matsse, pow, 64_sse, stdSec);
+        END_TEST();
+
     }
 
     if (doTests & DoTest_Wide)

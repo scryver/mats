@@ -92,7 +92,6 @@ mats_invalid32(f32 x)
     return result;
 }
 
-/* Top 12 bits of the float representation with the sign bit cleared.  */
 internal u32
 abstop12_(f32 x)
 {
@@ -106,6 +105,61 @@ issignaling32(f32 x)
     if (!IEEE_754_2008_SNAN)
         return (xu & 0x7FC00000) == 0x7FC00000;
     return 2 * (xu ^ 0x00400000) > 0xFF800000u;
+}
+
+internal f64
+mats_xflow64(u64 sign, f64 base)
+{
+    // TODO(michiel): Could add errno
+    f64 result = (sign ? -base : base) * base;
+    return result;
+}
+
+internal f64
+mats_underflow64(u64 sign)
+{
+    return mats_xflow64(sign, 0x1p-767);
+}
+
+internal f64
+mats_overflow64(u64 sign)
+{
+    return mats_xflow64(sign, 0x1p769);
+}
+
+internal f64
+mats_divzero64(u64 sign)
+{
+    f64 result = (sign ? -1.0 : 1.0) / 0.0;
+    return result;
+}
+
+internal f64
+mats_invalid64(f64 x)
+{
+    f64 result = (x - x) / (x - x);
+    return result;
+}
+
+internal b32
+issignaling64(f64 x)
+{
+    u64 xu = MATS_U64_FROM_F64(x);
+    if (!IEEE_754_2008_SNAN)
+        return (xu & 0x7FF8000000000000) == 0x7FF8000000000000;
+    return 2 * (xu ^ 0x0008000000000000) > 2 * 0x7FF8000000000000ULL;
+}
+
+internal u32
+mats_top12(f64 x)
+{
+    return MATS_U64_FROM_F64(x) >> 52;
+}
+
+internal u32
+mats_top16(f64 x)
+{
+    return MATS_U64_FROM_F64(x) >> 48;
 }
 
 //

@@ -101,15 +101,15 @@ exp32_fast_4x(f32_4x x)
     u64 ki2 = (u64)s64_from_f64_2x(zHi);
     u64 ki3 = (u64)s64_from_f64_2x(zHi, true);
 
-    u64 t0 = gExp2F32_Table[ki0 % (1 << EXP2F_TABLE_BITS)];
-    u64 t1 = gExp2F32_Table[ki1 % (1 << EXP2F_TABLE_BITS)];
-    t0 += ki0 << (52 - EXP2F_TABLE_BITS);
-    t1 += ki1 << (52 - EXP2F_TABLE_BITS);
+    u64 t0 = gExp2F32_Table[ki0 % (1 << EXP2_32_TABLE_BITS)];
+    u64 t1 = gExp2F32_Table[ki1 % (1 << EXP2_32_TABLE_BITS)];
+    t0 += ki0 << (52 - EXP2_32_TABLE_BITS);
+    t1 += ki1 << (52 - EXP2_32_TABLE_BITS);
 
-    u64 t2 = gExp2F32_Table[ki2 % (1 << EXP2F_TABLE_BITS)];
-    u64 t3 = gExp2F32_Table[ki3 % (1 << EXP2F_TABLE_BITS)];
-    t2 += ki2 << (52 - EXP2F_TABLE_BITS);
-    t3 += ki3 << (52 - EXP2F_TABLE_BITS);
+    u64 t2 = gExp2F32_Table[ki2 % (1 << EXP2_32_TABLE_BITS)];
+    u64 t3 = gExp2F32_Table[ki3 % (1 << EXP2_32_TABLE_BITS)];
+    t2 += ki2 << (52 - EXP2_32_TABLE_BITS);
+    t3 += ki3 << (52 - EXP2_32_TABLE_BITS);
 
     f64_2x rLo = zLo - kdLo;
     f64_2x rHi = zHi - kdHi;
@@ -117,11 +117,11 @@ exp32_fast_4x(f32_4x x)
     f64_2x sLo = S64_2x(t0, t1);
     f64_2x sHi = S64_2x(t2, t3);
 
-#define EXP2F_N  ((f64)(1 << EXP2F_TABLE_BITS))
-    f64_2x poly0 = F64_2x(0x1.c6af84b912394p-5 / EXP2F_N / EXP2F_N / EXP2F_N);
-    f64_2x poly1 = F64_2x(0x1.ebfce50fac4f3p-3 / EXP2F_N / EXP2F_N);
-    f64_2x poly2 = F64_2x(0x1.62e42ff0c52d6p-1 / EXP2F_N);
-#undef EXP2F_N
+#define EXP2_32_N  ((f64)(1 << EXP2_32_TABLE_BITS))
+    f64_2x poly0 = F64_2x(0x1.c6af84b912394p-5 / EXP2_32_N / EXP2_32_N / EXP2_32_N);
+    f64_2x poly1 = F64_2x(0x1.ebfce50fac4f3p-3 / EXP2_32_N / EXP2_32_N);
+    f64_2x poly2 = F64_2x(0x1.62e42ff0c52d6p-1 / EXP2_32_N);
+#undef EXP2_32_N
     zLo = poly0 * rLo + poly1;
     zHi = poly0 * rHi + poly1;
 
@@ -194,15 +194,15 @@ exp2_32_fast_4x(f32_4x x)
     kdLo = kdLo - F64_2x(gExp2F32_ShiftScaled);
     kdHi = kdHi - F64_2x(gExp2F32_ShiftScaled);;
 
-    u64 t0 = gExp2F32_Table[ki0 % (1 << EXP2F_TABLE_BITS)];
-    u64 t1 = gExp2F32_Table[ki1 % (1 << EXP2F_TABLE_BITS)];
-    t0 += ki0 << (52 - EXP2F_TABLE_BITS);
-    t1 += ki1 << (52 - EXP2F_TABLE_BITS);
+    u64 t0 = gExp2F32_Table[ki0 % (1 << EXP2_32_TABLE_BITS)];
+    u64 t1 = gExp2F32_Table[ki1 % (1 << EXP2_32_TABLE_BITS)];
+    t0 += ki0 << (52 - EXP2_32_TABLE_BITS);
+    t1 += ki1 << (52 - EXP2_32_TABLE_BITS);
 
-    u64 t2 = gExp2F32_Table[ki2 % (1 << EXP2F_TABLE_BITS)];
-    u64 t3 = gExp2F32_Table[ki3 % (1 << EXP2F_TABLE_BITS)];
-    t2 += ki2 << (52 - EXP2F_TABLE_BITS);
-    t3 += ki3 << (52 - EXP2F_TABLE_BITS);
+    u64 t2 = gExp2F32_Table[ki2 % (1 << EXP2_32_TABLE_BITS)];
+    u64 t3 = gExp2F32_Table[ki3 % (1 << EXP2_32_TABLE_BITS)];
+    t2 += ki2 << (52 - EXP2_32_TABLE_BITS);
+    t3 += ki3 << (52 - EXP2_32_TABLE_BITS);
 
     f64_2x rLo = zLo - kdLo;
     f64_2x rHi = zHi - kdHi;
@@ -277,8 +277,8 @@ log32_fast_4x(f32_4x x)
     f64_2x poly2 = F64_2x(gLogF32_Poly[2]);
 
     f32_4x temp = s32_4x_sub(x, S32_4x(0x3F330000));
-    f32_4x index = s32_4x_and(s32_4x_srl(temp, MATS_F32_EXP_SHIFT - LOGF_TABLE_BITS),
-                              S32_4x((1 << LOGF_TABLE_BITS) - 1));
+    f32_4x index = s32_4x_and(s32_4x_srl(temp, MATS_F32_EXP_SHIFT - LOG32_TABLE_BITS),
+                              S32_4x((1 << LOG32_TABLE_BITS) - 1));
     f32_4x k = s32_4x_sra(temp, MATS_F32_EXP_SHIFT);
     f32_4x iz = s32_4x_sub(x, s32_4x_and(temp, S32_4x(0x1FF << MATS_F32_EXP_SHIFT)));
 
@@ -368,8 +368,8 @@ log2_32_fast_4x(f32_4x x)
     f64_2x poly3 = F64_2x(gLog2F32_Poly[3]);
 
     f32_4x temp = s32_4x_sub(x, S32_4x(0x3F330000));
-    f32_4x index = s32_4x_and(s32_4x_srl(temp, MATS_F32_EXP_SHIFT - LOG2F_TABLE_BITS),
-                              S32_4x((1 << LOG2F_TABLE_BITS) - 1));
+    f32_4x index = s32_4x_and(s32_4x_srl(temp, MATS_F32_EXP_SHIFT - LOG2_32_TABLE_BITS),
+                              S32_4x((1 << LOG2_32_TABLE_BITS) - 1));
     f32_4x k = s32_4x_sra(temp, MATS_F32_EXP_SHIFT);
     f32_4x iz = s32_4x_sub(x, s32_4x_and(temp, S32_4x(0x1FF << MATS_F32_EXP_SHIFT)));
 
@@ -450,8 +450,8 @@ internal f32_4x
 log10_32_fast_4x(f32_4x x, f32_4x k = zero_f32_4x())
 {
     f32_4x invLn10    = F32_4x(gInvLn10F32);
-    f32_4x log10_2hi  = F32_4x(gLog10_2_hi);
-    f32_4x log10_2lo  = F32_4x(gLog10_2_lo);
+    f32_4x log10_2hi  = F32_4x(gLog10F32_2_hi);
+    f32_4x log10_2lo  = F32_4x(gLog10F32_2_lo);
 
     k = s32_4x_add(k, s32_4x_sub(s32_4x_sra(x, MATS_F32_EXP_SHIFT), S32_4x(MATS_F32_EXP_BIAS)));
     f32_4x i = s32_4x_srl(k, 31);
@@ -848,8 +848,8 @@ pow32_log2_4x(f32_4x x, f64_2x *dstLo, f64_2x *dstHi)
     f64_2x poly3 = F64_2x(gPowF32_Log2Poly[3]);
     f64_2x poly4 = F64_2x(gPowF32_Log2Poly[4]);
     f32_4x temp = s32_4x_sub(x, S32_4x(0x3F330000));
-    f32_4x index = s32_4x_and(s32_4x_srl(temp, MATS_F32_EXP_SHIFT - POWF_LOG2_TABLE_BITS),
-                              S32_4x((1 << POWF_LOG2_TABLE_BITS) - 1));
+    f32_4x index = s32_4x_and(s32_4x_srl(temp, MATS_F32_EXP_SHIFT - POW32_LOG2_TABLE_BITS),
+                              S32_4x((1 << POW32_LOG2_TABLE_BITS) - 1));
     f32_4x iz = s32_4x_sub(x, s32_4x_and(temp, S32_4x(0xFF800000)));
     f32_4x k = s32_4x_sra(temp, MATS_F32_EXP_SHIFT);
     f64_2x k64Lo; k64Lo.md = _mm_cvtepi32_pd(k.mi);
@@ -905,15 +905,15 @@ pow32_exp2_4x(f64_2x xLo, f64_2x xHi, f32_4x signBias)
     f64_2x rLo = xLo - kdLo;
     f64_2x rHi = xHi - kdHi;
 
-    u64 t0 = gExp2F32_Table[ki0 % (1 << EXP2F_TABLE_BITS)];
-    u64 t1 = gExp2F32_Table[ki1 % (1 << EXP2F_TABLE_BITS)];
-    u64 t2 = gExp2F32_Table[ki2 % (1 << EXP2F_TABLE_BITS)];
-    u64 t3 = gExp2F32_Table[ki3 % (1 << EXP2F_TABLE_BITS)];
+    u64 t0 = gExp2F32_Table[ki0 % (1 << EXP2_32_TABLE_BITS)];
+    u64 t1 = gExp2F32_Table[ki1 % (1 << EXP2_32_TABLE_BITS)];
+    u64 t2 = gExp2F32_Table[ki2 % (1 << EXP2_32_TABLE_BITS)];
+    u64 t3 = gExp2F32_Table[ki3 % (1 << EXP2_32_TABLE_BITS)];
 
-    t0 += (ki0 + signBias.u[0]) << (52 - EXP2F_TABLE_BITS);
-    t1 += (ki1 + signBias.u[1]) << (52 - EXP2F_TABLE_BITS);
-    t2 += (ki2 + signBias.u[2]) << (52 - EXP2F_TABLE_BITS);
-    t3 += (ki3 + signBias.u[3]) << (52 - EXP2F_TABLE_BITS);
+    t0 += (ki0 + signBias.u[0]) << (52 - EXP2_32_TABLE_BITS);
+    t1 += (ki1 + signBias.u[1]) << (52 - EXP2_32_TABLE_BITS);
+    t2 += (ki2 + signBias.u[2]) << (52 - EXP2_32_TABLE_BITS);
+    t3 += (ki3 + signBias.u[3]) << (52 - EXP2_32_TABLE_BITS);
 
     f64_2x sLo = S64_2x(t0, t1);
     f64_2x sHi = S64_2x(t2, t3);
@@ -966,7 +966,7 @@ pow32_4x(f32_4x x, f32_4x y)
     yMask.u[3] = 1 << shiftCount.u[3];
     yMask = s32_4x_equal(s32_4x_and(yMask, yu), zero_s32_4x());
     yMask = s32_4x_and_not(xSign, yMask);
-    f32_4x modSign = S32_4x(1 << (EXP2F_TABLE_BITS + 11));
+    f32_4x modSign = S32_4x(1 << (EXP2_32_TABLE_BITS + 11));
     signBias = s32_4x_and(modSign, yMask);
 
     f64_2x logXLo, logXHi;
