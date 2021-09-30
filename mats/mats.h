@@ -49,9 +49,6 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 
-#include "mats_defines.h"
-#include "mats_constants.h"
-
 // NOTE(michiel): Abbreviations:
 // inf         | infinity       (all exponent bits set and mantissa == 0)
 // NaN         | Not a Number   (all exponent bits set and mantissa != 0)
@@ -131,14 +128,16 @@
 // - 64bit
 
 // NOTE(michiel): XX = 32 or 64
+#include "mats_defines.h"
+#include "mats_constants.h"
 // NOTE(michiel): absoluteXX
 #include "mats_common.h"
 // NOTE(michiel): floorXX/ceilXX/roundXX/truncXX/modulusXX/remainderXX
 #include "mats_rounding.h"
 // NOTE(michiel): sqrtXX/hypotXX/expXX/exp2_XX/pow2_32/logXX/log2_XX/log10_XX/expm1_XX/log1pXX/log1p_fast32
 #include "mats_elem.h"
-// NOTE(michiel): pow32/pow10_32/exp10_32
+// NOTE(michiel): powXX/pow10_32/exp10_32
 #include "mats_elem_ext.h"
-// NOTE(michiel): cos32/sin32/sincos32/tan32/acos32/asin32/atan32/atan2_32
-//                cosh32/sinh32/sinhcosh32/tanh32/acosh32/asinh32/atanh32
+// NOTE(michiel): cosXX/sinXX/sincosXX/tanXX/acosXX/asinXX/atanXX/atan2_XX
+//                coshXX/sinhXX/sinhcoshXX/tanhXX/acoshXX/asinhXX/atanhXX
 #include "mats_trig.h"

@@ -19,8 +19,9 @@ absolute(f32 x)
 #endif
 
 #include "../mats/mats_defines.h"
-#include "../mats/mats_common.h"
 #include "../mats/mats_constants.h"
+#include "../mats/mats_common.h"
+#include "../mats/mats_rounding.h"
 
 #include "../src/sun93.h"
 

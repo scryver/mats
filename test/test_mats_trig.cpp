@@ -17,23 +17,41 @@
 #define MATS_USE_SSE2 1
 #define IEEE_754_2008_SNAN 1
 #include "../mats/mats_defines.h"
-#include "../mats/mats_common.h"
 #include "../mats/mats_constants.h"
-#include "../mats/mats4x.h"
+#include "../mats/mats_common.h"
+#include "../mats/mats_rounding.h"
 #include "../mats/mats_elem.h"
 #include "../mats/mats_elem_ext.h"
-#include "../mats/mats_elem4x.h"
 #include "../mats/mats_trig.h"
-#include "../mats/mats_trig4x.h"
+#include "../mats/mats4x.h"
 
 #include "../src/arm_sincos.cpp"
 
+#include "musl_temp.cpp"
+#include "newlib_temp.cpp"
+
 #include "test_common.cpp"
+
+internal void
+sincos_wrap64(f64 val, f64 *s, f64 *c)
+{
+    SinCos64 result = sincos64(val);
+    *s = result.sin;
+    *c = result.cos;
+}
+
+internal void
+sincos_wrap32(f32 val, f32 *s, f32 *c)
+{
+    SinCos32 result = sincos32(val);
+    *s = result.sin;
+    *c = result.cos;
+}
 
 internal f64
 sincos_match(f64 val)
 {
-    return 1.0;
+    return square(sin(val)) + square(cos(val));
 }
 
 internal f32
@@ -49,6 +67,13 @@ sincos_match32(f32 val)
 }
 
 internal f32
+sincos_match_cs_32(f32 val)
+{
+    SinCos32 cs = sincos32(val);
+    return square(cs.sin) + square(cs.cos);
+}
+
+internal f32
 sincos_matchf_arm(f32 val)
 {
     return square(arm_sinf(val)) + square(arm_cosf(val));
@@ -58,6 +83,19 @@ internal f32
 sincos_match_pi(f32 val)
 {
     return square(sin_pi(val)) + square(cos_pi(val));
+}
+
+internal f64
+sincos_match64(f64 val)
+{
+    return square(sin64(val)) + square(cos64(val));
+}
+
+internal f64
+sincos_match_cs_64(f64 val)
+{
+    SinCos64 cs = sincos64(val);
+    return square(cs.sin) + square(cs.cos);
 }
 
 internal f32_4x
@@ -286,9 +324,15 @@ s32 main(s32 argc, char **argv)
 
         if ((doTests & (DoTest_sin | DoTest_cos)) == (DoTest_sin | DoTest_cos))
         {
+            fprintf(stdout, "sincos32\n");
+            f32 stdSec = call_comp_r2(stdlib, sincos, f, 0.0f);
+            call_comp_r2(mats, sincos, _wrap32, stdSec);
+            fprintf(stdout, "\n");
+
             fprintf(stdout, "Sin Cos matching\n");
-            f32 stdSec = call_comp(stdlib, sincos_match, f, 0.0f);
+            stdSec = call_comp(stdlib, sincos_match, f, 0.0f);
             call_comp(mats, sincos_match, 32, stdSec);
+            call_comp(mats, sincos_match, _cs_32, stdSec);
             call_comp(arm, sincos_match, f_arm, stdSec);
             call_comp(dip, sincos_match, _pi, stdSec);
             // TODO(michiel): Add 4x
@@ -375,6 +419,112 @@ s32 main(s32 argc, char **argv)
         //call_comp_4x(mats4, atanh, 32_4x, stdSec);
         END_TEST();
 
+        BEGIN_TEST64(doTests, cos, call_comp64);
+        call_comp64(mats, cos, 64, stdSec);
+        //call_comp64_2x(mats4, cos, 64_2x, stdSec);
+        END_TEST();
+
+        BEGIN_TEST64(doTests, sin, call_comp64);
+        call_comp64(mats, sin, 64, stdSec);
+        //call_comp64_2x(mats4, sin, 64_2x, stdSec);
+        END_TEST();
+
+        if ((doTests & (DoTest_sin | DoTest_cos)) == (DoTest_sin | DoTest_cos))
+        {
+            fprintf(stdout, "sincos64\n");
+            f32 stdSec = call_comp64_r2(stdlib, sincos, , 0.0f);
+            call_comp64_r2(mats, sincos, _wrap64, stdSec);
+            fprintf(stdout, "\n");
+
+            fprintf(stdout, "Sin Cos matching\n");
+            stdSec = call_comp64(stdlib, sincos_match, , 0.0f);
+            call_comp64(mats, sincos_match, 64, stdSec);
+            call_comp64(mats, sincos_match, _cs_64, stdSec);
+            // TODO(michiel): Add 4x
+            fprintf(stdout, "\n");
+
+#if 0
+            fprintf(stdout, "SinCos\n");
+            f64 stdSecSinCos64 = run_comp_f64(string("stdlib sincos"), 15, "sincos", tests, minVal, maxVal, sincosf, sincosf, 0.0f);
+            run_comp_f64(string("mats sincos"), 15, "sincos", tests, minVal, maxVal, sincosf, sincos64, stdSecSinCos64);
+            fprintf(stdout, "\n");
+#endif
+        }
+
+        BEGIN_TEST64(doTests, tan, call_comp64);
+        call_comp64(mats, tan, 64, stdSec);
+        call_comp64(musl, tan, _musl, stdSec);
+        call_comp64(newlib, tan, _newlib, stdSec);
+        //call_comp64_2x(mats4, tan, 64_2x, stdSec);
+        END_TEST();
+
+        minVal = -1.2f;
+        maxVal =  1.2f;
+
+        BEGIN_TEST64(doTests, acos, call_comp64);
+        call_comp64(mats, acos, 64, stdSec);
+        //call_comp64_2x(mats4, acos, 64_2x, stdSec);
+        END_TEST();
+
+        BEGIN_TEST64(doTests, asin, call_comp64);
+        call_comp64(mats, asin, 64, stdSec);
+        //call_comp64_2x(mats4, asin, 64_2x, stdSec);
+        END_TEST();
+
+        minVal = -100.0f;
+        maxVal = 100.0f;
+
+        BEGIN_TEST64(doTests, atan, call_comp64);
+        call_comp64(mats, atan, 64, stdSec);
+        //call_comp64_2x(mats4, atan, 64_2x, stdSec);
+        END_TEST();
+
+        BEGIN_TEST64(doTests, atan2, call_comp64_2);
+        call_comp64_2(mats, atan2, _64, stdSec);
+        //call_comp64_2_2x(mats4, atan2, _64_2x, stdSec);
+        END_TEST();
+
+        minVal = -22.0f;
+        maxVal = 22.0f;
+
+        BEGIN_TEST64(doTests, cosh, call_comp64);
+        call_comp64(mats, cosh, 64, stdSec);
+        //call_comp64_2x(mats4, cosh, 64_2x, stdSec);
+        END_TEST();
+
+        BEGIN_TEST64(doTests, sinh, call_comp64);
+        call_comp64(mats, sinh, 64, stdSec);
+        //call_comp64_2x(mats4, sinh, 64_2x, stdSec);
+        END_TEST();
+
+        BEGIN_TEST64(doTests, tanh, call_comp64);
+        call_comp64(mats, tanh, 64, stdSec);
+        //call_comp64_2x(mats4, tanh, 64_2x, stdSec);
+        END_TEST();
+
+        minVal = 1.0f;
+        maxVal = 100.0f;
+
+        BEGIN_TEST64(doTests, acosh, call_comp64);
+        call_comp64(mats, acosh, 64, stdSec);
+        //call_comp64_2x(mats4, acosh, 64_2x, stdSec);
+        END_TEST();
+
+        minVal = -100.0f;
+        maxVal = 100.0f;
+
+        BEGIN_TEST64(doTests, asinh, call_comp64);
+        call_comp64(mats, asinh, 64, stdSec);
+        //call_comp64_2x(mats4, asinh, 64_2x, stdSec);
+        END_TEST();
+
+        minVal = -1.0f;
+        maxVal = 1.0f;
+
+        BEGIN_TEST64(doTests, atanh, call_comp64);
+        call_comp64(mats, atanh, 64, stdSec);
+        //call_comp64_2x(mats4, atanh, 64_2x, stdSec);
+        END_TEST();
     }
 
     if (doTests & DoTest_Speed)
@@ -477,6 +627,105 @@ s32 main(s32 argc, char **argv)
         BEGIN_TEST(doTests, atanh, call_spd);
         call_spd(mats, atanh, 32, stdSec);
         //call_spd_4x(mats4, atanh, 32_4x, stdSec);
+        END_TEST();
+
+        //
+        // NOTE(michiel): 64-bit
+        //
+
+        minVal = -100.0f;
+        maxVal = 100.0f;
+
+        BEGIN_TEST64(doTests, cos, call_spd64);
+        call_spd64(mats, cos, 64, stdSec);
+        //call_spd64_2x(matsse, cos, 64_2x, stdSec);
+        END_TEST();
+
+        BEGIN_TEST64(doTests, sin, call_spd64);
+        call_spd64(mats, sin, 64, stdSec);
+        //call_spd64_2x(matsse, sin, 64_2x, stdSec);
+        END_TEST();
+
+#if 0
+        if ((doTests & (DoTest_Sin | DoTest_Cos)) == (DoTest_Sin | DoTest_Cos))
+        {
+            fprintf(stdout, "SinCos\n");
+            f64 spdSecSinCos64 = run_speed_f64(string("stdlib sincos"), 15, "sincos", tests, minVal, maxVal, sincos, 0.0f);
+            run_speed_f64(string("mats sincos"), 15, "sincos", tests, minVal, maxVal, sincos64, spdSecSinCos64);
+            fprintf(stdout, "\n");
+        }
+#endif
+
+        BEGIN_TEST64(doTests, tan, call_spd64);
+        call_spd64(mats, tan, 64, stdSec);
+        call_spd64(musl, tan, _musl, stdSec);
+        call_spd64(newlib, tan, _newlib, stdSec);
+        //call_spd64_2x(matsse, tan, 64_2x, stdSec);
+        END_TEST();
+
+        minVal = -1.2f;
+        maxVal = 1.2f;
+
+        BEGIN_TEST64(doTests, acos, call_spd64);
+        call_spd64(mats, acos, 64, stdSec);
+        //call_spd64_2x(mats4, acos, 64_4x, stdSec);
+        END_TEST();
+
+        BEGIN_TEST64(doTests, asin, call_spd64);
+        call_spd64(mats, asin, 64, stdSec);
+        //call_spd64_2x(mats4, asin, 64_2x, stdSec);
+        END_TEST();
+
+        minVal = -100.0f;
+        maxVal = 100.0f;
+
+        BEGIN_TEST64(doTests, atan, call_spd64);
+        call_spd64(mats, atan, 64, stdSec);
+        //call_spd64_2x(mats4, atan, 64_2x, stdSec);
+        END_TEST();
+
+        BEGIN_TEST64(doTests, atan2, call_spd64_2);
+        call_spd64_2(mats, atan2, _64, stdSec);
+        //call_spd64_2_2x(mats4, atan2, _64_2x, stdSec);
+        END_TEST();
+
+        BEGIN_TEST64(doTests, cosh, call_spd64);
+        call_spd64(mats, cosh, 64, stdSec);
+        //call_spd64_2x(mats4, cosh, 64_2x, stdSec);
+        END_TEST();
+
+        BEGIN_TEST64(doTests, sinh, call_spd64);
+        call_spd64(mats, sinh, 64, stdSec);
+        //call_spd64_2x(mats4, sinh, 64_2x, stdSec);
+        END_TEST();
+
+        BEGIN_TEST64(doTests, tanh, call_spd64);
+        call_spd64(mats, tanh, 64, stdSec);
+        //call_spd64_2x(mats4, tanh, 64_2x, stdSec);
+        END_TEST();
+
+        minVal = 1.0f;
+        maxVal = 100.0f;
+
+        BEGIN_TEST64(doTests, acosh, call_spd64);
+        call_spd64(mats, acosh, 64, stdSec);
+        //call_spd64_2x(mats4, acosh, 64_2x, stdSec);
+        END_TEST();
+
+        minVal = -100.0f;
+        maxVal = 100.0f;
+
+        BEGIN_TEST64(doTests, asinh, call_spd64);
+        call_spd64(mats, asinh, 64, stdSec);
+        //call_spd64_2x(mats4, asinh, 64_2x, stdSec);
+        END_TEST();
+
+        minVal = -1.0f;
+        maxVal = 1.0f;
+
+        BEGIN_TEST64(doTests, atanh, call_spd64);
+        call_spd64(mats, atanh, 64, stdSec);
+        //call_spd64_2x(mats4, atanh, 64_2x, stdSec);
         END_TEST();
     }
 

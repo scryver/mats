@@ -17,23 +17,23 @@ global const f64 gZeroF64          =  0.0;
 global const f64 gOneF64           =  1.0;
 global const f64 gHalfF64          =  0.5;
 //global const f64 g2pow8F64         =  2.5600000000e+02;  /* 0x43800000 = 2^8 */
-//global const f64 g2pow25F64        =  3.355446400e+07;   /* 0x4c000000 = 2^25 */
+global const f64 g2pow24F64        =  1.67772160000000000000e+07;  /* 0x4170000000000000 = 2^24 */
 global const f64 g2pow54F64        =  1.80143985094819840000e+16;  /* 0x4350000000000000 = 2^54 */
 //global const f64 g2powMin8F64      =  3.9062500000e-03;  /* 0x3b800000 = 2^-8 */
-//global const f64 g2powMin25F64     =  2.9802642388e-08;  /* 0x33000000 = 2^-25 */
-//global const f64 g2powMin100F64    =  7.8886090522e-31;  /* 0x0d800000 = 2^-100 */
+global const f64 g2powMin24F64     =  5.96046447753906250000e-08;  /* 0x3E70000000000000 = 2^-24 */
+global const f64 g2powMin54F64     =  5.55111512312578270212e-17;  /* 0x3C90000000000000 = 2^-54 */
 global const f64 g2powMin1000F64   =  9.33263618503218878990e-302; /* 0x0170000000000000 = 2^-1000 */
-//global const f64 gLn2F64           =  6.9314718246e-01;  /* 0x3f317218 = ln(2) */
+global const f64 gLn2F64           =  6.93147180559945286227e-01;  /* 0x3FE62E42FEFA39EF = ln(2) */
 global const f64 gInvLn2F64        =  1.44269504088896338700e+00;  /* 0x3ff71547652b82fe = 1/ln(2) */
 global const f64 gInvLn10F64       =  4.34294481903251816668e-01;  /* 0x3FDBCB7B1526E50E = 1/ln(10) */
 global const f64 gHugeF64          =  1.0e+300;
-//global const f64 gTinyF64          =  1.0e-300;
+global const f64 gTinyF64          =  1.0e-300;
 
 global const f32 gPiF32            =  3.1415927410e+00f; /* 0x40490fdb, 24 bits of pi */
+global const f32 gPiF32_lo         = -8.7422776573e-08f; /* 0x40490fdb, pi - gPiF32 */
 global const f32 gPiOver2F32       =  1.5707963705e+00f; /* 0x3fc90fdb, 24 bits of pi / 2 */
 global const f32 gPiOver4F32       =  7.8539818525e-01f; /* 0x3f490fdb, 24 bits of pi / 4 */
 global const f32 g2OverPiF32       =  6.3661980629e-01f; /* 0x3f22f984, 24 bits of 2 / pi */
-global const f32 gPiF32_lo         = -8.7422776573e-08f; /* 0x40490fdb, pi - gPiF32 */
 global const f32 gPiOver4F32_hi    =  7.8539812565e-01f; /* 0x3F490FDA, 24 bits of pi / 4 */
 global const f32 gPiOver4F32_lo    =  3.7748947079e-08f; /* 0x33222168, pi / 4 - gPiOver4F32_hi */
 global const f32 gPiOver2F32_1     =  1.5707855225e+00f; /* 0x3fc90f80, first 17 bit of pi/2 */
@@ -45,6 +45,20 @@ global const f32 gPiOver2F32_3t    =  6.1232342629e-17f; /* 0x248d3132, pi/2 - (
 global const f32 gLog10F32_2_hi    =  3.0102920532e-01f; /* 0x3e9a2080, log10(2) */
 global const f32 gLog10F32_2_lo    =  7.9034151668e-07f; /* 0x355427db, log10(2) - gLog10_2_hi */
 
+global const f64 gPiF64            =  3.14159265358979311600e+00; /* 0x400921FB54442D18, 52 bits of pi */
+global const f64 gPiF64_lo         =  1.22464679914735317720e-16; /* 0x3CA1A62633145C07, pi - gPiF64 */
+global const f64 gPiOver2F64       =  1.57079632679489655800e+00; /* 0x3FF921FB54442D18, 52 bits of pi / 2 */
+global const f64 gPiOver2F64_lo    =  6.12323399573676603587e-17; /* 0x3C91A62633145C07, pi / 2 - gPiOver2F64 */
+global const f64 gPiOver4F64       =  7.85398163397448278999e-01; /* 0x3FE921FB54442D18, 52 bits of pi / 4 */
+global const f64 gPiOver4F64_lo    =  3.06161699786838301793e-17; /* 0x3C81A62633145C07, pi / 4 - gPiOver4F64 */
+global const f64 g2OverPiF64       =  6.36619772367581382433e-01; /* 0x3FE45F306DC9C883, 52 bits of 2 / pi */
+global const f64 gPiOver2F64_1     =  1.57079632673412561417e+00; /* 0x3FF921FB54400000, first bits of pi/2 */
+global const f64 gPiOver2F64_1t    =  6.07710050650619224932e-11; /* 0x3DD0B4611A626331, pi/2 - pio2_1 */
+global const f64 gPiOver2F64_2     =  6.07710050630396597660e-11; /* 0x3DD0B4611A600000, second bits of pi/2 */
+global const f64 gPiOver2F64_2t    =  2.02226624879595063154e-21; /* 0x3BA3198A2E037073, pi/2 - (pio2_1 + pio2_2) */
+global const f64 gPiOver2F64_3     =  2.02226624871116645580e-21; /* 0x3BA3198A2E000000, third bits of pi/2 */
+global const f64 gPiOver2F64_3t    =  8.47842766036889956997e-32; /* 0x397B839A252049C1, pi/2 - (pio2_1 + pio2_2 + pio2_3) */
+
 global const f64 gLog10F64_2_hi    =  3.01029995663611771306e-01; /* 0x3FD34413509F6000, log10(2) */
 global const f64 gLog10F64_2_lo    =  3.69423907715893078616e-13; /* 0x3D59FEF311F12B36, log10(2) - gLog10_2_hi */
 
@@ -55,6 +69,67 @@ global const f32 gLn2LowF32s[2]    = {9.0580006145e-06, -9.0580006145e-06}; /* 0
 global const f64 gHalfSignF64s[2]  = {0.5, -0.5};
 global const f64 gLn2HighF64s[2]   = {6.93147180369123816490e-01, -6.93147180369123816490e-01}; // 0x3fe62e42fee00000, 0xbfe62e42fee00000
 global const f64 gLn2LowF64s[2]    = {1.90821492927058770002e-10, -1.90821492927058770002e-10}; // 0x3dea39ef35793c76. 0xbdea39ef35793c76
+
+// NOTE(michiel): Pi
+global const s32 g2OverPiF64_Table[] = {
+    0x00A2F983, 0x006E4E44, 0x001529FC, 0x002757D1, 0x00F534DD, 0x00C0DB62,
+    0x0095993C, 0x00439041, 0x00FE5163, 0x00ABDEBB, 0x00C561B7, 0x00246E3A,
+    0x00424DD2, 0x00E00649, 0x002EEA09, 0x00D1921C, 0x00FE1DEB, 0x001CB129,
+    0x00A73EE8, 0x008235F5, 0x002EBB44, 0x0084E99C, 0x007026B4, 0x005F7E41,
+    0x003991D6, 0x00398353, 0x0039F49C, 0x00845F8B, 0x00BDF928, 0x003B1FF8,
+    0x0097FFDE, 0x0005980F, 0x00EF2F11, 0x008B5A0A, 0x006D1F6D, 0x00367ECF,
+    0x0027CB09, 0x00B74F46, 0x003F669E, 0x005FEA2D, 0x007527BA, 0x00C7EBE5,
+    0x00F17B3D, 0x000739F7, 0x008A5292, 0x00EA6BFB, 0x005FB11F, 0x008D5D08,
+    0x00560330, 0x0046FC7B, 0x006BABF0, 0x00CFBC20, 0x009AF436, 0x001DA9E3,
+    0x0091615E, 0x00E61B08, 0x00659985, 0x005F14A0, 0x0068408D, 0x00FFD880,
+    0x004D7327, 0x00310606, 0x001556CA, 0x0073A8C9, 0x0060E27B, 0x00C08C6B,
+};
+global const s32 gNPiOver2F64_hw[] = {
+    0x3FF921FB, 0x400921FB, 0x4012D97C, 0x401921FB, 0x401F6A7A, 0x4022D97C,
+    0x4025FDBB, 0x402921FB, 0x402C463A, 0x402F6A7A, 0x4031475C, 0x4032D97C,
+    0x40346B9C, 0x4035FDBB, 0x40378FDB, 0x403921FB, 0x403AB41B, 0x403C463A,
+    0x403DD85A, 0x403F6A7A, 0x40407E4C, 0x4041475C, 0x4042106C, 0x4042D97C,
+    0x4043A28C, 0x40446B9C, 0x404534AC, 0x4045FDBB, 0x4046C6CB, 0x40478FDB,
+    0x404858EB, 0x404921FB,
+};
+global const f64 gPiOver2F64_Table[] = {
+    1.57079625129699707031e+00, /* 0x3FF921FB40000000 */
+    7.54978941586159635335e-08, /* 0x3E74442D00000000 */
+    5.39030252995776476554e-15, /* 0x3CF8469880000000 */
+    3.28200341580791294123e-22, /* 0x3B78CC5160000000 */
+    1.27065575308067607349e-29, /* 0x39F01B8380000000 */
+    1.22933308981111328932e-36, /* 0x387A252040000000 */
+    2.73370053816464559624e-44, /* 0x36E3822280000000 */
+    2.16741683877804819444e-51, /* 0x3569F31D00000000 */
+};
+
+// NOTE(michiel): Atan
+global const f32 gAtanHiF32[] = {
+    4.6364760399e-01, /* atan(0.5)hi 0x3eed6338 */
+    7.8539812565e-01, /* atan(1.0)hi 0x3f490fda */
+    9.8279368877e-01, /* atan(1.5)hi 0x3f7b985e */
+    1.5707962513e+00, /* atan(inf)hi 0x3fc90fda */
+};
+global const f32 gAtanLoF32[] = {
+    5.0121582440e-09, /* atan(0.5)lo 0x31ac3769 */
+    3.7748947079e-08, /* atan(1.0)lo 0x33222168 */
+    3.4473217170e-08, /* atan(1.5)lo 0x33140fb4 */
+    7.5497894159e-08, /* atan(inf)lo 0x33a22168 */
+};
+
+global const f64 gAtanHiF64[] = {
+    4.63647609000806093515e-01, /* atan(0.5)hi 0x3FDDAC670561BB4F */
+    gPiOver4F64,                /* atan(1.0)hi 0x3FE921FB54442D18 */
+    9.82793723247329054082e-01, /* atan(1.5)hi 0x3FEF730BD281F69B */
+    gPiOver2F64,                /* atan(inf)hi 0x3FF921FB54442D18 */
+};
+global const f64 gAtanLoF64[] = {
+    2.26987774529616870924e-17, /* atan(0.5)lo 0x3C7A2B7F222F65E2 */
+    gPiOver4F64_lo,             /* atan(1.0)lo 0x3C81A62633145C07 */
+    1.39033110312309984516e-17, /* atan(1.5)lo 0x3C7007887AF0CBBD */
+    gPiOver2F64_lo,             /* atan(inf)lo 0x3C91A62633145C07 */
+};
+
 
 // NOTE(michiel): Exp
 #define EXP2_32_TABLE_BITS 5

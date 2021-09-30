@@ -13,10 +13,8 @@
 #include "../libberdip/src/multilane.h"
 
 #define IEEE_754_2008_SNAN 1
-#define MATS_F32_ABS_MASK  0x7FFFFFFF
-#define MATS_F64_ABS_MASK  0x7FFFFFFFFFFFFFFFULL
-#include "../mats/mats_common.h"
 #include "../mats/mats_constants.h"
+#include "../mats/mats_common.h"
 
 #define floor32     floor32_nonsse
 #define ceil32      ceil32_nonsse

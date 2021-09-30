@@ -8,8 +8,6 @@
 
 #include "../mats/mats.h"
 #include "../mats/mats4x.h"
-#include "../mats/mats_elem4x.h"
-#include "../mats/mats_trig4x.h"
 
 internal f32
 tan_kernel_logic(f32 x, s32 mod)

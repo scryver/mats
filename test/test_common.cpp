@@ -5,30 +5,35 @@
 typedef MATH_FUNC_F32_FROM_F32(MathFuncF32FromF32);
 #define MATH_FUNC_F32_FROM_F32_F32(name)            f32 name(f32 a, f32 b)
 typedef MATH_FUNC_F32_FROM_F32_F32(MathFuncF32FromF32F32);
+#define MATH_FUNC_F32_F32_FROM_F32(name)            void name(f32 a, f32 *x, f32 *y)
+typedef MATH_FUNC_F32_F32_FROM_F32(MathFuncF32F32FromF32);
 #define MATH_FUNC_F32_4x_FROM_F32_4x(name)          f32_4x name(f32_4x x)
 typedef MATH_FUNC_F32_4x_FROM_F32_4x(MathFuncF32_4xFromF32_4x);
 #define MATH_FUNC_F32_4x_FROM_F32_4x_F32_4x(name)   f32_4x name(f32_4x a, f32_4x b)
 typedef MATH_FUNC_F32_4x_FROM_F32_4x_F32_4x(MathFuncF32_4xFromF32_4xF32_4x);
 
 #define call_comp(lib, name, suf, sec)  \
-run_comp_f32(string(#lib " " #name "32"), 20, #name, tests, minVal, maxVal, name, name ## suf, sec)
+run_comp_f32(string(#lib " " #name "32"), 30, #name, tests, minVal, maxVal, name, name ## suf, sec)
 #define call_spd(lib, name, suf, sec) \
-run_speed_f32(string(#lib " " #name "32"), 20, #name, tests, minVal, maxVal, name ## suf, sec)
+run_speed_f32(string(#lib " " #name "32"), 30, #name, tests, minVal, maxVal, name ## suf, sec)
+
+#define call_comp_r2(lib, name, suf, sec)  \
+run_comp_f32_f32(string(#lib " " #name "32"), 30, #name, tests, minVal, maxVal, name, name ## suf, sec)
 
 #define call_comp2(lib, name, suf, sec)  \
-run_comp_f32_f32(string(#lib " " #name "32"), 20, #name, testsA, minValA, maxValA, testsB, minValB, maxValB, name, name ## suf, sec)
+run_comp_f32_f32(string(#lib " " #name "32"), 30, #name, testsA, minValA, maxValA, testsB, minValB, maxValB, name, name ## suf, sec)
 #define call_spd2(lib, name, suf, sec) \
-run_speed_f32_f32(string(#lib " " #name "32"), 20, #name, testsA, minValA, maxValA, testsB, minValB, maxValB, name ## suf, sec)
+run_speed_f32_f32(string(#lib " " #name "32"), 30, #name, testsA, minValA, maxValA, testsB, minValB, maxValB, name ## suf, sec)
 
 #define call_comp_4x(lib, name, suf, sec)  \
-run_comp_f32_4x(string(#lib " " #name "32"), 20, #name "_4x", tests, minVal, maxVal, name, name ## suf, sec)
+run_comp_f32_4x(string(#lib " " #name "32"), 30, #name "_4x", tests, minVal, maxVal, name, name ## suf, sec)
 #define call_spd_4x(lib, name, suf, sec) \
-run_speed_f32_4x(string(#lib " " #name "32"), 20, #name "_4x", tests, minVal, maxVal, name ## suf, sec)
+run_speed_f32_4x(string(#lib " " #name "32"), 30, #name "_4x", tests, minVal, maxVal, name ## suf, sec)
 
 #define call_comp2_4x(lib, name, suf, sec)  \
-run_comp_f32_f32_4x(string(#lib " " #name "32"), 20, #name "_4x", testsA, minValA, maxValA, testsB, minValB, maxValB, name, name ## suf, sec)
+run_comp_f32_f32_4x(string(#lib " " #name "32"), 30, #name "_4x", testsA, minValA, maxValA, testsB, minValB, maxValB, name, name ## suf, sec)
 #define call_spd2_4x(lib, name, suf, sec) \
-run_speed_f32_f32_4x(string(#lib " " #name "32"), 20, #name "_4x", testsA, minValA, maxValA, testsB, minValB, maxValB, name ## suf, sec)
+run_speed_f32_f32_4x(string(#lib " " #name "32"), 30, #name "_4x", testsA, minValA, maxValA, testsB, minValB, maxValB, name ## suf, sec)
 
 #define WIDE_FUNC_FROM_F32(name) \
 internal f32_4x \
@@ -75,30 +80,35 @@ fprintf(stdout, "\n"); \
 typedef MATH_FUNC_F64_FROM_F64(MathFuncF64FromF64);
 #define MATH_FUNC_F64_FROM_F64_F64(name)            f64 name(f64 a, f64 b)
 typedef MATH_FUNC_F64_FROM_F64_F64(MathFuncF64FromF64F64);
+#define MATH_FUNC_F64_F64_FROM_F64(name)            void name(f64 a, f64 *x, f64 *y)
+typedef MATH_FUNC_F64_F64_FROM_F64(MathFuncF64F64FromF64);
 #define MATH_FUNC_F64_2x_FROM_F64_2x(name)          f64_2x name(f64_2x x)
 typedef MATH_FUNC_F64_2x_FROM_F64_2x(MathFuncF64_2xFromF64_2x);
 #define MATH_FUNC_F64_2x_FROM_F64_2x_F64_2x(name)   f64_2x name(f64_2x a, f64_2x b)
 typedef MATH_FUNC_F64_2x_FROM_F64_2x_F64_2x(MathFuncF64_2xFromF64_2xF64_2x);
 
 #define call_comp64(lib, name, suf, sec)  \
-run_comp_f64(string(#lib " " #name "64"), 20, #name, tests, minVal, maxVal, name, name ## suf, sec)
+run_comp_f64(string(#lib " " #name "64"), 30, #name, tests, minVal, maxVal, name, name ## suf, sec)
 #define call_spd64(lib, name, suf, sec) \
-run_speed_f64(string(#lib " " #name "64"), 20, #name, tests, minVal, maxVal, name ## suf, sec)
+run_speed_f64(string(#lib " " #name "64"), 30, #name, tests, minVal, maxVal, name ## suf, sec)
+
+#define call_comp64_r2(lib, name, suf, sec)  \
+run_comp_f64_f64(string(#lib " " #name "64"), 30, #name, tests, minVal, maxVal, name, name ## suf, sec)
 
 #define call_comp64_2(lib, name, suf, sec)  \
-run_comp_f64_f64(string(#lib " " #name "64"), 20, #name, testsA, minValA, maxValA, testsB, minValB, maxValB, name, name ## suf, sec)
+run_comp_f64_f64(string(#lib " " #name "64"), 30, #name, testsA, minValA, maxValA, testsB, minValB, maxValB, name, name ## suf, sec)
 #define call_spd64_2(lib, name, suf, sec) \
-run_speed_f64_f64(string(#lib " " #name "64"), 20, #name, testsA, minValA, maxValA, testsB, minValB, maxValB, name ## suf, sec)
+run_speed_f64_f64(string(#lib " " #name "64"), 30, #name, testsA, minValA, maxValA, testsB, minValB, maxValB, name ## suf, sec)
 
 #define call_comp64_2x(lib, name, suf, sec)  \
-run_comp_f64_2x(string(#lib " " #name "64"), 20, #name "_4x", tests, minVal, maxVal, name, name ## suf, sec)
+run_comp_f64_2x(string(#lib " " #name "64"), 30, #name "_4x", tests, minVal, maxVal, name, name ## suf, sec)
 #define call_spd64_2x(lib, name, suf, sec) \
-run_speed_f64_2x(string(#lib " " #name "64"), 20, #name "_4x", tests, minVal, maxVal, name ## suf, sec)
+run_speed_f64_2x(string(#lib " " #name "64"), 30, #name "_4x", tests, minVal, maxVal, name ## suf, sec)
 
 #define call_comp64_2_2x(lib, name, suf, sec)  \
-run_comp_f64_f64_2x(string(#lib " " #name "64"), 20, #name "_4x", testsA, minValA, maxValA, testsB, minValB, maxValB, name, name ## suf, sec)
+run_comp_f64_f64_2x(string(#lib " " #name "64"), 30, #name "_4x", testsA, minValA, maxValA, testsB, minValB, maxValB, name, name ## suf, sec)
 #define call_spd64_2_2x(lib, name, suf, sec) \
-run_speed_f64_f64_2x(string(#lib " " #name "64"), 20, #name "_4x", testsA, minValA, maxValA, testsB, minValB, maxValB, name ## suf, sec)
+run_speed_f64_f64_2x(string(#lib " " #name "64"), 30, #name "_4x", testsA, minValA, maxValA, testsB, minValB, maxValB, name ## suf, sec)
 
 #define WIDE_FUNC_FROM_F64(name) \
 internal f64_2x \
@@ -343,7 +353,7 @@ run_comp_f32(String name, u32 maxNameSize, char *func, u32 tests, f32 minVal, f3
     return seconds;
 }
 
-internal f64
+internal f32
 run_comp_f64(String name, u32 maxNameSize, char *func, u32 tests, f64 minVal, f64 maxVal,
              MathFuncF64FromF64 *origFunc, MathFuncF64FromF64 *testFunc, f32 secondsBase)
 {
@@ -361,6 +371,62 @@ run_comp_f64(String name, u32 maxNameSize, char *func, u32 tests, f64 minVal, f6
         f64 origRes = origFunc(inputVal);
         f64 testRes = testFunc(inputVal);
         update_comp(&compInfo, origRes, testRes, inputVal);
+    }
+    f32 seconds = linux_get_seconds_elapsed(start, linux_get_wall_clock());
+
+    print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, secondsBase);
+    return seconds;
+}
+
+internal f32
+run_comp_f32_f32(String name, u32 maxNameSize, char *func, u32 tests, f32 minVal, f32 maxVal,
+                 MathFuncF64F64FromF64 *origFunc, MathFuncF32F32FromF32 *testFunc, f32 secondsBase)
+{
+    CompInfo compInfo = {};
+    compInfo.numInputs = 1;
+    compInfo.minAbsErr = F32_MAX;
+    compInfo.minRelErr = F32_MAX;
+
+    f32 oneOverTests = 1.0f / (f32)tests;
+    f32 scale = (maxVal - minVal) * oneOverTests;
+    struct timespec start = linux_get_wall_clock();
+    for (u32 index = 0; index < tests; ++index)
+    {
+        f32 inputVal = (f32)index * scale + minVal;
+        f64 orig0, orig1;
+        origFunc(inputVal, &orig0, &orig1);
+        f32 test0, test1;
+        testFunc(inputVal, &test0, &test1);
+        update_comp(&compInfo, orig0, test0, inputVal);
+        update_comp(&compInfo, orig1, test1, inputVal);
+    }
+    f32 seconds = linux_get_seconds_elapsed(start, linux_get_wall_clock());
+
+    print_comp_info(name, maxNameSize, func, tests, seconds, &compInfo, secondsBase);
+    return seconds;
+}
+
+internal f32
+run_comp_f64_f64(String name, u32 maxNameSize, char *func, u32 tests, f64 minVal, f64 maxVal,
+                 MathFuncF64F64FromF64 *origFunc, MathFuncF64F64FromF64 *testFunc, f32 secondsBase)
+{
+    CompInfo compInfo = {};
+    compInfo.numInputs = 1;
+    compInfo.minAbsErr = F64_MAX;
+    compInfo.minRelErr = F64_MAX;
+
+    f64 oneOverTests = 1.0 / (f64)tests;
+    f64 scale = (maxVal - minVal) * oneOverTests;
+    struct timespec start = linux_get_wall_clock();
+    for (u32 index = 0; index < tests; ++index)
+    {
+        f64 inputVal = (f64)index * scale + minVal;
+        f64 orig0, orig1;
+        origFunc(inputVal, &orig0, &orig1);
+        f64 test0, test1;
+        testFunc(inputVal, &test0, &test1);
+        update_comp(&compInfo, orig0, test0, inputVal);
+        update_comp(&compInfo, orig1, test1, inputVal);
     }
     f32 seconds = linux_get_seconds_elapsed(start, linux_get_wall_clock());
 

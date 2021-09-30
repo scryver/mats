@@ -11,8 +11,6 @@
 #define MATS_USE_SSE4 1
 #include "../mats/mats.h"
 #include "../mats/mats4x.h"
-#include "../mats/mats_elem4x.h"
-#include "../mats/mats_trig4x.h"
 
 #include "test_common.cpp"
 //#include "../mats/mats.cpp"

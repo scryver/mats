@@ -787,12 +787,11 @@ hypot64(f64 x, f64 y)
     }
 }
 
-#if 1
-#define EXP64_N  (1 << EXP64_TABLE_BITS)
 
 internal f64
 exp64(f64 x)
 {
+#define EXP64_N  (1 << EXP64_TABLE_BITS)
     u32 abstop = mats_top12(x) & 0x7FF;
     if ((abstop - mats_top12(0x1p-54)) >= (mats_top12(512.0) - mats_top12(0x1p-54)))
     {
@@ -899,105 +898,8 @@ exp64(f64 x)
     // NOTE(michiel): tmp == 0 or |tmp| > 2^-65 and scale > 2^-739, so there
     // is no spurious underflow here even without fma.
     return scale + scale * tmp;
-}
 #undef EXP64_N
-
-#else
-internal f64
-exp64(f64 x)
-{
-    s64 ax = MATS_S64_FROM_F64(x);
-    s32 signBit = (ax >> 63) & 0x1;
-    ax &= MATS_F64_ABS_MASK;
-
-    s64 upAx = ax & 0xFFFFFFFF00000000LL;
-
-    if (upAx >= 0x40862E4200000000LL)
-    {
-        // NOTE(michiel): |x| >= 709.78...
-        if (upAx >= 0x7FF0000000000000LL)
-        {
-            if (ax & MATS_F64_MANT_MASK) {
-                return x + x; // NOTE(michiel): NaN
-            } else {
-                return signBit ? 0.0 : x; // NOTE(michiel): exp(+/-inf) = +inf/0
-            }
-        }
-        if (x > 7.09782712893383973096e+02) {
-            return mats_overflow64(0);
-        }
-        if (x < -7.45133219101941108420e+02) {
-            return mats_underflow64(0);
-        }
-    }
-
-    // NOTE(michiel): Argument reduction
-    f64 hi;
-    f64 lo;
-    s32 k = 0;
-    if (upAx > 0x3FD62E4200000000LL)
-    {
-        // NOTE(michiel): |x| > 0.5 * ln(2)
-        if (upAx < 0x3FF0A2B200000000LL)
-        {
-            // NOTE(michiel): |x| < 1.5 * ln(2)
-            hi = x - gLn2HighF64s[signBit];
-            lo = gLn2LowF64s[signBit];
-            k  = 1 - signBit - signBit;
-        }
-        else
-        {
-            k = gInvLn2F64 * x + gHalfSignF64s[signBit];
-            f64 t = k;
-            hi = x - t * gLn2HighF64s[0];
-            lo = t * gLn2LowF64s[0];
-        }
-        x = hi - lo;
-    }
-    else if (upAx < 0x3DF0000000000000LL)
-    {
-        // NOTE(michiel): |x| < 2^-32
-        return 1.0; // TODO(michiel): Signals?
-    }
-
-    // NOTE(michiel): x is now in primary range
-#define P1  1.66666666666666019037e-01
-#define P2 -2.77777777770155933842e-03
-#define P3  6.61375632143793436117e-05
-#define P4 -1.65339022054652515390e-06
-#define P5  4.13813679705723846039e-08
-
-    f64 t = x * x;
-    f64 t2 = t * t;
-    f64 c1 = t * (P1 + t2 * (P3 + t2 * P5));
-    f64 c2 = t2 * (P2 + t2 * P4);
-    f64 c = x - (c1 + c2);
-    //f64 c = x - t * (P1 + t * (P2 + t * (P3 + t * (P4 + t * P5))));
-
-#undef P5
-#undef P4
-#undef P3
-#undef P2
-#undef P1
-
-    if (k == 0) {
-        return 1.0 - ((x * c) / (c - 2.0) - x);
-    }
-
-    f64 y = 1.0 - ((lo - (x * c) / (2.0 - c)) - hi);
-    if (k >= -1021)
-    {
-        y = MATS_F64_FROM_U64(MATS_U64_FROM_F64(y) + ((u64)k << 52));
-    }
-    else
-    {
-        y = MATS_F64_FROM_U64(MATS_U64_FROM_F64(y) + ((u64)(k + 1000) << 52));
-        y *= g2powMin1000F64;
-    }
-    return y;
 }
-#endif
-
 
 internal f64
 exp2_64(f64 x)

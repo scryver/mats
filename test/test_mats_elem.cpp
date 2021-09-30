@@ -11,8 +11,8 @@
 #define MATS_F32_ABS_MASK  0x7FFFFFFF
 #define MATS_F64_ABS_MASK  0x7FFFFFFFFFFFFFFFULL
 #define IEEE_754_2008_SNAN 1
-#include "../mats/mats_common.h"
 #include "../mats/mats_constants.h"
+#include "../mats/mats_common.h"
 #include "../mats/mats4x.h"
 
 #define sqrt32   sqrt32_nonsse
@@ -285,7 +285,6 @@ exp32_sse(f32 x)
 }
 
 #include "../mats/mats_elem_ext.h"
-#include "../mats/mats_elem4x.h"
 
 #include "test_common.cpp"
 
@@ -445,10 +444,10 @@ s32 main(s32 argc, char **argv)
 
         BEGIN_TEST(doTests, hypot, call_comp2);
         call_comp2(mats, hypot, 32_nonsse, stdSec);
-        call_comp2(mats, hypot, 32_sse, stdSec);
+        call_comp2(matsse, hypot, 32_sse, stdSec);
         call_comp2(ieee754, hypot, _ieee754, stdSec);
-        call_comp2_4x(matsse, hypot, 32_4x, stdSec);
-        call_comp2_4x(fatsse, hypot, 32_fast_4x, stdSec);
+        call_comp2_4x(mats4, hypot, 32_4x, stdSec);
+        call_comp2_4x(fats4, hypot, 32_fast_4x, stdSec);
         END_TEST();
 
         minVal = -12.0f;
@@ -457,19 +456,19 @@ s32 main(s32 argc, char **argv)
         BEGIN_TEST(doTests, exp, call_comp);
         call_comp(mats, exp, 32_nonsse, stdSec);
         call_comp(matsse, exp, 32_sse, stdSec);
-        call_comp_4x(matsse, exp, 32_4x, stdSec);
-        call_comp_4x(fatsse, exp, 32_fast_4x, stdSec);
+        call_comp_4x(mats4, exp, 32_4x, stdSec);
+        call_comp_4x(fats4, exp, 32_fast_4x, stdSec);
         END_TEST();
 
         BEGIN_TEST(doTests, exp2, call_comp);
         call_comp(mats, exp2, _32_nonsse, stdSec);
-        call_comp_4x(matsse, exp2, _32_4x, stdSec);
-        call_comp_4x(fatsse, exp2, _32_fast_4x, stdSec);
+        call_comp_4x(mats4, exp2, _32_4x, stdSec);
+        call_comp_4x(fats4, exp2, _32_fast_4x, stdSec);
         END_TEST();
 
         BEGIN_TEST(doTests, expm1, call_comp);
         call_comp(mats, expm1, _32_nonsse, stdSec);
-        call_comp_4x(matsse, expm1, _32_4x, stdSec);
+        call_comp_4x(mats4, expm1, _32_4x, stdSec);
         //call_comp_4x(fatsse, expm1, _32_fast_4x_t, stdSec);
         END_TEST();
 
@@ -478,33 +477,33 @@ s32 main(s32 argc, char **argv)
 
         BEGIN_TEST(doTests, log, call_comp);
         call_comp(mats, log, 32_nonsse, stdSec);
-        call_comp_4x(matsse, log, 32_4x, stdSec);
-        call_comp_4x(fatsse, log, 32_fast_4x, stdSec);
+        call_comp_4x(mats4, log, 32_4x, stdSec);
+        call_comp_4x(fats4, log, 32_fast_4x, stdSec);
         END_TEST();
 
         BEGIN_TEST(doTests, log2, call_comp);
         call_comp(mats, log2, _32_nonsse, stdSec);
-        call_comp_4x(matsse, log2, _32_4x, stdSec);
-        call_comp_4x(fatsse, log2, _32_fast_4x, stdSec);
+        call_comp_4x(mats4, log2, _32_4x, stdSec);
+        call_comp_4x(fats4, log2, _32_fast_4x, stdSec);
         END_TEST();
 
         BEGIN_TEST(doTests, log10, call_comp);
         call_comp(mats, log10, _32_nonsse, stdSec);
-        call_comp_4x(matsse, log10, _32_4x, stdSec);
-        call_comp_4x(fatsse, log10, _32_fast_4x_t, stdSec);
+        call_comp_4x(mats4, log10, _32_4x, stdSec);
+        call_comp_4x(fats4, log10, _32_fast_4x_t, stdSec);
         END_TEST();
 
         BEGIN_TEST(doTests, log1p, call_comp);
         call_comp(mats, log1p, 32_nonsse, stdSec);
         call_comp(mats, log1p, _fast32_nonsse, stdSec);
         call_comp_4x(mats4, log1p, 32_4x, stdSec);
-        //call_comp_4x(fatsse, log1p, _32_fast_4x_t, stdSec);
+        //call_comp_4x(fats4, log1p, _32_fast_4x_t, stdSec);
         END_TEST();
 
         BEGIN_TEST(doTests, pow, call_comp2);
         call_comp2(mats, pow, 32, stdSec);
-        call_comp2_4x(matsse, pow, 32_4x, stdSec);
-        call_comp2_4x(mats, pow, 32_temp_4x, stdSec);
+        call_comp2_4x(mats4, pow, 32_4x, stdSec);
+        call_comp2_4x(tats4, pow, 32_temp_4x, stdSec);
         END_TEST();
 
         BEGIN_TEST64(doTests, sqrt, call_comp64);
@@ -583,7 +582,7 @@ s32 main(s32 argc, char **argv)
         call_spd2(matsse, hypot, 32_sse, stdSec);
         call_spd2(ieee754, hypot, _ieee754, stdSec);
         call_spd2_4x(mats4, hypot, 32_4x, stdSec);
-        call_spd2_4x(mats4, hypot, 32_fast_4x, stdSec);
+        call_spd2_4x(fats4, hypot, 32_fast_4x, stdSec);
         END_TEST();
 
         minVal = -12.0f;
@@ -593,18 +592,18 @@ s32 main(s32 argc, char **argv)
         call_spd(mats, exp, 32_nonsse, stdSec);
         call_spd(matsse, exp, 32_sse, stdSec);
         call_spd_4x(mats4, exp, 32_4x, stdSec);
-        call_spd_4x(mats4, exp, 32_fast_4x, stdSec);
+        call_spd_4x(fats4, exp, 32_fast_4x, stdSec);
         END_TEST();
 
         BEGIN_TEST(doTests, exp2, call_spd);
         call_spd(mats, exp2, _32_nonsse, stdSec);
         call_spd_4x(mats4, exp2, _32_4x, stdSec);
-        call_spd_4x(mats4, exp2, _32_fast_4x, stdSec);
+        call_spd_4x(fats4, exp2, _32_fast_4x, stdSec);
         END_TEST();
 
         BEGIN_TEST(doTests, expm1, call_spd);
         call_spd(mats, expm1, _32_nonsse, stdSec);
-        call_spd_4x(mats, expm1, _32_4x, stdSec);
+        call_spd_4x(mats4, expm1, _32_4x, stdSec);
         END_TEST();
 
         minVal = 1.0e-9f;
@@ -613,24 +612,24 @@ s32 main(s32 argc, char **argv)
         BEGIN_TEST(doTests, log, call_spd);
         call_spd(mats, log, 32_nonsse, stdSec);
         call_spd_4x(mats4, log, 32_4x, stdSec);
-        call_spd_4x(mats4, log, 32_fast_4x, stdSec);
+        call_spd_4x(fats4, log, 32_fast_4x, stdSec);
         END_TEST();
 
         BEGIN_TEST(doTests, log2, call_spd);
         call_spd(mats, log2, _32_nonsse, stdSec);
         call_spd_4x(mats4, log2, _32_4x, stdSec);
-        call_spd_4x(mats4, log2, _32_fast_4x, stdSec);
+        call_spd_4x(fats4, log2, _32_fast_4x, stdSec);
         END_TEST();
 
         BEGIN_TEST(doTests, log10, call_spd);
         call_spd(mats, log10, _32_nonsse, stdSec);
         call_spd_4x(mats4, log10, _32_4x, stdSec);
-        call_spd_4x(mats4, log10, _32_fast_4x_t, stdSec);
+        call_spd_4x(fats4, log10, _32_fast_4x_t, stdSec);
         END_TEST();
 
         BEGIN_TEST(doTests, log1p, call_spd);
         call_spd(mats, log1p, 32_nonsse, stdSec);
-        call_spd(mats, log1p, _fast32_nonsse, stdSec);
+        call_spd(fats, log1p, _fast32_nonsse, stdSec);
         call_spd_4x(mats4, log1p, 32_4x, stdSec);
         END_TEST();
 

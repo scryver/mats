@@ -1,4 +1,20 @@
 
+struct c32
+{
+    f32 real;
+    f32 imag;
+};
+
+global const c32 gImaginary32 = {0, 1};
+
+struct c64
+{
+    f64 real;
+    f64 imag;
+};
+
+global const c64 gImaginary64 = {0, 1};
+
 //
 // NOTE(michiel): Helpers
 //
@@ -24,14 +40,6 @@ reduce_pi32(f32 x)
 //
 //
 //
-
-struct c32
-{
-    f32 real;
-    f32 imag;
-};
-
-global const c32 gImaginary = {0, 1};
 
 internal c32
 complex32(f32 real, f32 imag)
@@ -439,7 +447,7 @@ asin32(c32 c)
     f32 x = c.real;
     f32 y = c.imag;
 
-    c32 ct = c * gImaginary;
+    c32 ct = c * gImaginary32;
 
     c32 zz = complex32((x - y) * (x + y), 2.0f * x * y);
     zz.real = 1.0f - zz.real;
@@ -450,7 +458,7 @@ asin32(c32 c)
     zz = ct + z2;
     zz = log32(zz);
 
-    c32 result = zz * (-gImaginary);
+    c32 result = zz * (-gImaginary32);
     return result;
 }
 
