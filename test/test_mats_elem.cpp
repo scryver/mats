@@ -13,7 +13,7 @@
 #define IEEE_754_2008_SNAN 1
 #include "../mats/mats_constants.h"
 #include "../mats/mats_common.h"
-#include "../mats/mats4x.h"
+#include "../mats/mats_wide.h"
 
 #define sqrt32   sqrt32_nonsse
 #define hypot32  hypot32_nonsse

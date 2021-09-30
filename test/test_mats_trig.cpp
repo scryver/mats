@@ -23,7 +23,7 @@
 #include "../mats/mats_elem.h"
 #include "../mats/mats_elem_ext.h"
 #include "../mats/mats_trig.h"
-#include "../mats/mats4x.h"
+#include "../mats/mats_wide.h"
 
 #include "../src/arm_sincos.cpp"
 

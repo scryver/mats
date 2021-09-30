@@ -73,7 +73,7 @@
 #undef modulus64
 #undef remainder64
 
-#include "../mats/mats_rounding4x.h"
+#include "../mats/mats_rounding_wide.h"
 
 #include "test_common.cpp"
 
