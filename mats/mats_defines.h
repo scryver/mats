@@ -17,6 +17,10 @@
 #define MATS_HAVE_FAST_FMA 0
 #endif
 
+#ifndef MATS_ASSERT
+#define MATS_ASSERT(x) ((x) ? (void)0 : (void)(*(volatile int *)0 = 0))
+#endif
+
 #if MATS_USE_SSE
 union WideMath
 {

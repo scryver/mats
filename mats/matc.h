@@ -35,7 +35,7 @@ reduce_pi32(f32 x)
     } else {
         t -= 0.5f;
     }
-    
+
     t = (f32)(s32)t;  /* the multiple */
     f32 result = ((x - t * gPiReduce1F32) - t * gPiReduce2F32) - t * gPiReduce3F32;
     return result;
@@ -50,7 +50,7 @@ reduce_pi64(f64 x)
     } else {
         t -= 0.5f;
     }
-    
+
     t = (f64)(s64)t;  /* the multiple */
     f64 result = ((x - t * gPiReduce1F64) - t * gPiReduce2F64) - t * gPiReduce3F64;
     return result;
@@ -266,7 +266,7 @@ sqrt32(c32 c)
 {
     f32 x = c.real;
     f32 y = c.imag;
-    
+
     if (y == 0.0f)
     {
         if (x < 0.0f) {
@@ -283,7 +283,7 @@ sqrt32(c32 c)
         r = sqrt32(0.5f * r);
         return complex32(r, (y > 0.0f) ? r : -r);
     }
-    
+
     f32 scale = 1.0f;
     if ((absolute32(x) > 4.0f) || (absolute32(y) > 4.0f))
     {
@@ -298,7 +298,7 @@ sqrt32(c32 c)
         y *= 6.7108864e7f;
         scale = 1.220703125e-4f; // NOTE(michiel): 2^-13
     }
-    
+
     f32 r = absolute32(complex32(x, y));
     f32 t;
     if (x > 0.0f)
@@ -313,7 +313,7 @@ sqrt32(c32 c)
         t = scale * absolute32((0.5f * y) / r);
         r *= scale;
     }
-    
+
     c32 result = complex32(t, (y < 0.0f) ? -r : r);
     return result;
 }
@@ -350,25 +350,25 @@ log10_32(c32 c)
 internal c32
 pow32(c32 x, c32 y)
 {
-    
+
     f32 real = y.real;
     f32 imag = y.imag;
-    
+
     f32 absX = absolute32(x);
     if (absX == 0.0f) {
         return complex32(0, 0);
     }
-    
+
     f32 argX = argument32(x);
     f32 r = pow32(absX, real);
     f32 theta = real * argX;
-    
+
     if (imag != 0.0f)
     {
         r = r * exp32(-imag * argX);
         theta = theta + imag * log32(absX);
     }
-    
+
     SinCos32 th = sincos32(theta);
     c32 result = complex32(r * th.cos, r * th.sin);
     return result;
@@ -402,18 +402,18 @@ tan_serie32(c32 c)
     // NOTE(michiel): Taylor-series expansion for cosh(2y) - cos(2x)
     f32 x = absolute32(2.0f * c.real);
     f32 y = absolute32(2.0f * c.imag);
-    
+
     x = reduce_pi32(x);
-    
+
     x = x * x;
     y = y * y;
-    
+
     f32 x2 = 1.0f;
     f32 y2 = 1.0f;
     f32 f  = 1.0f;
     f32 rn = 0.0f;
     f32 d  = 0.0f;
-    
+
     // NOTE(michiel): While error is greater than machine precision
     f32 t;
     do
@@ -427,7 +427,7 @@ tan_serie32(c32 c)
         t   = y2 + x2;
         t  /= f;
         d  += f;
-        
+
         rn += 1.0f;
         f  *= rn;
         rn += 1.0f;
@@ -447,15 +447,15 @@ tan32(c32 c)
     SinCos32 cs  = sincos32(2.0f * c.real);
     SinCos32 csh = sinhcosh32(2.0f * c.imag);
     f32 d = cs.cos + csh.cos;
-    
+
     if (absolute32(d) < 0.25f) {
         d = tan_serie32(c);
     }
-    
+
     if (d == 0.0f) {
         return complex32(gHugeF32, gHugeF32);
     }
-    
+
     c32 result = complex32(cs.sin / d, csh.sin / d);
     return result;
 }
@@ -465,18 +465,18 @@ asin32(c32 c)
 {
     f32 x = c.real;
     f32 y = c.imag;
-    
+
     c32 ct = c * gImaginary32;
-    
+
     c32 zz = complex32((x - y) * (x + y), 2.0f * x * y);
     zz.real = 1.0f - zz.real;
     zz.imag = -zz.imag;
-    
+
     c32 z2 = sqrt32(zz);
-    
+
     zz = ct + z2;
     zz = log32(zz);
-    
+
     c32 result = zz * (-gImaginary32);
     return result;
 }
@@ -485,7 +485,7 @@ internal c32
 acos32(c32 c)
 {
     c32 result = asin32(c);
-    result = (F32_PI_OVER_2 - result.real) - complex32(0.0f, result.imag);
+    result = (gPiOver2F32 - result.real) - complex32(0.0f, result.imag);
     return result;
 }
 
@@ -495,26 +495,26 @@ atan32(c32 c)
     c32 result;
     f32 x = c.real;
     f32 y = c.imag;
-    
+
     if ((x == 0.0f) && (y > 1.0f)) {
         return complex32(gHugeF32, gHugeF32);
     }
-    
+
     f32 x2 = x * x;
     f32 a = 1.0f - x2 - (y * y);
     if (a == 0.0f) {
         return complex32(gHugeF32, gHugeF32);
     }
-    
+
     f32 t = 0.5f * atan2_32(2.0f * x, a);
     f32 w = reduce_pi32(t);
-    
+
     t = y - 1.0f;
     a = x2 + (t * t);
     if (a == 0.0f) {
         return complex32(gHugeF32, gHugeF32);
     }
-    
+
     t = y + 1.0f;
     a = (x2 + (t * t)) / a;
     result = complex32(w, 0.25f * log32(a));
@@ -786,7 +786,7 @@ sqrt64(c64 c)
 {
     f64 x = c.real;
     f64 y = c.imag;
-    
+
     if (y == 0.0)
     {
         if (x < 0.0) {
@@ -803,7 +803,7 @@ sqrt64(c64 c)
         r = sqrt64(0.5 * r);
         return complex64(r, (y > 0.0) ? r : -r);
     }
-    
+
     f64 scale = 1.0;
     if ((absolute64(x) > 4.0) || (absolute64(y) > 4.0))
     {
@@ -818,7 +818,7 @@ sqrt64(c64 c)
         y *= 1.8014398509481984e16;
         scale = 7.450580596923828125e-9; // NOTE(michiel): 2^-27
     }
-    
+
     f64 r = absolute64(complex64(x, y));
     f64 t;
     if (x > 0.0)
@@ -833,7 +833,7 @@ sqrt64(c64 c)
         t = scale * absolute64((0.5 * y) / r);
         r *= scale;
     }
-    
+
     c64 result = complex64(t, (y < 0.0) ? -r : r);
     return result;
 }
@@ -870,25 +870,25 @@ log10_64(c64 c)
 internal c64
 pow64(c64 x, c64 y)
 {
-    
+
     f64 real = y.real;
     f64 imag = y.imag;
-    
+
     f64 absX = absolute64(x);
     if (absX == 0.0) {
         return complex64(0, 0);
     }
-    
+
     f64 argX = argument64(x);
     f64 r = pow64(absX, real);
     f64 theta = real * argX;
-    
+
     if (imag != 0.0)
     {
         r = r * exp64(-imag * argX);
         theta = theta + imag * log64(absX);
     }
-    
+
     SinCos64 th = sincos64(theta);
     c64 result = complex64(r * th.cos, r * th.sin);
     return result;
@@ -922,18 +922,18 @@ tan_serie64(c64 c)
     // NOTE(michiel): Taylor-series expansion for cosh(2y) - cos(2x)
     f64 x = absolute64(2.0 * c.real);
     f64 y = absolute64(2.0 * c.imag);
-    
+
     x = reduce_pi64(x);
-    
+
     x = x * x;
     y = y * y;
-    
+
     f64 x2 = 1.0;
     f64 y2 = 1.0;
     f64 f  = 1.0;
     f64 rn = 0.0;
     f64 d  = 0.0;
-    
+
     // NOTE(michiel): While error is greater than machine precision
     f64 t;
     do
@@ -947,7 +947,7 @@ tan_serie64(c64 c)
         t   = y2 + x2;
         t  /= f;
         d  += f;
-        
+
         rn += 1.0;
         f  *= rn;
         rn += 1.0;
@@ -967,15 +967,15 @@ tan64(c64 c)
     SinCos64 cs  = sincos64(2.0 * c.real);
     SinCos64 csh = sinhcosh64(2.0 * c.imag);
     f64 d = cs.cos + csh.cos;
-    
+
     if (absolute64(d) < 0.25) {
         d = tan_serie64(c);
     }
-    
+
     if (d == 0.0) {
         return complex64(gHugeF64, gHugeF64);
     }
-    
+
     c64 result = complex64(cs.sin / d, csh.sin / d);
     return result;
 }
@@ -985,18 +985,18 @@ asin64(c64 c)
 {
     f64 x = c.real;
     f64 y = c.imag;
-    
+
     c64 ct = c * gImaginary64;
-    
+
     c64 zz = complex64((x - y) * (x + y), 2.0 * x * y);
     zz.real = 1.0 - zz.real;
     zz.imag = -zz.imag;
-    
+
     c64 z2 = sqrt64(zz);
-    
+
     zz = ct + z2;
     zz = log64(zz);
-    
+
     c64 result = zz * (-gImaginary64);
     return result;
 }
@@ -1015,26 +1015,26 @@ atan64(c64 c)
     c64 result;
     f64 x = c.real;
     f64 y = c.imag;
-    
+
     if ((x == 0.0) && (y > 1.0)) {
         return complex64(gHugeF64, gHugeF64);
     }
-    
+
     f64 x2 = x * x;
     f64 a = 1.0 - x2 - (y * y);
     if (a == 0.0) {
         return complex64(gHugeF64, gHugeF64);
     }
-    
+
     f64 t = 0.5 * atan2_64(2.0 * x, a);
     f64 w = reduce_pi64(t);
-    
+
     t = y - 1.0;
     a = x2 + (t * t);
     if (a == 0.0) {
         return complex64(gHugeF64, gHugeF64);
     }
-    
+
     t = y + 1.0;
     a = (x2 + (t * t)) / a;
     result = complex64(w, 0.25 * log64(a));

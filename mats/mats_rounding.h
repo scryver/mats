@@ -210,8 +210,8 @@ modulus32(f32 num, f32 den)
     // This function computes the remainder from the division of numerator by denominator. Specifically, the return value
     // is numerator - n * denominator, where n is the quotient of numerator divided by denominator, rounded towards zero.
     // Thus, fmod (6.5, 2.3) returns 1.9, which is 6.5 minus 4.6.
-    s32 hnum = (s32)u32f32(num).u;
-    s32 hden = (s32)u32f32(den).u;
+    s32 hnum = (s32)MATS_F32U(num).u;
+    s32 hden = (s32)MATS_F32U(den).u;
 
     u32 signNum = hnum & MATS_F32_SIGN_MASK;
     hnum &= MATS_F32_ABS_MASK; // |num|
@@ -289,7 +289,7 @@ modulus32(f32 num, f32 den)
             hnum = hnum + hnum;
         } else {
 	    	if (hdiff == 0) { 		/* return sign(x)*0 */
-                return u32f32(signNum).f;
+                return MATS_F32U(signNum).f;
             }
             hnum = hdiff + hdiff;
 	    }
@@ -303,7 +303,7 @@ modulus32(f32 num, f32 den)
     /* convert back to floating value and restore the sign */
 	if (hnum == 0) {
         /* return sign(x)*0 */
-        return u32f32(signNum).f;
+        return MATS_F32U(signNum).f;
     }
 
 	while (hnum < 0x00800000) {		/* normalize x */
@@ -314,13 +314,13 @@ modulus32(f32 num, f32 den)
     f32 result;
 	if (expDen >= MATS_F32_EXP_MIN) {		/* normalize output */
         hnum = ((hnum - 0x00800000) | ((expDen + MATS_F32_EXP_BIAS) << MATS_F32_EXP_SHIFT));
-        result = u32f32(signNum | hnum).f;
+        result = MATS_F32U(signNum | hnum).f;
 	} else {		/* subnormal output */
 	    /* If denormals are not supported, this code will generate a
 	       zero representation.  */
 	    s32 n = MATS_F32_EXP_MIN - expDen;
 	    hnum >>= n;
-        result = u32f32(signNum | hnum).f;
+        result = MATS_F32U(signNum | hnum).f;
 	    //result *= 1.0f;		/* create necessary signal */
 	}
 	return result;		/* exact output */
@@ -333,8 +333,8 @@ remainder32(f32 num, f32 den)
     // of the denominator. returned value's sign is equal to the sign of the numerator,
     // This function is like modulus32 except that it rounds the internal quotient n to the nearest integer instead of towards
     // zero. For example, remainder (6.5, 2.3) returns -0.4, which is 6.5 minus 6.9.
-    u32 hnum = u32f32(num).u;
-    u32 hden = u32f32(den).u;
+    u32 hnum = MATS_F32U(num).u;
+    u32 hden = MATS_F32U(den).u;
 
     u32 signNum = hnum & MATS_F32_SIGN_MASK;
     hnum ^= signNum;    // |num|
@@ -352,7 +352,7 @@ remainder32(f32 num, f32 den)
         num = modulus32(num, den + den);
     }
     if ((hnum - hden) == 0) {
-        return u32f32(signNum).f;
+        return MATS_F32U(signNum).f;
     }
 
     num = absolute32(num);
@@ -378,8 +378,8 @@ remainder32(f32 num, f32 den)
         }
     }
 
-    hnum = u32f32(num).u;
-    f32 result = u32f32(signNum ^ hnum).f;
+    hnum = MATS_F32U(num).u;
+    f32 result = MATS_F32U(signNum ^ hnum).f;
     return result;
 }
 

@@ -144,7 +144,7 @@ sin32_4x(f32_4x y)
 }
 
 // TODO(michiel): Rename to SinCos32_4x
-internal SinCos_4x
+internal SinCos32_4x
 sincos32_4x(f32_4x y)
 {
     // NOTE(michiel): absolute value of y should be smaller than 100.0f
@@ -210,7 +210,7 @@ sincos32_4x(f32_4x y)
     sinResult = select4x(sinResult, selSinSign, minSin);
     sinResult = select4x(sinResult, smallestMask, y);
 
-    SinCos_4x result;
+    SinCos32_4x result;
     result.cos = cosResult;
     result.sin = sinResult;
     return result;
@@ -327,7 +327,7 @@ acos32_temp(f32 x)
 #define pio2_hi   1.5707962513e+00f
 #define pio2_lo   7.5497894159e-08f
 
-	s32 ix = (s32)u32f32(x).u;
+	s32 ix = (s32)MATS_F32U(x).u;
     u32 hx = ix & MATS_F32_ABS_MASK;
 
     b32 hxEqOne = hx == 0x3F800000;
@@ -357,7 +357,7 @@ acos32_temp(f32 x)
         }
         else if (!xLtZero)
         {
-            f32 df = u32f32(u32f32(s).u & 0xFFFFF000).f;
+            f32 df = MATS_F32U(MATS_F32U(s).u & 0xFFFFF000).f;
             c = (polyIn - df * df) / (s + df);
             s = df;
         }
@@ -382,7 +382,7 @@ asin32_temp(f32 x)
 #define pio2_lo -4.37113900018624283e-8f
 #define pio4_hi 0.785398185253143310546875f
 
-    s32 ix = (s32)u32f32(x).u;
+    s32 ix = (s32)MATS_F32U(x).u;
     u32 hx = ix & MATS_F32_ABS_MASK;
 
     b32 hxEqOne = hx == 0x3F800000;
@@ -390,7 +390,7 @@ asin32_temp(f32 x)
     b32 hxLtMax = hx <  0x3F79999A;
     b32 hxLtHaf = hx <  0x3F000000;
 
-    f32 preW = 1.0f - u32f32(hx).f;
+    f32 preW = 1.0f - MATS_F32U(hx).f;
     f32 polyIn = preW * 0.5f;
     if (hxLtHaf) {
         polyIn = x * x;
@@ -420,8 +420,8 @@ asin32_temp(f32 x)
         else if (hxLtMax)
         {
             f32 w = s;
-            u32 iw = u32f32(w).u;
-            w = u32f32(iw & 0xFFFFF000).f;
+            u32 iw = MATS_F32U(w).u;
+            w = MATS_F32U(iw & 0xFFFFF000).f;
             f32 correct = (polyIn - w * w) / (s + w);
             b = 2.0f * sr - (pio2_lo - 2.0f * correct);
             c = pio4_hi - 2.0f * w;

@@ -44,8 +44,8 @@ modulus32_nosafe(f32 num, f32 den)
     // This function computes the remainder from the division of numerator by denominator. Specifically, the return value
     // is numerator - n * denominator, where n is the quotient of numerator divided by denominator, rounded towards zero.
     // Thus, fmod (6.5, 2.3) returns 1.9, which is 6.5 minus 4.6.
-    s32 hnum = (s32)u32f32(num).u;
-    s32 hden = (s32)u32f32(den).u;
+    s32 hnum = (s32)MATS_F32U(num).u;
+    s32 hden = (s32)MATS_F32U(den).u;
 
     u32 signNum = hnum & MATS_F32_SIGN_MASK;
     hnum &= MATS_F32_ABS_MASK; // |num|
@@ -55,7 +55,7 @@ modulus32_nosafe(f32 num, f32 den)
         return num;               // NOTE(michiel): |num| < |den|, return num
     }
     if (hnum == hden) {
-        return u32f32(signNum).f; // NOTE(michiel): |num| == |den|, return 0 with the correct sign
+        return MATS_F32U(signNum).f; // NOTE(michiel): |num| == |den|, return 0 with the correct sign
     }
 
     /* determine ix = ilogb(x) */
@@ -77,7 +77,7 @@ modulus32_nosafe(f32 num, f32 den)
             hnum = hnum + hnum;
         } else {
 	    	if (hdiff == 0) { 		/* return sign(x)*0 */
-                return u32f32(signNum).f;
+                return MATS_F32U(signNum).f;
             }
             hnum = hdiff + hdiff;
 	    }
@@ -91,7 +91,7 @@ modulus32_nosafe(f32 num, f32 den)
     /* convert back to floating value and restore the sign */
 	if (hnum == 0) {
         /* return sign(x)*0 */
-        return u32f32(signNum).f;
+        return MATS_F32U(signNum).f;
     }
 
 	while (hnum < 0x00800000) {		/* normalize x */
@@ -100,7 +100,7 @@ modulus32_nosafe(f32 num, f32 den)
 	}
 
     hnum = ((hnum - 0x00800000) | ((expDen + MATS_F32_EXP_BIAS) << MATS_F32_EXP_SHIFT));
-    f32 result = u32f32(signNum | hnum).f;
+    f32 result = MATS_F32U(signNum | hnum).f;
 	return result;		/* exact output */
 }
 

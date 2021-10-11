@@ -15,7 +15,7 @@ sqrt32(f32 x)
     m.m = _mm_sqrt_ss(_mm_set_ss(x));
     result = m.e[0];
 #else
-	s32 ix = (s32)u32f32(x).u;
+	s32 ix = (s32)MATS_F32U(x).u;
     u32 hx = ix & MATS_F32_ABS_MASK;
 
     /* take care of Inf and NaN */
@@ -83,7 +83,7 @@ sqrt32(f32 x)
 	ix = (q >> 1) + 0x3f000000L;
 	ix += (m << MATS_F32_EXP_SHIFT);
 
-    result = u32f32((u32)ix).f;
+    result = MATS_F32U((u32)ix).f;
 #endif
     return result;
 }
@@ -91,8 +91,8 @@ sqrt32(f32 x)
 internal f32
 hypot32(f32 x, f32 y)
 {
-    u32 ux = u32f32(x).u & MATS_F32_ABS_MASK;
-    u32 uy = u32f32(y).u & MATS_F32_ABS_MASK;
+    u32 ux = MATS_F32U(x).u & MATS_F32_ABS_MASK;
+    u32 uy = MATS_F32U(y).u & MATS_F32_ABS_MASK;
 
 	if (ux < uy) {
         u32 temp = ux;
@@ -100,8 +100,8 @@ hypot32(f32 x, f32 y)
         uy = temp;
 	}
 
-    x = u32f32(ux).f;
-    y = u32f32(uy).f;
+    x = MATS_F32U(ux).f;
+    y = MATS_F32U(uy).f;
     if (uy == MATS_F32_EXP_MASK) {
         return y;
     }
@@ -132,12 +132,12 @@ hypot32(f32 x, f32 y)
 internal f32
 exp32(f32 x)
 {
-    u32 xu = u32f32(x).u;
+    u32 xu = MATS_F32U(x).u;
 
     u32 abstop = abstop12_(x);
     if (abstop >= abstop12_(88.0f))
     {
-        if (xu == u32f32(-F32_INF).u) {
+        if (xu == MATS_F32U(-F32_INF).u) {
             return 0.0f;
         }
         if (abstop >= abstop12_(F32_INF)) {
@@ -155,7 +155,7 @@ exp32(f32 x)
     f64 z = gExp2F32_InvLn2Scaled * xd;
 
     f64 kd = z + gExp2F32_Shift; /* Rounding to double precision is required.  */
-    u64 ki = u64f64(kd).u;
+    u64 ki = MATS_F64U(kd).u;
     kd -= gExp2F32_Shift;
 
     f64 r = z - kd;
@@ -164,7 +164,7 @@ exp32(f32 x)
     u64 t = gExp2F32_Table[ki % (1 << EXP2_32_TABLE_BITS)];
     t += ki << (52 - EXP2_32_TABLE_BITS);
 
-    f64 s = u64f64(t).f;
+    f64 s = MATS_F64U(t).f;
     f64 res = gExp2F32_PolyScaled[0] * r + gExp2F32_PolyScaled[1];
     f64 r2 = r * r;
     f64 y = gExp2F32_PolyScaled[2] * r + 1.0;
@@ -178,12 +178,12 @@ internal f32
 exp2_32(f32 x)
 {
     // NOTE(michiel): result = 2^x
-    u32 xu = u32f32(x).u;
+    u32 xu = MATS_F32U(x).u;
 
     u32 abstop = abstop12_(x);
     if (abstop >= abstop12_(128.0f))
     {
-        if (xu == u32f32(-F32_INF).u) {
+        if (xu == MATS_F32U(-F32_INF).u) {
             return 0.0f;
         }
         if (abstop >= abstop12_(F32_INF)) {
@@ -199,7 +199,7 @@ exp2_32(f32 x)
 
     f64 xd = x;
     f64 kd = xd + gExp2F32_ShiftScaled; /* Rounding to double precision is required.  */
-    u64 ki = u64f64(kd).u;
+    u64 ki = MATS_F64U(kd).u;
     kd -= gExp2F32_ShiftScaled;
 
     f64 r = xd - kd;
@@ -207,7 +207,7 @@ exp2_32(f32 x)
     u64 t = gExp2F32_Table[ki % (1 << EXP2_32_TABLE_BITS)];
     t += ki << (52 - EXP2_32_TABLE_BITS);
 
-    f64 s = u64f64(t).f;
+    f64 s = MATS_F64U(t).f;
     f64 z = gExp2F32_Poly[0] * r + gExp2F32_Poly[1];
     f64 r2 = r * r;
     f64 y = gExp2F32_Poly[2] * r + 1.0;
@@ -225,7 +225,7 @@ pow2_32(f32 x)
 internal f32
 log32(f32 x)
 {
-    u32 xu = u32f32(x).u;
+    u32 xu = MATS_F32U(x).u;
 
     if ((xu - 0x00800000) >= (MATS_F32_EXP_MASK - 0x00800000))
     {
@@ -240,7 +240,7 @@ log32(f32 x)
             return mats_invalid32(x);
         }
         // NOTE(michiel): Normalize a subnormal
-        xu = u32f32(x * 0x1p23f).u;
+        xu = MATS_F32U(x * 0x1p23f).u;
         xu -= MATS_F32_EXP_SHIFT << MATS_F32_EXP_SHIFT;
     }
 
@@ -253,7 +253,7 @@ log32(f32 x)
     u32 iz = xu - (temp & (0x1FF << MATS_F32_EXP_SHIFT));
     f64 invC = gLogF32_Table[index].invC;
     f64 logC = gLogF32_Table[index].logC;
-    f64 z = (f64)u32f32(iz).f;
+    f64 z = (f64)MATS_F32U(iz).f;
 
     /* log(x) = log1p(z/c-1) + log(c) + k*Ln2 */
     f64 r = z * invC - 1.0;
@@ -269,7 +269,7 @@ log32(f32 x)
 internal f32
 log2_32(f32 x)
 {
-    u32 xu = u32f32(x).u;
+    u32 xu = MATS_F32U(x).u;
 
     if ((xu - 0x00800000) >= (MATS_F32_EXP_MASK - 0x00800000))
     {
@@ -284,7 +284,7 @@ log2_32(f32 x)
             return mats_invalid32(x);
         }
         // NOTE(michiel): Normalize a subnormal
-        xu = u32f32(x * 0x1p23f).u;
+        xu = MATS_F32U(x * 0x1p23f).u;
         xu -= MATS_F32_EXP_SHIFT << MATS_F32_EXP_SHIFT;
     }
 
@@ -298,7 +298,7 @@ log2_32(f32 x)
     s32 k = (s32)temp >> MATS_F32_EXP_SHIFT;
     f64 invC = gLog2F32_Table[index].invC;
     f64 logC = gLog2F32_Table[index].logC;
-    f64 z = (f64)u32f32(iz).f;
+    f64 z = (f64)MATS_F32U(iz).f;
 
     /* log(x) = log1p(z/c-1) + log(c) + k*Ln2 */
     f64 r = z * invC - 1.0;
@@ -343,7 +343,7 @@ internal f32
 expm1_32(f32 x)
 {
     // NOTE(michiel): result = exp(x) - 1
-    u32 hx = u32f32(x).u;
+    u32 hx = MATS_F32U(x).u;
     f32 ln2_hi = gLn2HighF32s[0];
     f32 ln2_lo = gLn2LowF32s[0];
 
@@ -450,24 +450,24 @@ expm1_32(f32 x)
             if ((k <= -2) || (k > 56))
             {
                 f32 y = 1.0f - (e - x);
-                u32 i = u32f32(y).u;
-                y = u32f32(i + (k << MATS_F32_EXP_SHIFT)).f;
+                u32 i = MATS_F32U(y).u;
+                y = MATS_F32U(i + (k << MATS_F32_EXP_SHIFT)).f;
                 result = y - 1.0f;
             }
             else if (k < MATS_F32_EXP_SHIFT)
             {
-                f32 y = u32f32((u32)0x3F800000 - (0x01000000 >> k)).f;
+                f32 y = MATS_F32U((u32)0x3F800000 - (0x01000000 >> k)).f;
                 y = y - (e - x);
-                u32 i = u32f32(y).u;
-                result = u32f32(i + (k << MATS_F32_EXP_SHIFT)).f;
+                u32 i = MATS_F32U(y).u;
+                result = MATS_F32U(i + (k << MATS_F32_EXP_SHIFT)).f;
             }
             else
             {
-                f32 y = u32f32((u32)(MATS_F32_EXP_BIAS - k) << MATS_F32_EXP_SHIFT).f;
+                f32 y = MATS_F32U((u32)(MATS_F32_EXP_BIAS - k) << MATS_F32_EXP_SHIFT).f;
                 y = x - (e + y);
                 y += 1.0f;
-                u32 i = u32f32(y).u;
-                result = u32f32(i + (k << MATS_F32_EXP_SHIFT)).f;
+                u32 i = MATS_F32U(y).u;
+                result = MATS_F32U(i + (k << MATS_F32_EXP_SHIFT)).f;
             }
         }
     }
@@ -478,7 +478,7 @@ internal f32
 log1p32(f32 x)
 {
     // NOTE(michiel): result = log(1 + x)
-    s32 hx = (s32)u32f32(x).u;
+    s32 hx = (s32)MATS_F32U(x).u;
     f32 ln2_hi = gLn2HighF32s[0];
     f32 ln2_lo = gLn2LowF32s[0];
 
@@ -528,7 +528,7 @@ log1p32(f32 x)
         if (hx < 0x5A000000)
         {
             f32 u = 1.0f + x;
-            hu = (s32)u32f32(u).u;
+            hu = (s32)MATS_F32U(u).u;
             k  = (hu >> MATS_F32_EXP_SHIFT) - MATS_F32_EXP_BIAS;
             // NOTE(michiel): Correction term
             c = (k > 0) ? 1.0f - (u - x) : x - (u - 1.0f);
@@ -537,19 +537,19 @@ log1p32(f32 x)
         else
         {
             f32 u = x;
-            hu = (s32)u32f32(u).u;
+            hu = (s32)MATS_F32U(u).u;
             k  = (hu >> MATS_F32_EXP_SHIFT) - MATS_F32_EXP_BIAS;
         }
         hu &= MATS_F32_MANT_MASK;
         f32 u;
         if (hu < 0x003504F7)
         {
-            u = u32f32((u32)hu | 0x3F800000).f; // NOTE(michiel): Normalize
+            u = MATS_F32U((u32)hu | 0x3F800000).f; // NOTE(michiel): Normalize
         }
         else
         {
             ++k;
-            u = u32f32((u32)hu | 0x3F000000).f;
+            u = MATS_F32U((u32)hu | 0x3F000000).f;
             hu = (0x00800000 - hu) >> 2;
         }
         f = u - 1.0f;
@@ -599,7 +599,7 @@ log1p_fast32(f32 x)
     /* |(log(1+s)-log(1-s))/s - Lg(s)| < 2**-34.24 (~[-4.95e-11, 4.97e-11]). */
     f32 ln2_hi = gLn2HighF32s[0];
     f32 ln2_lo = gLn2LowF32s[0];
-    u32 ix = u32f32(x).u;
+    u32 ix = MATS_F32U(x).u;
 
     f32 c;
     f32 f;
@@ -636,7 +636,7 @@ log1p_fast32(f32 x)
 
     if (k)
     {
-        U32F32 u = u32f32(1.0f + x);
+        mats_f32u u = MATS_F32U(1.0f + x);
         u32 iu = u.u;
         iu += 0x3F800000 - 0x3F3504F3;
         k = (s32)(iu >> MATS_F32_EXP_SHIFT) - MATS_F32_EXP_BIAS;

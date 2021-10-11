@@ -12,7 +12,7 @@ pow32_log2(u32 xu)
     s32 k = (s32)temp >> MATS_F32_EXP_SHIFT;
     f64 invC = gPowF32_Log2Table[index].invC;
     f64 logC = gPowF32_Log2Table[index].logC;
-    f64 z = (f64)u32f32(iz).f;
+    f64 z = (f64)MATS_F32U(iz).f;
     f64 r = z * invC - 1.0;
     f64 y0 = logC + (f64)k;
 
@@ -30,14 +30,14 @@ internal f64
 pow32_exp2(f64 xd, u32 signBias)
 {
     f64 kd = xd + gExp2F32_ShiftScaled;
-    u64 ki = u64f64(kd).u;
+    u64 ki = MATS_F64U(kd).u;
     kd -= gExp2F32_ShiftScaled;
 
     f64 r = xd - kd;
     u64 t = gExp2F32_Table[ki % (1 << EXP2_32_TABLE_BITS)];
     u64 ski = ki + signBias;
     t += ski << (52 - EXP2_32_TABLE_BITS);
-    f64 s = u64f64(t).f;
+    f64 s = MATS_F64U(t).f;
     f64 z = gExp2F32_Poly[0] * r + gExp2F32_Poly[1];
     f64 r2 = r * r;
     f64 result = gExp2F32_Poly[2] * r + 1.0;
@@ -76,8 +76,8 @@ pow32(f32 x, f32 y)
 {
     u32 signBias = 0;
 
-    u32 xu = u32f32(x).u;
-    u32 yu = u32f32(y).u;
+    u32 xu = MATS_F32U(x).u;
+    u32 yu = MATS_F32U(y).u;
 
     if (((xu - 0x00800000) >= (MATS_F32_EXP_MASK - 0x00800000)) || pow32_zeroinfnan(yu))
     {
@@ -127,7 +127,7 @@ pow32(f32 x, f32 y)
         }
         if (xu < 0x00800000)
         {
-            xu = u32f32(x * 0x1p23f).u;
+            xu = MATS_F32U(x * 0x1p23f).u;
             xu &= MATS_F32_ABS_MASK;
             xu -= MATS_F32_EXP_SHIFT << MATS_F32_EXP_SHIFT;
         }
@@ -135,7 +135,7 @@ pow32(f32 x, f32 y)
 
     f64 logX = pow32_log2(xu);
     f64 yLogX = (f64)y * logX; /* Note: cannot overflow, y is single prec.  */
-    if ((u64f64(yLogX).u >> 47 & 0xFFFF) >= (u64f64(126.0 * POW32_SCALE).u >> 47))
+    if ((MATS_F64U(yLogX).u >> 47 & 0xFFFF) >= (MATS_F64U(126.0 * POW32_SCALE).u >> 47))
     {
         if (yLogX > 0x1.fffffffd1d571p+6 * POW32_SCALE) {
             return mats_overflow32(signBias);

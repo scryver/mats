@@ -2,12 +2,12 @@
 internal void
 fft_inplace(u32 count, c32 *dest)
 {
-    i_expect(is_pow2(count));
-    i_expect(count > 8);
+    MATS_ASSERT(is_pow2(count));
+    MATS_ASSERT(count > 8);
 
     u32 halfCount = count / 2;
     BitScanResult highBit = find_most_significant_set_bit(count);
-    i_expect(highBit.found);
+    MATS_ASSERT(highBit.found);
     for (u32 index = 0; index < halfCount; index += 2)
     {
         u32 index0 = index + 0;
@@ -42,7 +42,7 @@ fft_inplace(u32 count, c32 *dest)
     }
 
     // NOTE(michiel): w = e^(-i*2pi*j/m)
-    SinCos_4x csBase = sincos32_4x(F32_4x(0.0f, -0.25f * F32_PI, -0.5f * F32_PI, -0.75f * F32_PI));
+    SinCos32_4x csBase = sincos32_4x(F32_4x(0.0f, -0.25f * F32_PI, -0.5f * F32_PI, -0.75f * F32_PI));
     f32_4x cos42; cos42.m = _mm_shuffle_ps(csBase.cos.m, csBase.cos.m, MULTILANE_SHUFFLE_MASK(2, 2, 2, 2));
     f32_4x sin42; sin42.m = _mm_shuffle_ps(csBase.sin.m, csBase.sin.m, MULTILANE_SHUFFLE_MASK(2, 2, 2, 2));
     f32_4x cos801; cos801.m = _mm_shuffle_ps(csBase.cos.m, csBase.cos.m, MULTILANE_SHUFFLE_MASK(0, 0, 1, 1));
@@ -129,7 +129,7 @@ fft_inplace(u32 count, c32 *dest)
                 f32_4x src103r; src103r.m = _mm_shuffle_ps(src101ri.m, src123ri.m, MULTILANE_SHUFFLE_MASK(0, 2, 0, 2));
                 f32_4x src103i; src103i.m = _mm_shuffle_ps(src101ri.m, src123ri.m, MULTILANE_SHUFFLE_MASK(1, 3, 1, 3));
 
-                SinCos_4x cs0 = sincos32_4x(angles);
+                SinCos32_4x cs0 = sincos32_4x(angles);
                 angles = angles + angleStep;
 
                 f32_4x O03r = cs0.cos * src103r - cs0.sin * src103i;
@@ -165,7 +165,7 @@ fft_inplace(u32 count, c32 *dest)
                 f32_4x src147r; src147r.m = _mm_shuffle_ps(src145ri.m, src167ri.m, MULTILANE_SHUFFLE_MASK(0, 2, 0, 2));
                 f32_4x src147i; src147i.m = _mm_shuffle_ps(src145ri.m, src167ri.m, MULTILANE_SHUFFLE_MASK(1, 3, 1, 3));
 
-                SinCos_4x cs1 = sincos32_4x(angles);
+                SinCos32_4x cs1 = sincos32_4x(angles);
                 angles = angles + angleStep;
 
                 f32_4x O47r = cs1.cos * src147r - cs1.sin * src147i;
@@ -202,12 +202,12 @@ fft_inplace(u32 count, c32 *dest)
 internal void
 fft_inplace_fast(u32 count, c32 *dest)
 {
-    i_expect(is_pow2(count));
-    i_expect(count > 8);
+    MATS_ASSERT(is_pow2(count));
+    MATS_ASSERT(count > 8);
 
     u32 halfCount = count / 2;
     BitScanResult highBit = find_most_significant_set_bit(count);
-    i_expect(highBit.found);
+    MATS_ASSERT(highBit.found);
     for (u32 index = 0; index < halfCount; index += 2)
     {
         u32 index0 = index + 0;
@@ -242,7 +242,7 @@ fft_inplace_fast(u32 count, c32 *dest)
     }
 
     // NOTE(michiel): w = e^(-i*2pi*j/m)
-    SinCos_4x csBase = sincos32_4x(F32_4x(0.0f, -0.25f * F32_PI, -0.5f * F32_PI, -0.75f * F32_PI));
+    SinCos32_4x csBase = sincos32_4x(F32_4x(0.0f, -0.25f * F32_PI, -0.5f * F32_PI, -0.75f * F32_PI));
     f32_4x cos42; cos42.m = _mm_shuffle_ps(csBase.cos.m, csBase.cos.m, MULTILANE_SHUFFLE_MASK(2, 2, 2, 2));
     f32_4x sin42; sin42.m = _mm_shuffle_ps(csBase.sin.m, csBase.sin.m, MULTILANE_SHUFFLE_MASK(2, 2, 2, 2));
     f32_4x cos801; cos801.m = _mm_shuffle_ps(csBase.cos.m, csBase.cos.m, MULTILANE_SHUFFLE_MASK(0, 0, 1, 1));
@@ -301,7 +301,7 @@ fft_inplace_fast(u32 count, c32 *dest)
     u32 m = 16;
 
     f32 oneOverMpre = 4.0f * F32_PI / (f32)m;
-    SinCos_4x sinCosPre = sincos32_4x(F32_4x(-oneOverMpre, -oneOverMpre*2.0f, -oneOverMpre*3.0f, -oneOverMpre*4.0f));
+    SinCos32_4x sinCosPre = sincos32_4x(F32_4x(-oneOverMpre, -oneOverMpre*2.0f, -oneOverMpre*3.0f, -oneOverMpre*4.0f));
 
     c32 wm1 = complex32(sinCosPre.cos.e[0], sinCosPre.sin.e[0]);
     c32 wm2 = complex32(sinCosPre.cos.e[1], sinCosPre.sin.e[1]);
@@ -318,7 +318,7 @@ fft_inplace_fast(u32 count, c32 *dest)
         wm4 = wm2;
         wm2 = wm1;
 
-        SinCos_4x sinCos = sincos32_4x(F32_4x(-oneOverM, -oneOverM*3.0f, -oneOverM*5.0f, -oneOverM*7.0f));
+        SinCos32_4x sinCos = sincos32_4x(F32_4x(-oneOverM, -oneOverM*3.0f, -oneOverM*5.0f, -oneOverM*7.0f));
         wm1 = complex32(sinCos.cos.e[0], sinCos.sin.e[0]);
         wm3 = complex32(sinCos.cos.e[1], sinCos.sin.e[1]);
         c32 wm5 = complex32(sinCos.cos.e[2], sinCos.sin.e[2]);

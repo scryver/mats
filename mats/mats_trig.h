@@ -37,7 +37,7 @@ sinf_poly_q1(f64 x2)
 internal f32
 cos32(f32 y)
 {
-    i_expect(absolute32(y) < 120.0f);
+    MATS_ASSERT(absolute32(y) < 120.0f);
     f32 x = y;
     f32 result;
     if (abstop12_(y) < abstop12_(0x1p-12f))
@@ -58,16 +58,16 @@ cos32(f32 y)
             case 3: { result =  sinf_poly_q0(xm, x2); } break;
         }
     }
-    
+
     return result;
 }
 
 internal f32
 sin32(f32 y)
 {
-    i_expect(absolute32(y) < 120.0f);
+    MATS_ASSERT(absolute32(y) < 120.0f);
     f32 x = y;
-    
+
     f32 result;
     if (abstop12_(y) < abstop12_(0x1p-12f))
     {
@@ -87,16 +87,16 @@ sin32(f32 y)
             case 3: { result = -sinf_poly_q1(x2); } break;
         }
     }
-    
+
     return result;
 }
 
 internal SinCos32
 sincos32(f32 y)
 {
-    i_expect(absolute32(y) < 120.0f);
+    MATS_ASSERT(absolute32(y) < 120.0f);
     f32 x = y;
-    
+
     SinCos32 result;
     if (abstop12_(y) < abstop12_(0x1p-12f))
     {
@@ -118,20 +118,20 @@ sincos32(f32 y)
             case 3: { result.cos =  sinP; result.sin = -cosP; } break;
         }
     }
-    
+
     return result;
 }
 
 internal f32
 tan32_kernel(f32 x, s32 mod)
 {
-	s32 ix = (s32)u32f32(x).u;
+	s32 ix = (s32)MATS_F32U(x).u;
     u32 hx = ix & MATS_F32_ABS_MASK;
     if (hx < 0x31800000)
     {
         if ((s32)x == 0) {
             if ((hx | (mod + 1)) == 0) {
-                return 1.0f / u32f32(hx).f;
+                return 1.0f / MATS_F32U(hx).f;
             } else {
                 return (mod == 1) ? x : -1.0f / x;
             }
@@ -156,19 +156,19 @@ tan32_kernel(f32 x, s32 mod)
     r = (r + 3.5920790397e-03f) * w;
     r = (r + 2.1869488060e-02f) * w;
     r = (r + 1.3333334029e-01f);
-    
+
     f32 v =  2.5907305826e-05f * w;
     v = (v + 7.1407252108e-05f) * w;
     v = (v + 2.4646313977e-04f) * w;
     v = (v + 1.4562094584e-03f) * w;
     v = (v + 8.8632395491e-03f) * w;
     v = (v + 5.3968254477e-02f) * z;
-    
+
     f32 s = z * x;
     r = z * (s * (r + v));
     r += 3.3333334327e-01f * s;
     w = x + r;
-    
+
     if (hx >= 0x3F2CA140)
     {
         v = (f32)mod;
@@ -178,12 +178,12 @@ tan32_kernel(f32 x, s32 mod)
         return w;
     } else {
         z = w;
-        u32 uz = u32f32(z).u & 0xFFFFF000;
-        z = u32f32(uz).f;
+        u32 uz = MATS_F32U(z).u & 0xFFFFF000;
+        z = MATS_F32U(uz).f;
         v = r - (z - x);
         f32 t = -1.0f / w;
         f32 a = t;
-        t = u32f32(u32f32(t).u & 0xFFFFF000).f;
+        t = MATS_F32U(MATS_F32U(t).u & 0xFFFFF000).f;
         s = 1.0f + t * z;
         return t + a * (s + t * v);
     }
@@ -192,9 +192,9 @@ tan32_kernel(f32 x, s32 mod)
 internal f32
 tan32(f32 y)
 {
-    i_expect(absolute32(y) < 120.0f);
+    MATS_ASSERT(absolute32(y) < 120.0f);
     f32 result;
-    u32 uy = u32f32(y).u & MATS_F32_ABS_MASK;
+    u32 uy = MATS_F32U(y).u & MATS_F32_ABS_MASK;
     if (uy < 0x3F490FDA)
     {
         result = tan32_kernel(y, 1);
@@ -258,10 +258,10 @@ acos32(f32 x)
 #define pi        3.1415925026e+00f
 #define pio2_hi   1.5707962513e+00f
 #define pio2_lo   7.5497894159e-08f
-    
-	s32 ix = (s32)u32f32(x).u;
+
+	s32 ix = (s32)MATS_F32U(x).u;
     u32 hx = ix & MATS_F32_ABS_MASK;
-    
+
     if (hx == 0x3F800000) {
         if (ix > 0) {
             return 0.0f;                 // NOTE(michiel): x == 1.0f
@@ -271,7 +271,7 @@ acos32(f32 x)
     } else if (hx > 0x3F800000) {
         return (x - x) / (x - x);        // NOTE(michiel): |x| > 1.0f
     }
-    
+
     if (hx < 0x3F000000)
     {
         if (hx <= 0x23000000) {
@@ -293,13 +293,13 @@ acos32(f32 x)
     {
         f32 z = (1.0f - x) * 0.5f;
         f32 s = sqrt32(z);
-        f32 df = u32f32(u32f32(s).u & 0xFFFFF000).f;
+        f32 df = MATS_F32U(MATS_F32U(s).u & 0xFFFFF000).f;
         f32 c = (z - df * df) / (s + df);
         poly(z);
         f32 w = r * s + c;
         return 2.0f * (df + w); // NOTE(michiel): x >= 0.5f
     }
-    
+
 #undef pio2_hi
 #undef pio2_lo
 #undef pi
@@ -311,10 +311,10 @@ asin32(f32 x)
 #define pio2_hi 1.57079637050628662109375f
 #define pio2_lo -4.37113900018624283e-8f
 #define pio4_hi 0.785398185253143310546875f
-    
-    s32 ix = (s32)u32f32(x).u;
+
+    s32 ix = (s32)MATS_F32U(x).u;
     u32 hx = ix & MATS_F32_ABS_MASK;
-    
+
     if (hx == 0x3F800000) {
         return x * pio2_hi + x * pio2_lo;
     } else if (hx > 0x3F800000) {
@@ -330,8 +330,8 @@ asin32(f32 x)
             return x + x * r;
         }
     }
-    
-    f32 w = 1.0f - u32f32(hx).f;
+
+    f32 w = 1.0f - MATS_F32U(hx).f;
     f32 t = w * 0.5f;
     poly(t);
     f32 s = sqrt32(t);
@@ -342,14 +342,14 @@ asin32(f32 x)
     else
     {
         w = s;
-        u32 iw = u32f32(w).u;
-        w = u32f32(iw & 0xFFFFF000).f;
+        u32 iw = MATS_F32U(w).u;
+        w = MATS_F32U(iw & 0xFFFFF000).f;
         f32 c = (t - w * w) / (s + w);
         p = 2.0f * s * r - (pio2_lo - 2.0f * c);
         q = pio4_hi - 2.0f * w;
         t = pio4_hi - (p - q);
     }
-    
+
     return (ix < 0) ? -t : t;
 #undef pio4_hi
 #undef pio2_hi
@@ -371,9 +371,9 @@ asin32(f32 x)
 internal f32
 atan32(f32 x)
 {
-    s32 ix = (s32)u32f32(x).u;
+    s32 ix = (s32)MATS_F32U(x).u;
     u32 hx = ix & MATS_F32_ABS_MASK;
-    
+
     if (hx >= 0x50800000)
     {
         // NOTE(michiel): |x| >= 2^34
@@ -398,7 +398,7 @@ atan32(f32 x)
         }
         else
         {
-            x = u32f32(hx).f;
+            x = MATS_F32U(hx).f;
             if (hx < 0x3F980000) { // NOTE(michiel): |x| < 1.1875
                 if (hx < 0x3F300000) { // NOTE(michiel): 7/16 <= |x| < 11/16
                     id = 0;
@@ -417,7 +417,7 @@ atan32(f32 x)
                 }
             }
         }
-        
+
         f32 x2 = x * x;
 #if MATS_ATAN_USE_SMALL_POLY
         f32 x4 = x2 * x2;
@@ -430,7 +430,7 @@ atan32(f32 x)
 #if MATS_USE_SSE
         WideMath x2w; x2w.m = _mm_set1_ps(x2);
         WideMath x4w; x4w.m = _mm_mul_ps(x2w.m, x2w.m);
-        
+
         WideMath coef0; coef0.m = _mm_setr_ps(3.3333334327e-01f, 0.0f, 0.0f, 0.0f);
         WideMath coef1; coef1.m = _mm_setr_ps(1.4285714924e-01f, -2.0000000298e-01f, 0, 0);
         WideMath coef2; coef2.m = _mm_setr_ps(9.0908870101e-02f, -1.1111110449e-01f, 0, 0);
@@ -443,7 +443,7 @@ atan32(f32 x)
         s1s2.m = _mm_mul_ps(_mm_add_ps(s1s2.m, coef2.m), x4w.m);
         s1s2.m = _mm_mul_ps(_mm_add_ps(s1s2.m, coef1.m), x4w.m);
         s1s2.m = _mm_add_ps(s1s2.m, coef0.m);
-        
+
         f32 s1 = s1s2.e[0] * x2;
         f32 s2 = s1s2.e[1];
 #else
@@ -461,7 +461,7 @@ atan32(f32 x)
         s1 = (s1 + 3.3333334327e-01f) * x2;
 #endif
 #endif
-        
+
         f32 result = x * (s1 + s2);
         if (id < 0) {
             result = x - result;
@@ -469,7 +469,7 @@ atan32(f32 x)
             result = gAtanHiF32[id] - ((result - gAtanLoF32[id]) - x);
             result = (ix < 0) ? -result : result;
         }
-        
+
         return result;
     }
 }
@@ -481,7 +481,7 @@ atan2_32(f32 y, f32 x)
     u32 hx = ix & MATS_F32_ABS_MASK;
     s32 iy = MATS_S32_FROM_F32(y);
     u32 hy = iy & MATS_F32_ABS_MASK;
-    
+
     if (MATS_F32_UWORD_IS_NAN(hx) || MATS_F32_UWORD_IS_NAN(hy)) {
         return x + y;
     }
@@ -499,12 +499,12 @@ atan2_32(f32 y, f32 x)
             case 3: { return -gPiF32 - gTinyF32; } break; // NOTE(michiel): atan(-0,  -anything) = -pi
         }
     }
-    
+
     if (MATS_F32_UWORD_IS_ZERO(hx))
     {
         return (iy < 0) ? -gPiOver2F32 - gTinyF32 : gPiOver2F32 + gTinyF32;
     }
-    
+
     if (MATS_F32_UWORD_IS_INFINITE(hx))
     {
         if (MATS_F32_UWORD_IS_INFINITE(hy))
@@ -528,11 +528,11 @@ atan2_32(f32 y, f32 x)
             }
         }
     }
-    
+
     if (MATS_F32_UWORD_IS_INFINITE(hy)) {
         return (iy < 0) ? -gPiOver2F32 - gTinyF32 : gPiOver2F32 + gTinyF32;
     }
-    
+
     f32 result;
     s32 k = ((s32)hy - (s32)hx) >> MATS_F32_EXP_SHIFT;
     if (k > 60) {
@@ -545,7 +545,7 @@ atan2_32(f32 y, f32 x)
     switch (m)
     {
         case 0: {} break;
-        case 1: { result = u32f32(u32f32(result).u ^ MATS_F32_SIGN_MASK).f; } break;
+        case 1: { result = MATS_F32U(MATS_F32U(result).u ^ MATS_F32_SIGN_MASK).f; } break;
         case 2: { result = gPiF32 - (result - gPiF32_lo); } break;
         case 3: { result = (result - gPiF32_lo) - gPiF32; } break;
     }
@@ -559,13 +559,13 @@ atan2_32(f32 y, f32 x)
 internal f32
 cosh32(f32 x)
 {
-    s32 ix = (s32)u32f32(x).u;
+    s32 ix = (s32)MATS_F32U(x).u;
     ix &= MATS_F32_ABS_MASK;
-    
+
     if (!MATS_F32_UWORD_IS_FINITE(ix)) {
         return x * x;
     }
-    
+
     if (ix < 0x3EB17218)
     {
         // NOTE(michiel): |x| in [0, ln(2)/2], return 1 + expm1(|x|)^2 / (2*exp(|x|))
@@ -605,15 +605,15 @@ cosh32(f32 x)
 internal f32
 sinh32(f32 x)
 {
-    s32 jx = (s32)u32f32(x).u;
+    s32 jx = (s32)MATS_F32U(x).u;
     s32 ix = jx & MATS_F32_ABS_MASK;
-    
+
     if (!MATS_F32_UWORD_IS_FINITE(ix)) {
         return x + x;
     }
-    
+
     f32 h = (jx < 0) ? -0.5f : 0.5f;
-    
+
     if (ix < 0x41B00000)
     {
         // NOTE(michiel): |x| in [0, 22], return sign(x) * 0.5 * (E + E/(E + 1))
@@ -669,9 +669,9 @@ sinhcosh32(f32 x)
 internal f32
 tanh32(f32 x)
 {
-    s32 jx = (s32)u32f32(x).u;
+    s32 jx = (s32)MATS_F32U(x).u;
     s32 ix = jx & MATS_F32_ABS_MASK;
-    
+
     if (!MATS_F32_UWORD_IS_FINITE(ix))
     {
         if (jx >= 0) {
@@ -680,7 +680,7 @@ tanh32(f32 x)
             return 1.0f / x - 1.0f; // NOTE(michiel): tanh(NaN) = NaN
         }
     }
-    
+
     f32 result;
     if (ix < 0x41B00000)
     {
@@ -689,7 +689,7 @@ tanh32(f32 x)
             // NOTE(michiel): |x| < 2^-55
             return x * (1.0f + x); // NOTE(michiel): tanh(small) = small
         }
-        
+
         if (ix >= 0x3F800000)
         {
             // NOTE(michiel): |x| >= 1
@@ -713,8 +713,8 @@ tanh32(f32 x)
 internal f32
 acosh32(f32 x)
 {
-    s32 jx = (s32)u32f32(x).u;
-    
+    s32 jx = (s32)MATS_F32U(x).u;
+
     if (jx < 0x3F800000) {
         // NOTE(michiel): x < 1
         return (x - x) / (x - x);
@@ -743,9 +743,9 @@ acosh32(f32 x)
 internal f32
 asinh32(f32 x)
 {
-    s32 jx = (s32)u32f32(x).u;
+    s32 jx = (s32)MATS_F32U(x).u;
     s32 ix = jx & MATS_F32_ABS_MASK;
-    
+
     f32 result;
     if (!MATS_F32_UWORD_IS_FINITE(ix)) {
         // NOTE(michiel): Inf or NaN
@@ -765,16 +765,16 @@ asinh32(f32 x)
         f32 t = x * x;
         result = log1p32(absolute32(x) + t / (1.0f + sqrt32(1.0f + t)));
     }
-    
+
     return jx > 0 ? result : -result;
 }
 
 internal f32
 atanh32(f32 x)
 {
-    s32 jx = (s32)u32f32(x).u;
+    s32 jx = (s32)MATS_F32U(x).u;
     s32 ix = jx & MATS_F32_ABS_MASK;
-    
+
     if (ix > 0x3F800000) {
         // NOTE(michiel): |x| > 1
         return (x - x) / (x - x);
@@ -785,7 +785,7 @@ atanh32(f32 x)
         // NOTE(michiel): |x| < 2^-28
         return x;
     } else {
-        x = u32f32((u32)ix).f;
+        x = MATS_F32U((u32)ix).f;
         f32 result;
         if (ix < 0x3F000000) {
             // NOTE(michiel): |x| < 0.5
@@ -811,14 +811,14 @@ kernel_rem_pi_over_2(f64 *x, f64 *y, s32 e0, s32 nx, s32 prec, const s32 *twoOve
 {
     s32 jk = gRemPiInitJK[prec];
     s32 jp = jk;
-    
+
     s32 jx = nx - 1;
     s32 jv = (e0 - 3) / 24;
     if (jv < 0) {
         jv = 0;
     }
     s32 q0 = e0 - 24 * (jv + 1);
-    
+
     s32 j = jv - jx;
     s32 m = jx + jk;
     f64 f[20];
@@ -826,7 +826,7 @@ kernel_rem_pi_over_2(f64 *x, f64 *y, s32 e0, s32 nx, s32 prec, const s32 *twoOve
     {
         f[i] = (j < 0) ? 0.0 : (f64)twoOverPi[j];
     }
-    
+
     f64 q[20];
     for (s32 i = 0; i < jk; ++i)
     {
@@ -836,12 +836,12 @@ kernel_rem_pi_over_2(f64 *x, f64 *y, s32 e0, s32 nx, s32 prec, const s32 *twoOve
         }
         q[i] = fw;
     }
-    
+
     s32 jz = jk;
-    
+
     s32 n,iq[20],i,k,ih;
     f64 z,fq[20];
-    
+
     recompute:
     z = q[jz];
     i = 0;
@@ -851,12 +851,12 @@ kernel_rem_pi_over_2(f64 *x, f64 *y, s32 e0, s32 nx, s32 prec, const s32 *twoOve
         iq[i] = (s32)(z - g2pow24F64 * fw);
         z = q[j - 1] + fw;
     }
-    
+
     z = scalbn64(z, q0);
     z -= 8.0 * floor64(z * 0.125);
     n = (s32)z;
     z -= (f64)n;
-    
+
     ih = 0;
     if (q0 > 0)
     {
@@ -873,7 +873,7 @@ kernel_rem_pi_over_2(f64 *x, f64 *y, s32 e0, s32 nx, s32 prec, const s32 *twoOve
     {
         ih = 2;
     }
-    
+
     if (ih > 0)
     {
 	    ++n;
@@ -911,7 +911,7 @@ kernel_rem_pi_over_2(f64 *x, f64 *y, s32 e0, s32 nx, s32 prec, const s32 *twoOve
             }
 	    }
 	}
-    
+
     /* check if recomputation is needed */
 	if (z == 0.0)
     {
@@ -923,7 +923,7 @@ kernel_rem_pi_over_2(f64 *x, f64 *y, s32 e0, s32 nx, s32 prec, const s32 *twoOve
         {
             /* need recomputation */
             for (k = 1; iq[jk - k] == 0; ++k) {}   /* k = no. of terms needed */
-            
+
             for (i = jz + 1; i <= jz + k; ++i)
             {
                 /* add q[jz+1] to q[jz+k] */
@@ -938,7 +938,7 @@ kernel_rem_pi_over_2(f64 *x, f64 *y, s32 e0, s32 nx, s32 prec, const s32 *twoOve
             goto recompute;
 	    }
 	}
-    
+
     /* chop off zero terms */
 	if (z == 0.0)
     {
@@ -966,14 +966,14 @@ kernel_rem_pi_over_2(f64 *x, f64 *y, s32 e0, s32 nx, s32 prec, const s32 *twoOve
             iq[jz] = (s32)z;
         }
 	}
-    
+
     /* convert integer "bit" chunk to floating-point value */
 	f64 fw = scalbn64(1.0, q0);
 	for (i = jz; i >= 0; --i) {
 	    q[i] = fw * (f64)iq[i];
         fw *= g2powMin24F64;
 	}
-    
+
     /* compute PIo2[0,...,jp]*q[jz,...,0] */
 	for (i = jz; i >= 0; --i) {
         f64 fw = 0.0;
@@ -982,7 +982,7 @@ kernel_rem_pi_over_2(f64 *x, f64 *y, s32 e0, s32 nx, s32 prec, const s32 *twoOve
         }
 	    fq[jz - i] = fw;
 	}
-    
+
     /* compress fq[] into y[] */
 	switch(prec)
     {
@@ -994,7 +994,7 @@ kernel_rem_pi_over_2(f64 *x, f64 *y, s32 e0, s32 nx, s32 prec, const s32 *twoOve
             }
             y[0] = (ih == 0) ? fw : -fw;
         } break;
-        
+
 	    case 1:
 	    case 2: {
             f64 fw = 0.0;
@@ -1003,13 +1003,13 @@ kernel_rem_pi_over_2(f64 *x, f64 *y, s32 e0, s32 nx, s32 prec, const s32 *twoOve
             }
             y[0] = (ih == 0) ? fw : -fw;
             fw = fq[0] - fw;
-            
+
             for (i = 1; i <= jz; ++i) {
                 fw += fq[i];
             }
             y[1] = (ih == 0) ? fw: -fw;
 		} break;
-        
+
 	    case 3: {
             /* painful */
             for (i = jz; i > 0; --i)
@@ -1028,7 +1028,7 @@ kernel_rem_pi_over_2(f64 *x, f64 *y, s32 e0, s32 nx, s32 prec, const s32 *twoOve
             for (i = jz; i >= 2; --i) {
                 fw += fq[i];
             }
-            
+
             if (ih == 0) {
                 y[0] =  fq[0];
                 y[1] =  fq[1];
@@ -1040,7 +1040,7 @@ kernel_rem_pi_over_2(f64 *x, f64 *y, s32 e0, s32 nx, s32 prec, const s32 *twoOve
             }
         } break;
     }
-    
+
     return n & 7;
 }
 
@@ -1056,7 +1056,7 @@ kernel_cos64(f64 x, f64 y)
             return 1.0;         /* generate inexact */
         }
     }
-    
+
     f64 z = x * x;
 #define C1   4.16666666666666019037e-02 /* 0x3FA55555, 0x5555554C */
 #define C2  -1.38888888888741095749e-03 /* 0xBF56C16C, 0x16C15177 */
@@ -1064,19 +1064,19 @@ kernel_cos64(f64 x, f64 y)
 #define C4  -2.75573143513906633035e-07 /* 0xBE927E4F, 0x809C52AD */
 #define C5   2.08757232129817482790e-09 /* 0x3E21EE9E, 0xBDB4B1C4 */
 #define C6  -1.13596475577881948265e-11 /* 0xBDA8FAE9, 0xBE8838D4 */
-    
+
     f64 z2 = z * z;
     f64 p1 = z2 * (C2 + z2 * (C4 + z2 * C6));
     f64 p2 = z * (C1 + z2 * (C3 + z2 * C5));
     f64 r = p1 + p2;
-    
+
 #undef C6
 #undef C5
 #undef C4
 #undef C3
 #undef C2
 #undef C1
-    
+
     f64 result;
     if (top < 0x3FD33333)
     {
@@ -1114,7 +1114,7 @@ kernel_sin64(f64 x, f64 y, s32 iy)
             return x;         /* generate inexact */
         }
     }
-    
+
     f64 z = x * x;
 #define S1  -1.66666666666666324348e-01 /* 0xBFC55555, 0x55555549 */
 #define S2   8.33333333332248946124e-03 /* 0x3F811111, 0x1110F8A6 */
@@ -1122,12 +1122,12 @@ kernel_sin64(f64 x, f64 y, s32 iy)
 #define S4   2.75573137070700676789e-06 /* 0x3EC71DE3, 0x57B1FE7D */
 #define S5  -2.50507602534068634195e-08 /* 0xBE5AE5E6, 0x8A2B9CEB */
 #define S6   1.58969099521155010221e-10 /* 0x3DE5D93A, 0x5ACFD57C */
-    
+
     f64 z2 = z * z;
     f64 p1 = S2 + z2 * (S4 + z2 * S6);
     f64 p2 = z * (S3 + z2 * S5);
     f64 r = p1 + p2;
-    
+
 #undef S6
 #undef S5
 #undef S4
@@ -1144,7 +1144,7 @@ kernel_sin64(f64 x, f64 y, s32 iy)
         result = x - ((z * (0.5 * y - v * r) - y) - v * S1);
     }
 #undef S1
-    
+
     return result;
 }
 
@@ -1153,7 +1153,7 @@ kernel_tan64(f64 x, f64 y, s32 iy)
 {
     s64 ix = MATS_S64_FROM_F64(x);
     s32 top = (ix >> 32) & 0x7FFFFFFF;
-    
+
     if (top < 0x3E300000)
     {
         if ((s32)x == 0)
@@ -1182,7 +1182,7 @@ kernel_tan64(f64 x, f64 y, s32 iy)
             }
         }
     }
-    
+
     if (top >= 0x3FE59428)
     {
         if (ix < 0) {
@@ -1194,10 +1194,10 @@ kernel_tan64(f64 x, f64 y, s32 iy)
         x = z + w;
         y = 0.0;
     }
-    
+
     f64 z = x * x;
     f64 w = z * z;
-    
+
 #define T1   3.33333333333334091986e-01 /* 0x3FD5555555555563 */
 #define T2   1.33333333333201242699e-01 /* 0x3FC111111110FE7A */
 #define T3   5.39682539762260521377e-02 /* 0x3FABA1BA1BB341FE */
@@ -1211,14 +1211,14 @@ kernel_tan64(f64 x, f64 y, s32 iy)
 #define T11  7.14072491382608190305e-05 /* 0x3F12B80F32F0A7E9 */
 #define T12 -1.85586374855275456654e-05 /* 0xBEF375CBDB605373 */
 #define T13  2.59073051863633712884e-05 /* 0x3EFB2A7074BF7AD4 */
-    
+
     f64 r = T2 + w * (T4 + w * (T6 + w * (T8 + w * (T10 + w * T12))));
     f64 v = z * (T3 + w * (T5 + w * (T7 + w * (T9 + w * (T11 + w * T13)))));
     f64 s = z * x;
     r = y + z * (s * (r + v) + y);
     r += T1 * s;
     w = x + r;
-    
+
 #undef T13
 #undef T12
 #undef T11
@@ -1232,7 +1232,7 @@ kernel_tan64(f64 x, f64 y, s32 iy)
 #undef T3
 #undef T2
 #undef T1
-    
+
     if (top >= 0x3FE59428)
     {
         v = (f64)iy;
@@ -1259,7 +1259,7 @@ ieee754_rem_pi_over_2(f64 x, f64 *y)
     s64 sx = MATS_S64_FROM_F64(x);
     s32 hx = sx >> 32;
     s32 ix = hx & 0x7FFFFFFF;
-    
+
     if (ix <= 0x3FE921FB)
     {
         // NOTE(michiel): No reduction needed
@@ -1309,7 +1309,7 @@ ieee754_rem_pi_over_2(f64 x, f64 *y)
         f64 fn = (f64)n;
         f64 r = t - fn * gPiOver2F64_1;
         f64 w = fn * gPiOver2F64_1t;
-        
+
         if ((n < 32) && (ix != gNPiOver2F64_hw[n - 1]))
         {
             y[0] = r - w;
@@ -1340,7 +1340,7 @@ ieee754_rem_pi_over_2(f64 x, f64 *y)
             }
         }
         y[1] = (r - y[0]) - w;
-        
+
         if (hx < 0)
         {
             y[0] = -y[0];
@@ -1352,32 +1352,32 @@ ieee754_rem_pi_over_2(f64 x, f64 *y)
             return n;
         }
     }
-    
+
     if (ix >= 0x7FF00000)
     {
         y[0] = y[1] = x - x;
         return 0;
     }
-    
+
     u32 lowZ = sx & 0xFFFFFFFF;
     s32 e0 = (s32)((ix >> 20) - 1046); // NOTE(michiel): ilogb(z) - 23
     s32 highZ = ix - (e0 << 20);
     f64 z = MATS_F64_FROM_U64(((u64)highZ << 32) | (u64)lowZ);
-    
+
     f64 tx[3];
     tx[0] = (f64)((s32)z);
     z = (z - tx[0]) * g2pow24F64;
     tx[1] = (f64)((s32)z);
     z = (z - tx[1]) * g2pow24F64;
     tx[2] = z;
-    
+
     s32 nx = 3;
     while (tx[nx - 1] == 0) {
         --nx;
     }
-    
+
     s32 n = kernel_rem_pi_over_2(tx, y, e0, nx, 2, g2OverPiF64_Table);
-    
+
     if (hx < 0)
     {
         y[0] = -y[0];
@@ -1395,7 +1395,7 @@ cos64(f64 x)
 {
     s64 ix = MATS_S64_FROM_F64(x);
     s32 top = (ix >> 32) & 0x7FFFFFFF;
-    
+
     f64 result;
     if (top <= 0x3FE921FB)
     {
@@ -1417,7 +1417,7 @@ cos64(f64 x)
             default: { result =  kernel_sin64(y[0], y[1], 1); } break;
         }
     }
-    
+
     return result;
 }
 
@@ -1426,7 +1426,7 @@ sin64(f64 x)
 {
     s64 ix = MATS_S64_FROM_F64(x);
     s32 top = (ix >> 32) & 0x7FFFFFFF;
-    
+
     f64 result;
     if (top <= 0x3FE921FB)
     {
@@ -1448,7 +1448,7 @@ sin64(f64 x)
             default: { result = -kernel_cos64(y[0], y[1]); } break;
         }
     }
-    
+
     return result;
 }
 
@@ -1457,7 +1457,7 @@ sincos64(f64 x)
 {
     s64 ix = MATS_S64_FROM_F64(x);
     s32 top = (ix >> 32) & 0x7FFFFFFF;
-    
+
     SinCos64 result;
     if (top <= 0x3FE921FB)
     {
@@ -1495,7 +1495,7 @@ sincos64(f64 x)
         result.cos = c;
         result.sin = s;
     }
-    
+
     return result;
 }
 
@@ -1504,7 +1504,7 @@ tan64(f64 x)
 {
     s64 ix = MATS_S64_FROM_F64(x);
     s32 top = (ix >> 32) & 0x7FFFFFFF;
-    
+
     f64 result;
     if (top <= 0x3FE921FB)
     {
@@ -1521,7 +1521,7 @@ tan64(f64 x)
         n = 1 - ((n & 1) << 1); // NOTE(michiel): +/- 1
         result = kernel_tan64(y[0], y[1], n);
     }
-    
+
     return result;
 }
 
@@ -1530,7 +1530,7 @@ acos64(f64 x)
 {
     s64 ix = MATS_S64_FROM_F64(x);
     s32 top = (ix >> 32) & 0x7FFFFFFF;
-    
+
     if (top >= 0x3FF00000)
     {
         u32 low = ix & 0xFFFFFFFF;
@@ -1544,7 +1544,7 @@ acos64(f64 x)
         }
         return (x - x) / (x - x);
     }
-    
+
 #define pS0  1.66666666666666657415e-01    /* 0x3FC5555555555555 */
 #define pS1 -3.25565818622400915405e-01    /* 0xBFD4D61203EB6F7D */
 #define pS2  2.01212532134862925881e-01    /* 0x3FC9C1550E884455 */
@@ -1555,7 +1555,7 @@ acos64(f64 x)
 #define qS2  2.02094576023350569471e+00    /* 0x40002AE59C598AC8 */
 #define qS3 -6.88283971605453293030e-01    /* 0xBFE6066C1B8D0159 */
 #define qS4  7.70381505559019352791e-02    /* 0x3FB3B8C5B12E9282 */
-    
+
     if (top < 0x3FE00000)
     {
         // NOTE(michiel): |x| < 0.5
@@ -1607,7 +1607,7 @@ asin64(f64 x)
 {
     s64 ix = MATS_S64_FROM_F64(x);
     s32 top = (ix >> 32) & 0x7FFFFFFF;
-    
+
 #define pS0  1.66666666666666657415e-01    /* 0x3FC5555555555555 */
 #define pS1 -3.25565818622400915405e-01    /* 0xBFD4D61203EB6F7D */
 #define pS2  2.01212532134862925881e-01    /* 0x3FC9C1550E884455 */
@@ -1642,13 +1642,13 @@ asin64(f64 x)
             return x + x * w;
         }
     }
-    
+
     f64 w = 1.0 - absolute64(x);
     f64 t = 0.5 * w;
     f64 p = t * (pS0 + t * (pS1 + t * (pS2 + t * (pS3 + t * (pS4 + t * pS5)))));
     f64 q = 1.0 + t * (qS1 + t * (qS2 + t * (qS3 + t * qS4)));
     f64 s = sqrt64(t);
-    
+
     if (top >= 0x3FEF3333)
     {
         w = p / q;
@@ -1681,7 +1681,7 @@ atan64(f64 x)
 {
     s64 ix = MATS_S64_FROM_F64(x);
     s32 top = (ix >> 32) & 0x7FFFFFFF;
-    
+
     s32 id = 0;
     if (top >= 0x44100000)
     {
@@ -1728,10 +1728,10 @@ atan64(f64 x)
             }
         }
     }
-    
+
     f64 z = x * x;
     f64 w = z * z;
-    
+
 #define T1  3.33333333333329318027e-01    /* 0x3FD555555555550D */
 #define T2 -1.99999999998764832476e-01    /* 0xBFC999999998EBC4 */
 #define T3  1.42857142725034663711e-01    /* 0x3FC24924920083FF */
@@ -1743,10 +1743,10 @@ atan64(f64 x)
 #define T9  4.97687799461593236017e-02    /* 0x3FA97B4B24760DEB */
 #define T10 -3.65315727442169155270e-02    /* 0xBFA2B4442C6A6C2F */
 #define T11  1.62858201153657823623e-02    /* 0x3F90AD3AE322DA11 */
-    
+
     f64 s1 = z * (T1 + w * (T3 + w * (T5 + w * (T7 + w * (T9 + w * T11)))));
     f64 s2 = w * (T2 + w * (T4 + w * (T6 + w * (T8 + w * T10))));
-    
+
 #undef T11
 #undef T10
 #undef T9
@@ -1758,7 +1758,7 @@ atan64(f64 x)
 #undef T3
 #undef T2
 #undef T1
-    
+
     if (id < 0) {
         return x - x * (s1 + s2);
     } else {
@@ -1772,12 +1772,12 @@ atan2_64(f64 y, f64 x)
 {
     s64 sx = MATS_S64_FROM_F64(x);
     s64 sy = MATS_S64_FROM_F64(y);
-    
+
     u32 ix = (sx >> 32) & 0x7FFFFFFF;
     u32 iy = (sy >> 32) & 0x7FFFFFFF;
     u32 lx = (sx & 0xFFFFFFFF);
     u32 ly = (sy & 0xFFFFFFFF);
-    
+
     if (((ix | ((lx | -lx) >> 31)) > 0x7FF00000) ||
         ((iy | ((ly | -ly) >> 31)) > 0x7FF00000))
     {
@@ -1787,9 +1787,9 @@ atan2_64(f64 y, f64 x)
         // NOTE(michiel): x == 1.0
         return atan64(y);
     }
-    
+
     s32 m = ((sx >> 62) & 0x2) | ((sy >> 63) & 0x1);
-    
+
     // NOTE(michiel): y == 0
     if ((iy | ly) == 0)
     {
@@ -1801,13 +1801,13 @@ atan2_64(f64 y, f64 x)
             case 3: { return -gPiF64 - gTinyF64; } break;
         }
     }
-    
+
     // NOTE(michiel): x == 0
     if ((ix | lx) == 0)
     {
         return (sy < 0) ? -gPiOver2F64 - gTinyF64 : gPiOver2F64 + gTinyF64;
     }
-    
+
     // NOTE(michiel): x == inf
     if (ix == 0x7FF00000)
     {
@@ -1832,13 +1832,13 @@ atan2_64(f64 y, f64 x)
             }
         }
     }
-    
+
     // NOTE(michiel): y == inf
     if (iy == 0x7FF00000)
     {
         return (sy < 0) ? -gPiOver2F64 - gTinyF64 : gPiOver2F64 + gTinyF64;
     }
-    
+
     s32 k = (s32)(iy - ix) >> 20;
     f64 z;
     if (k > 60) {
@@ -1863,7 +1863,7 @@ cosh64(f64 x)
 {
     s64 ix = MATS_S64_FROM_F64(x);
     s32 top = (ix >> 32) & 0x7FFFFFFF;
-    
+
     if (top >= 0x7FF00000) {
         // NOTE(michiel): Inf or NaN
         return x * x;
@@ -1909,9 +1909,9 @@ sinh64(f64 x)
 {
     s64 ix = MATS_S64_FROM_F64(x);
     s32 top = (ix >> 32) & 0x7FFFFFFF;
-    
+
     f64 h = (ix < 0) ? -0.5 : 0.5;
-    
+
     if (top >= 0x7FF00000)
     {
         // NOTE(michiel): Inf or NaN
@@ -1975,7 +1975,7 @@ tanh64(f64 x)
 {
     s64 ix = MATS_S64_FROM_F64(x);
     s32 top = (ix >> 32) & 0x7FFFFFFF;
-    
+
     f64 result;
     if (top >= 0x7FF00000)
     {
@@ -2009,7 +2009,7 @@ acosh64(f64 x)
 {
     s64 ix = MATS_S64_FROM_F64(x);
     s32 top = (ix >> 32);
-    
+
     if (top < 0x3FF00000)
     {
         // NOTE(michiel): x < 1.0
@@ -2044,7 +2044,7 @@ asinh64(f64 x)
 {
     s64 ix = MATS_S64_FROM_F64(x);
     s32 top = (ix >> 32) & 0x7FFFFFFF;
-    
+
     f64 result;
     if (top >= 0x7FF00000)
     {
@@ -2068,7 +2068,7 @@ asinh64(f64 x)
         f64 t = x * x;
         result = log1p64(absolute64(x) + t / (1.0 + sqrt64(1.0 + t)));
     }
-    
+
     return (ix < 0) ? -result : result;
 }
 
@@ -2076,10 +2076,10 @@ internal f64
 atanh64(f64 x)
 {
     s64 sx = MATS_S64_FROM_F64(x);
-    
+
     u32 ix = (sx >> 32) & 0x7FFFFFFF;
     u32 lx = (sx & 0xFFFFFFFF);
-    
+
     if ((ix | ((lx | -lx) >> 31)) > 0x7FF00000)
     {
         // NOTE(michiel): |x| > 1.0

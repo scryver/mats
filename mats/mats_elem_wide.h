@@ -505,7 +505,7 @@ internal f32
 expm1_32_temp(f32 x)
 {
     // NOTE(michiel): result = exp(x) - 1
-    u32 hx = u32f32(x).u;
+    u32 hx = MATS_F32U(x).u;
     f32 ln2_hi = gLn2HighF32s[0];
     f32 ln2_lo = gLn2LowF32s[0];
 
@@ -528,13 +528,13 @@ expm1_32_temp(f32 x)
     {
         // NOTE(michiel): |x| > 0.5*ln(2)
         s32 xSignMod = hxGeOneHalfLn2 ? 0 : xSign;
-        f32 hi = u32f32(xSignMod ^ u32f32(-ln2_hi).u).f;
-        f32 lo = u32f32(xSignMod ^ u32f32(ln2_lo).u).f;
+        f32 hi = MATS_F32U(xSignMod ^ MATS_F32U(-ln2_hi).u).f;
+        f32 lo = MATS_F32U(xSignMod ^ MATS_F32U(ln2_lo).u).f;
         k      = 1 - ((u32)xSign >> 30);
 
         if (hxGeOneHalfLn2)
         {
-            k = (s32)(gInvLn2F32 * x + u32f32(xSign ^ u32f32(0.5f).u).f);
+            k = (s32)(gInvLn2F32 * x + MATS_F32U(xSign ^ MATS_F32U(0.5f).u).f);
             f32 t = (f32)k;
             hi *= t;
             lo *= t;
@@ -576,15 +576,15 @@ expm1_32_temp(f32 x)
     if (kNotLarge)
     {
         if (kLtExpSh) {
-            y = u32f32((u32)0x3F800000 - (0x01000000 >> k)).f;
+            y = MATS_F32U((u32)0x3F800000 - (0x01000000 >> k)).f;
         } else {
-            f32 c = u32f32((u32)(MATS_F32_EXP_BIAS - k) << MATS_F32_EXP_SHIFT).f;
+            f32 c = MATS_F32U((u32)(MATS_F32_EXP_BIAS - k) << MATS_F32_EXP_SHIFT).f;
             b = x - (e2 + c);
         }
     }
     y = y + b;
-    u32 i = u32f32(y).u;
-    f32 result = u32f32(i + (k << MATS_F32_EXP_SHIFT)).f;
+    u32 i = MATS_F32U(y).u;
+    f32 result = MATS_F32U(i + (k << MATS_F32_EXP_SHIFT)).f;
     result = result - (kLarge ? 1.0f : 0.0f);
 
     if (kIsZero)
@@ -608,7 +608,7 @@ expm1_32_temp(f32 x)
     {
         // NOTE(michiel): |x| >= 27 * ln(2)
         if (isNan) {
-            result = u32f32((u32)MATS_F32_EXP_MASK | 0x100).f;
+            result = MATS_F32U((u32)MATS_F32_EXP_MASK | 0x100).f;
         } else if (isInfOrLtZero) {
             result = xSign ? -1.0f : F32_INF;
         } else if (isTooBig) {
@@ -719,7 +719,7 @@ log1p32_temp(f32 x)
     /* |(log(1+s)-log(1-s))/s - Lg(s)| < 2**-34.24 (~[-4.95e-11, 4.97e-11]). */
     f32 ln2_hi = gLn2HighF32s[0];
     f32 ln2_lo = gLn2LowF32s[0];
-    s32 sx = (s32)u32f32(x).u;
+    s32 sx = (s32)MATS_F32U(x).u;
 
     b32 xIsNotInfOrNan = (sx - (s32)0x80000000) < (s32)(MATS_F32_EXP_MASK - 0x80000000);
     b32 xP1LtSqrt2     = (sx - (s32)0x80000000) < (s32)(0x3ED413D0 - 0x80000000);
@@ -737,7 +737,7 @@ log1p32_temp(f32 x)
 
     if (k)
     {
-        U32F32 u = u32f32(1.0f + x);
+        mats_f32u u = MATS_F32U(1.0f + x);
         u32 iu = u.u;
         iu += 0x3F800000 - 0x3F3504F3;
         k = (s32)(iu >> MATS_F32_EXP_SHIFT) - MATS_F32_EXP_BIAS;

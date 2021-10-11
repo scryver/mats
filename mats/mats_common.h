@@ -16,6 +16,11 @@ union mats_f64u
     s32 s32s[2];
 };
 
+internal mats_f32u MATS_F32U(u32 x) { mats_f32u result; result.u = x; return result; }
+internal mats_f32u MATS_F32U(f32 x) { mats_f32u result; result.f = x; return result; }
+internal mats_f64u MATS_F64U(u64 x) { mats_f64u result; result.u = x; return result; }
+internal mats_f64u MATS_F64U(f64 x) { mats_f64u result; result.f = x; return result; }
+
 #define MATS_F32_SIGN_MASK    0x80000000
 #define MATS_F32_EXP_MASK     0x7F800000
 #define MATS_F32_MANT_MASK    0x007FFFFF
