@@ -202,7 +202,7 @@ fft_normal3(u32 count, c32 *signal, c32 *dest)
     }
 
     // NOTE(michiel): w = e^(-i*2pi*j/m)
-    SinCos_4x csBase = sincos32_4x(F32_4x(0.0f, -0.25f * F32_PI, -0.5f * F32_PI, -0.75f * F32_PI));
+    SinCos32_4x csBase = sincos32_4x(F32_4x(0.0f, -0.25f * F32_PI, -0.5f * F32_PI, -0.75f * F32_PI));
     f32_4x wReal = csBase.cos;
     f32_4x wImag = csBase.sin;
 
@@ -318,14 +318,14 @@ fft_normal3(u32 count, c32 *signal, c32 *dest)
             c32 *src1 = dest + k + halfM;
             for (u32 j = 0; j < halfM; j += 8)
             {
-                SinCos_4x cs0 = sincos32_4x(F32_4x(-(f32)(j + 0) * oneOverM,
-                                                   -(f32)(j + 1) * oneOverM,
-                                                   -(f32)(j + 2) * oneOverM,
-                                                   -(f32)(j + 3) * oneOverM));
-                SinCos_4x cs1 = sincos32_4x(F32_4x(-(f32)(j + 4) * oneOverM,
-                                                   -(f32)(j + 5) * oneOverM,
-                                                   -(f32)(j + 6) * oneOverM,
-                                                   -(f32)(j + 7) * oneOverM));
+                SinCos32_4x cs0 = sincos32_4x(F32_4x(-(f32)(j + 0) * oneOverM,
+                                                     -(f32)(j + 1) * oneOverM,
+                                                     -(f32)(j + 2) * oneOverM,
+                                                     -(f32)(j + 3) * oneOverM));
+                SinCos32_4x cs1 = sincos32_4x(F32_4x(-(f32)(j + 4) * oneOverM,
+                                                     -(f32)(j + 5) * oneOverM,
+                                                     -(f32)(j + 6) * oneOverM,
+                                                     -(f32)(j + 7) * oneOverM));
                 f32_4x wReal0 = cs0.cos;
                 f32_4x wImag0 = cs0.sin;
                 f32_4x wReal1 = cs1.cos;
@@ -445,7 +445,7 @@ fft_normal4(u32 count, c32 *signal, c32 *dest)
     }
 
     // NOTE(michiel): w = e^(-i*2pi*j/m)
-    SinCos_4x csBase = sincos32_4x(F32_4x(0.0f, -0.25f * F32_PI, -0.5f * F32_PI, -0.75f * F32_PI));
+    SinCos32_4x csBase = sincos32_4x(F32_4x(0.0f, -0.25f * F32_PI, -0.5f * F32_PI, -0.75f * F32_PI));
     f32_4x wReal = csBase.cos;
     f32_4x wImag = csBase.sin;
 
@@ -577,14 +577,14 @@ fft_normal4(u32 count, c32 *signal, c32 *dest)
             c32 *src1 = dest + k + halfM;
             for (u32 j = 0; j < halfM; j += 8)
             {
-                SinCos_4x cs0 = sincos32_4x(F32_4x(-(f32)(j + 0) * oneOverM,
-                                                   -(f32)(j + 1) * oneOverM,
-                                                   -(f32)(j + 2) * oneOverM,
-                                                   -(f32)(j + 3) * oneOverM));
-                SinCos_4x cs1 = sincos32_4x(F32_4x(-(f32)(j + 4) * oneOverM,
-                                                   -(f32)(j + 5) * oneOverM,
-                                                   -(f32)(j + 6) * oneOverM,
-                                                   -(f32)(j + 7) * oneOverM));
+                SinCos32_4x cs0 = sincos32_4x(F32_4x(-(f32)(j + 0) * oneOverM,
+                                                     -(f32)(j + 1) * oneOverM,
+                                                     -(f32)(j + 2) * oneOverM,
+                                                     -(f32)(j + 3) * oneOverM));
+                SinCos32_4x cs1 = sincos32_4x(F32_4x(-(f32)(j + 4) * oneOverM,
+                                                     -(f32)(j + 5) * oneOverM,
+                                                     -(f32)(j + 6) * oneOverM,
+                                                     -(f32)(j + 7) * oneOverM));
 
                 c32 src00 = *(src0 + 0);
                 c32 src01 = *(src0 + 1);
@@ -738,7 +738,7 @@ fft_normal5(u32 count, c32 *signal, c32 *dest)
     }
 
     // NOTE(michiel): w = e^(-i*2pi*j/m)
-    SinCos_4x csBase = sincos32_4x(F32_4x(0.0f, -0.25f * F32_PI, -0.5f * F32_PI, -0.75f * F32_PI));
+    SinCos32_4x csBase = sincos32_4x(F32_4x(0.0f, -0.25f * F32_PI, -0.5f * F32_PI, -0.75f * F32_PI));
     f32_4x cos42; cos42.m = _mm_shuffle_ps(csBase.cos.m, csBase.cos.m, MULTILANE_SHUFFLE_MASK(2, 2, 2, 2));
     f32_4x sin42; sin42.m = _mm_shuffle_ps(csBase.sin.m, csBase.sin.m, MULTILANE_SHUFFLE_MASK(2, 2, 2, 2));
     f32_4x cos801; cos801.m = _mm_shuffle_ps(csBase.cos.m, csBase.cos.m, MULTILANE_SHUFFLE_MASK(0, 0, 1, 1));
@@ -805,14 +805,14 @@ fft_normal5(u32 count, c32 *signal, c32 *dest)
             c32 *src1 = dest + k + halfM;
             for (u32 j = 0; j < halfM; j += 8)
             {
-                SinCos_4x cs0 = sincos32_4x(F32_4x(-(f32)(j + 0) * oneOverM,
-                                                   -(f32)(j + 1) * oneOverM,
-                                                   -(f32)(j + 2) * oneOverM,
-                                                   -(f32)(j + 3) * oneOverM));
-                SinCos_4x cs1 = sincos32_4x(F32_4x(-(f32)(j + 4) * oneOverM,
-                                                   -(f32)(j + 5) * oneOverM,
-                                                   -(f32)(j + 6) * oneOverM,
-                                                   -(f32)(j + 7) * oneOverM));
+                SinCos32_4x cs0 = sincos32_4x(F32_4x(-(f32)(j + 0) * oneOverM,
+                                                     -(f32)(j + 1) * oneOverM,
+                                                     -(f32)(j + 2) * oneOverM,
+                                                     -(f32)(j + 3) * oneOverM));
+                SinCos32_4x cs1 = sincos32_4x(F32_4x(-(f32)(j + 4) * oneOverM,
+                                                     -(f32)(j + 5) * oneOverM,
+                                                     -(f32)(j + 6) * oneOverM,
+                                                     -(f32)(j + 7) * oneOverM));
 
                 c32 src00 = *(src0 + 0);
                 c32 src01 = *(src0 + 1);
@@ -982,7 +982,7 @@ fft_inplace6(u32 count, c32 *dest)
     }
 
     // NOTE(michiel): w = e^(-i*2pi*j/m)
-    SinCos_4x csBase = sincos32_4x(F32_4x(0.0f, -0.25f * F32_PI, -0.5f * F32_PI, -0.75f * F32_PI));
+    SinCos32_4x csBase = sincos32_4x(F32_4x(0.0f, -0.25f * F32_PI, -0.5f * F32_PI, -0.75f * F32_PI));
     f32_4x cos42; cos42.m = _mm_shuffle_ps(csBase.cos.m, csBase.cos.m, MULTILANE_SHUFFLE_MASK(2, 2, 2, 2));
     f32_4x sin42; sin42.m = _mm_shuffle_ps(csBase.sin.m, csBase.sin.m, MULTILANE_SHUFFLE_MASK(2, 2, 2, 2));
     f32_4x cos801; cos801.m = _mm_shuffle_ps(csBase.cos.m, csBase.cos.m, MULTILANE_SHUFFLE_MASK(0, 0, 1, 1));
@@ -1069,7 +1069,7 @@ fft_inplace6(u32 count, c32 *dest)
                 f32_4x src103r; src103r.m = _mm_shuffle_ps(src101ri.m, src123ri.m, MULTILANE_SHUFFLE_MASK(0, 2, 0, 2));
                 f32_4x src103i; src103i.m = _mm_shuffle_ps(src101ri.m, src123ri.m, MULTILANE_SHUFFLE_MASK(1, 3, 1, 3));
 
-                SinCos_4x cs0 = sincos32_4x(angles);
+                SinCos32_4x cs0 = sincos32_4x(angles);
                 angles = angles + angleStep;
 
                 f32_4x O03r = cs0.cos * src103r - cs0.sin * src103i;
@@ -1105,7 +1105,7 @@ fft_inplace6(u32 count, c32 *dest)
                 f32_4x src147r; src147r.m = _mm_shuffle_ps(src145ri.m, src167ri.m, MULTILANE_SHUFFLE_MASK(0, 2, 0, 2));
                 f32_4x src147i; src147i.m = _mm_shuffle_ps(src145ri.m, src167ri.m, MULTILANE_SHUFFLE_MASK(1, 3, 1, 3));
 
-                SinCos_4x cs1 = sincos32_4x(angles);
+                SinCos32_4x cs1 = sincos32_4x(angles);
                 angles = angles + angleStep;
 
                 f32_4x O47r = cs1.cos * src147r - cs1.sin * src147i;
@@ -1189,7 +1189,7 @@ fft_inplace_inexact6(u32 count, c32 *dest)
     }
 
     // NOTE(michiel): w = e^(-i*2pi*j/m)
-    SinCos_4x csBase = sincos32_4x(F32_4x(0.0f, -0.25f * F32_PI, -0.5f * F32_PI, -0.75f * F32_PI));
+    SinCos32_4x csBase = sincos32_4x(F32_4x(0.0f, -0.25f * F32_PI, -0.5f * F32_PI, -0.75f * F32_PI));
     f32_4x cos42; cos42.m = _mm_shuffle_ps(csBase.cos.m, csBase.cos.m, MULTILANE_SHUFFLE_MASK(2, 2, 2, 2));
     f32_4x sin42; sin42.m = _mm_shuffle_ps(csBase.sin.m, csBase.sin.m, MULTILANE_SHUFFLE_MASK(2, 2, 2, 2));
     f32_4x cos801; cos801.m = _mm_shuffle_ps(csBase.cos.m, csBase.cos.m, MULTILANE_SHUFFLE_MASK(0, 0, 1, 1));
