@@ -2097,7 +2097,7 @@ atanh64(f64 x)
     {
         x = absolute64(x);
         f64 result;
-        if (ix < 0x3FE00000){
+        if (ix < 0x3FE00000) {
             result = x + x;
             result = 0.5 * log1p64(result + result * x / (1.0 - x));
         } else {

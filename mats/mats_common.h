@@ -45,15 +45,16 @@ internal mats_f64u MATS_F64U(f64 x) { mats_f64u result; result.f = x; return res
 #define MATS_F64_EXP_MAX      1023
 #define MATS_F64_EXP_MIN     -1022
 
-#define MATS_U32_FROM_F32(x)       ((mats_f32u){.f = (x)}).u
-#define MATS_S32_FROM_F32(x)       ((mats_f32u){.f = (x)}).s
-#define MATS_F32_FROM_U32(x)       ((mats_f32u){.u = (x)}).f
-#define MATS_F32_FROM_S32(x)       ((mats_f32u){.s = (x)}).f
+// NOTE(michiel): We do this in a function because C++ doesn't support the same initializer as C
+internal u32 MATS_U32_FROM_F32(f32 x) { mats_f32u fu; fu.f = (x); return fu.u; }
+internal s32 MATS_S32_FROM_F32(f32 x) { mats_f32u fu; fu.f = (x); return fu.s; }
+internal f32 MATS_F32_FROM_U32(u32 x) { mats_f32u fu; fu.u = (x); return fu.f; }
+internal f32 MATS_F32_FROM_S32(s32 x) { mats_f32u fu; fu.s = (x); return fu.f; }
 
-#define MATS_U64_FROM_F64(x)       ((mats_f64u){.f = (x)}).u
-#define MATS_S64_FROM_F64(x)       ((mats_f64u){.f = (x)}).s
-#define MATS_F64_FROM_U64(x)       ((mats_f64u){.u = (x)}).f
-#define MATS_F64_FROM_S64(x)       ((mats_f64u){.s = (x)}).f
+internal u64 MATS_U64_FROM_F64(f64 x) { mats_f64u fu; fu.f = (x); return fu.u; }
+internal s64 MATS_S64_FROM_F64(f64 x) { mats_f64u fu; fu.f = (x); return fu.s; }
+internal f64 MATS_F64_FROM_U64(u64 x) { mats_f64u fu; fu.u = (x); return fu.f; }
+internal f64 MATS_F64_FROM_S64(s64 x) { mats_f64u fu; fu.s = (x); return fu.f; }
 
 #define MATS_F32_UWORD_IS_FINITE(x)     ((x) <  MATS_F32_EXP_MASK)
 #define MATS_F32_UWORD_IS_NAN(x)        ((x) >  MATS_F32_EXP_MASK)
