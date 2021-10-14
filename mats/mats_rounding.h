@@ -318,7 +318,7 @@ modulus32(f32 num, f32 den)
 	} else {		/* subnormal output */
 	    /* If denormals are not supported, this code will generate a
 	       zero representation.  */
-	    s32 n = MATS_F32_EXP_MIN - expDen;
+        n = MATS_F32_EXP_MIN - expDen;
 	    hnum >>= n;
         result = MATS_F32U(signNum | hnum).f;
 	    //result *= 1.0f;		/* create necessary signal */
@@ -682,7 +682,7 @@ modulus64(f64 num, f64 den)
     }
     else
     {
-        s32 n = MATS_F64_EXP_MIN - expDen;
+        n = MATS_F64_EXP_MIN - expDen;
         anum >>= n;
         result = MATS_F64_FROM_U64(signNum | anum);
     }

@@ -37,7 +37,7 @@ reduce_pi32(f32 x)
     }
 
     t = (f32)(s32)t;  /* the multiple */
-    f32 result = ((x - t * gPiReduce1F32) - t * gPiReduce2F32) - t * gPiReduce3F32;
+    f32 result = (f32)(((x - t * gPiReduce1F32) - t * gPiReduce2F32) - t * gPiReduce3F32);
     return result;
 }
 

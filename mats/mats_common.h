@@ -74,7 +74,7 @@ internal f64 MATS_F64_FROM_S64(s64 x) { mats_f64u fu; fu.s = (x); return fu.f; }
 #define MATS_F64_UWORD_IS_INFINITE(x)   ((x) == MATS_F64_EXP_MASK)
 //#define MATS_F64_UWORD_LOG_MAX          0x42B17217
 //#define MATS_F64_UWORD_LOG_2MAX         0x42B2D4fC
-#define MATS_F64_UWORD_HALF_MAX         (MATS_F64_ABS_MASK - (1L << MATS_F64_EXP_SHIFT))
+#define MATS_F64_UWORD_HALF_MAX         (MATS_F64_ABS_MASK - (1LL << MATS_F64_EXP_SHIFT))
 #define MATS_F64_LARGEST_EXP            (MATS_F64_ABS_MASK >> MATS_F64_EXP_SHIFT)
 #define MATS_F64_SMALLEST_EXP           -(MATS_F64_EXP_SHIFT - 1)
 
@@ -114,6 +114,12 @@ mats_overflow32(u32 sign)
     return mats_xflow32(sign, 0x1p97f);
 }
 
+#if COMPILER_MSVC
+// NOTE(michiel): Suppress divide by zero warning
+#pragma warning(push)
+#pragma warning(disable: 4723)
+#endif
+
 internal f32
 mats_divzero32(u32 sign)
 {
@@ -127,6 +133,10 @@ mats_invalid32(f32 x)
     f32 result = (x - x) / (x - x);
     return result;
 }
+
+#if COMPILER_MSVC
+#pragma warning(pop)
+#endif
 
 internal u32
 abstop12_(f32 x)
@@ -163,6 +173,12 @@ mats_overflow64(u64 sign)
     return mats_xflow64(sign, 0x1p769);
 }
 
+#if COMPILER_MSVC
+// NOTE(michiel): Suppress divide by zero warning
+#pragma warning(push)
+#pragma warning(disable: 4723)
+#endif
+
 internal f64
 mats_divzero64(u64 sign)
 {
@@ -176,6 +192,10 @@ mats_invalid64(f64 x)
     f64 result = (x - x) / (x - x);
     return result;
 }
+
+#if COMPILER_MSVC
+#pragma warning(pop)
+#endif
 
 internal b32
 issignaling64(f64 x)

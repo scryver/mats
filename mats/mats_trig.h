@@ -52,10 +52,10 @@ cos32(f32 y)
         switch (n & 3)
         {
             default:
-            case 0: { result =  sinf_poly_q1(x2); } break;
-            case 1: { result = -sinf_poly_q0(xm, x2); } break;
-            case 2: { result = -sinf_poly_q1(x2); } break;
-            case 3: { result =  sinf_poly_q0(xm, x2); } break;
+            case 0: { result =  (f32)sinf_poly_q1(x2); } break;
+            case 1: { result = -(f32)sinf_poly_q0(xm, x2); } break;
+            case 2: { result = -(f32)sinf_poly_q1(x2); } break;
+            case 3: { result =  (f32)sinf_poly_q0(xm, x2); } break;
         }
     }
 
@@ -81,10 +81,10 @@ sin32(f32 y)
         switch (n & 3)
         {
             default:
-            case 0: { result =  sinf_poly_q0(xm, x2); } break;
-            case 1: { result =  sinf_poly_q1(x2); } break;
-            case 2: { result = -sinf_poly_q0(xm, x2); } break;
-            case 3: { result = -sinf_poly_q1(x2); } break;
+            case 0: { result =  (f32)sinf_poly_q0(xm, x2); } break;
+            case 1: { result =  (f32)sinf_poly_q1(x2); } break;
+            case 2: { result = -(f32)sinf_poly_q0(xm, x2); } break;
+            case 3: { result = -(f32)sinf_poly_q1(x2); } break;
         }
     }
 
@@ -112,10 +112,10 @@ sincos32(f32 y)
         f64 cosP = sinf_poly_q1(x2);
         switch (n & 3)
         {
-            case 0: { result.cos =  cosP; result.sin =  sinP; } break;
-            case 1: { result.cos = -sinP; result.sin =  cosP; } break;
-            case 2: { result.cos = -cosP; result.sin = -sinP; } break;
-            case 3: { result.cos =  sinP; result.sin = -cosP; } break;
+            case 0: { result.cos =  (f32)cosP; result.sin =  (f32)sinP; } break;
+            case 1: { result.cos = -(f32)sinP; result.sin =  (f32)cosP; } break;
+            case 2: { result.cos = -(f32)cosP; result.sin = -(f32)sinP; } break;
+            case 3: { result.cos =  (f32)sinP; result.sin = -(f32)cosP; } break;
         }
     }
 
@@ -202,7 +202,7 @@ tan32(f32 y)
     else
     {
         int n = 0;
-        f32 x = reduce_fast_pi4(y, &n);
+        f32 x = (f32)reduce_fast_pi4(y, &n);
         result = tan32_kernel(x, 1 - ((n & 1) << 1));
     }
     return result;
@@ -976,7 +976,7 @@ kernel_rem_pi_over_2(f64 *x, f64 *y, s32 e0, s32 nx, s32 prec, const s32 *twoOve
 
     /* compute PIo2[0,...,jp]*q[jz,...,0] */
 	for (i = jz; i >= 0; --i) {
-        f64 fw = 0.0;
+        fw = 0.0;
 	    for (k = 0; (k <= jp) && (k <= (jz - i)); ++k) {
             fw += gPiOver2F64_Table[k] * q[i + k];
         }
@@ -988,7 +988,7 @@ kernel_rem_pi_over_2(f64 *x, f64 *y, s32 e0, s32 nx, s32 prec, const s32 *twoOve
     {
         default:
 	    case 0: {
-            f64 fw = 0.0;
+            fw = 0.0;
             for (i = jz; i >= 0; --i) {
                 fw += fq[i];
             }
@@ -997,7 +997,7 @@ kernel_rem_pi_over_2(f64 *x, f64 *y, s32 e0, s32 nx, s32 prec, const s32 *twoOve
 
 	    case 1:
 	    case 2: {
-            f64 fw = 0.0;
+            fw = 0.0;
             for (i = jz; i >= 0; --i) {
                 fw += fq[i];
             }
@@ -1014,17 +1014,17 @@ kernel_rem_pi_over_2(f64 *x, f64 *y, s32 e0, s32 nx, s32 prec, const s32 *twoOve
             /* painful */
             for (i = jz; i > 0; --i)
             {
-                f64 fw = fq[i - 1] + fq[i];
+                fw = fq[i - 1] + fq[i];
                 fq[i] += fq[i - 1] - fw;
                 fq[i - 1] = fw;
             }
             for (i = jz; i > 1; --i)
             {
-                f64 fw = fq[i - 1] + fq[i];
+                fw = fq[i - 1] + fq[i];
                 fq[i] += fq[i - 1] - fw;
                 fq[i - 1] = fw;
             }
-            f64 fw = 0.0;
+            fw = 0.0;
             for (i = jz; i >= 2; --i) {
                 fw += fq[i];
             }
@@ -1248,7 +1248,7 @@ kernel_tan64(f64 x, f64 y, s32 iy)
         v = r - (z - x);
         f64 a = -1.0 / w;
         f64 t = MATS_F64_FROM_U64(MATS_U64_FROM_F64(a) & 0xFFFFFFFF00000000ULL);
-        f64 s = 1.0 + t * z;
+        s = 1.0 + t * z;
         return t + a * (s + t * v);
     }
 }

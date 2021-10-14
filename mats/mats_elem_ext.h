@@ -144,7 +144,7 @@ pow32(f32 x, f32 y)
             return mats_underflow32(signBias);
         }
     }
-    return pow32_exp2(yLogX, signBias);
+    return (f32)pow32_exp2(yLogX, signBias);
 }
 
 internal f32

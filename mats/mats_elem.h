@@ -124,7 +124,7 @@ hypot32(f32 x, f32 y)
         x *= 0x1p90f;
         y *= 0x1p90f;
     }
-    f32 result = z * sqrt32((f64)x * x + (f64)y * y);
+    f32 result = z * sqrt32((f32)((f64)x * x + (f64)y * y));
     //f32 result = z * sqrt32(x * x + y * y); // NOTE(michiel): Less accurate, but faster
     return result;
 }
@@ -171,7 +171,7 @@ exp32(f32 x)
     res = res * r2 + y;
     res = res * s;
 
-    return res;
+    return (f32)res;
 }
 
 internal f32
@@ -213,7 +213,7 @@ exp2_32(f32 x)
     f64 y = gExp2F32_Poly[2] * r + 1.0;
     y = z * r2 + y;
     y = y * s;
-    return y;
+    return (f32)y;
 }
 
 internal f32
@@ -263,7 +263,7 @@ log32(f32 x)
     f64 result = gLogF32_Poly[1] * r + gLogF32_Poly[2];
     result = gLogF32_Poly[0] * r2 + result;
     result = result * r2 + (y0 + r);
-    return result;
+    return (f32)result;
 }
 
 internal f32
@@ -309,7 +309,7 @@ log2_32(f32 x)
     result = gLog2F32_Poly[0] * r2 + result;
     f64 p = gLog2F32_Poly[3] * r + y0;
     result = result * r2 + p;
-    return result;
+    return (f32)result;
 }
 
 internal f32
@@ -319,9 +319,9 @@ log10_32(f32 x)
 
     s32 k = 0;
     if (MATS_F32_UWORD_IS_ZERO(hx & MATS_F32_ABS_MASK)) {
-        return -g2pow25F32 / 0.0f; // NOTE(michiel): log10(+/-0) = -inf
+        return -F32_INF; // -g2pow25F32 / 0.0f; // NOTE(michiel): log10(+/-0) = -inf
     } else if (hx < 0) {
-        return (x - x) / 0.0f;     // NOTE(michiel): log10(-X) = NaN
+        return F32_NAN;     // NOTE(michiel): log10(-X) = NaN
     } else if (!MATS_F32_UWORD_IS_FINITE(hx)) {
         return x + x;
     } else if (MATS_F32_UWORD_IS_SUBNORMAL(hx)) {
@@ -412,7 +412,7 @@ expm1_32(f32 x)
     f32 hxs = x * hfx;
 #if 1
     f32 r1 = 1.5807170421e-3f * hxs;
-    r1 = (r1 - 3.3333212137e-2) * hxs;
+    r1 = (r1 - 3.3333212137e-2f) * hxs;
 #else
     f32 r1 = -2.0109921195e-07f * hxs;
     r1 = (r1 + 4.0082177293e-06f) * hxs;
@@ -1263,7 +1263,7 @@ log10_64(f64 x)
     {
         // NOTE(michiel): x < 2**-1022
         if ((sx & MATS_F64_ABS_MASK) == 0) {
-            return -g2pow54F64 / 0.0;       /* log(+-0)=-inf */
+            return -F32_INF; // -g2pow54F64 / 0.0;       /* log(+-0)=-inf */
         } else if (sx < 0) {
             return (x - x) / 0.0;           /* log(-#) = NaN */
         }
