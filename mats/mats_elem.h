@@ -1172,7 +1172,7 @@ log2_64(f64 x)
         f64 hi = r * gLog2Data64.invln2hi;
         f64 lo = r * gLog2Data64.invln2lo + fma (r, gLog2Data64.invln2hi, -hi);
 #else
-        f64 rhi = MATS_F64_FROM_U64(MATS_U64_FROM_F64(r) & -1ULL << 32);
+        f64 rhi = MATS_F64_FROM_U64(MATS_U64_FROM_F64(r) & (-1ULL << 32));
         f64 rlo = r - rhi;
         f64 hi = rhi * gLog2Data64.invln2hi;
         f64 lo = rlo * gLog2Data64.invln2hi+ r * gLog2Data64.invln2lo;
