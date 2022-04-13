@@ -27,8 +27,8 @@
 
 #include "../src/arm_sincos.cpp"
 
-#include "musl_temp.cpp"
-#include "newlib_temp.cpp"
+//#include "musl_temp.cpp"
+//#include "newlib_temp.cpp"
 
 #include "test_common.cpp"
 
@@ -453,8 +453,8 @@ s32 main(s32 argc, char **argv)
 
         BEGIN_TEST64(doTests, tan, call_comp64);
         call_comp64(mats, tan, 64, stdSec);
-        call_comp64(musl, tan, _musl, stdSec);
-        call_comp64(newlib, tan, _newlib, stdSec);
+        //call_comp64(musl, tan, _musl, stdSec);
+        //call_comp64(newlib, tan, _newlib, stdSec);
         //call_comp64_2x(mats4, tan, 64_2x, stdSec);
         END_TEST();
 
@@ -658,8 +658,8 @@ s32 main(s32 argc, char **argv)
 
         BEGIN_TEST64(doTests, tan, call_spd64);
         call_spd64(mats, tan, 64, stdSec);
-        call_spd64(musl, tan, _musl, stdSec);
-        call_spd64(newlib, tan, _newlib, stdSec);
+        //call_spd64(musl, tan, _musl, stdSec);
+        //call_spd64(newlib, tan, _newlib, stdSec);
         //call_spd64_2x(matsse, tan, 64_2x, stdSec);
         END_TEST();
 

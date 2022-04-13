@@ -187,6 +187,37 @@ s32 main(s32 argc, char **argv)
         fprintf(stdout, "\n");
     }
 
+    //
+    // NOTE(michiel): FFT -> IFFT
+    //
+
+    for (u32 index = 0; index < FFT_COUNT; ++index)
+    {
+        inputSignal[index].real = sin32(5.0f * 2.0f * F32_PI * (f32)index / (f32)FFT_COUNT);
+    }
+    c32 reverseSignal[FFT_COUNT];
+    fft_normal(FFT_COUNT, inputSignal, outputSignal);
+    ifft_normal(FFT_COUNT, outputSignal, reverseSignal);
+
+#if 0
+    for (u32 index = 0; index < FFT_COUNT; ++index)
+    {
+        fprintf(stdout, "%3d: %7.5f -> %7.5f\n", index, inputSignal[index].real, reverseSignal[index].real);
+    }
+#endif
+
+    fprintf(stdout, "%f,%f -> %f,%f; %f,%f -> %f,%f; %f,%f -> %f,%f\n",
+            inputSignal[4].real, inputSignal[4].imag,
+            reverseSignal[4].real, reverseSignal[4].imag,
+            inputSignal[15].real, inputSignal[15].imag,
+            reverseSignal[15].real, reverseSignal[15].imag,
+            inputSignal[34].real, inputSignal[34].imag,
+            reverseSignal[34].real, reverseSignal[34].imag);
+
+    //
+    // NOTE(michiel): Large arrays
+    //
+
     u32 largeCount = megabytes(16);
     c32 *inputL = (c32 *)malloc(sizeof(c32) * largeCount);
     c32 *outputL = (c32 *)malloc(sizeof(c32) * largeCount);
@@ -225,7 +256,8 @@ s32 main(s32 argc, char **argv)
     fft(largeCount, outputL);
     f32 secondsRef = linux_get_seconds_elapsed(start, linux_get_wall_clock());
 
-    fprintf(stdout, "%u kB in %6.3f seconds, (1: %6.3fMB/sec) (2: %6.3fMB/sec) (6a: %6.3fMB/sec) (6b: %6.3fMB/sec) (mfft: %6.3fMB/sec) (mffft: %6.3fMB/sec) [target: %6.3fMB/sec]\n", largeCount / 1024, seconds,
+    fprintf(stdout, "Speed: (S = samples)\n");
+    fprintf(stdout, "%u kS in %6.3f seconds, (1: %6.3fMS/sec) (2: %6.3fMS/sec) (6a: %6.3fMS/sec) (6b: %6.3fMS/sec) (mfft: %6.3fMS/sec) (mffft: %6.3fMS/sec) [target: %6.3fMS/sec]\n", largeCount / 1024, seconds,
             (f64)(largeCount / 1024 / 1024) / seconds,
             (f64)(largeCount / 1024 / 1024) / seconds2,
             (f64)(largeCount / 1024 / 1024) / seconds3,

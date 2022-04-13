@@ -1248,7 +1248,7 @@ fft_inplace_inexact6(u32 count, c32 *dest)
     u32 m = 16;
 
     f32 oneOverMpre = 4.0f * F32_PI / (f32)m;
-    SinCos_4x sinCosPre = sincos32_4x(F32_4x(-oneOverMpre, -oneOverMpre*2.0f, -oneOverMpre*3.0f, -oneOverMpre*4.0f));
+    SinCos32_4x sinCosPre = sincos32_4x(F32_4x(-oneOverMpre, -oneOverMpre*2.0f, -oneOverMpre*3.0f, -oneOverMpre*4.0f));
 
     c32 wm1 = complex32(sinCosPre.cos.e[0], sinCosPre.sin.e[0]);
     c32 wm2 = complex32(sinCosPre.cos.e[1], sinCosPre.sin.e[1]);
@@ -1265,7 +1265,7 @@ fft_inplace_inexact6(u32 count, c32 *dest)
         wm4 = wm2;
         wm2 = wm1;
 
-        SinCos_4x sinCos = sincos32_4x(F32_4x(-oneOverM, -oneOverM*3.0f, -oneOverM*5.0f, -oneOverM*7.0f));
+        SinCos32_4x sinCos = sincos32_4x(F32_4x(-oneOverM, -oneOverM*3.0f, -oneOverM*5.0f, -oneOverM*7.0f));
         wm1 = complex32(sinCos.cos.e[0], sinCos.sin.e[0]);
         wm3 = complex32(sinCos.cos.e[1], sinCos.sin.e[1]);
         c32 wm5 = complex32(sinCos.cos.e[2], sinCos.sin.e[2]);
