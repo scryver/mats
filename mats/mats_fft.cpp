@@ -878,12 +878,12 @@ ifft_inplace_fast(u32 count, c32 *dest)
 internal void
 fft_inplace64(u32 count, c64 *dest)
 {
-    i_expect(is_pow2(count));
-    i_expect(count > 8);
+    MATS_ASSERT(is_pow2(count));
+    MATS_ASSERT(count > 8);
 
     u32 halfCount = count / 2;
     BitScanResult highBit = find_most_significant_set_bit(count);
-    i_expect(highBit.found);
+    MATS_ASSERT(highBit.found);
     for (u32 index = 0; index < halfCount; index += 2)
     {
         u32 index0 = index + 0;
@@ -1164,12 +1164,12 @@ fft_inplace64(u32 count, c64 *dest)
 internal void
 ifft_inplace64(u32 count, c64 *dest)
 {
-    i_expect(is_pow2(count));
-    i_expect(count > 8);
+    MATS_ASSERT(is_pow2(count));
+    MATS_ASSERT(count > 8);
 
     u32 halfCount = count / 2;
     BitScanResult highBit = find_most_significant_set_bit(count);
-    i_expect(highBit.found);
+    MATS_ASSERT(highBit.found);
     for (u32 index = 0; index < halfCount; index += 2)
     {
         u32 index0 = index + 0;
@@ -1204,7 +1204,7 @@ ifft_inplace64(u32 count, c64 *dest)
         }
     }
 
-    // NOTE(michiel): w = e^(-i*2pi*j/m)
+    // NOTE(michiel): w = e^(i*2pi*j/m)
     SinCos64 csBase0 = sincos64(0.0);
     SinCos64 csBase1 = sincos64(0.25 * F64_PI);
     SinCos64 csBase2 = sincos64(0.5 * F64_PI);
