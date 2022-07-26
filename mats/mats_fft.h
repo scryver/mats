@@ -79,3 +79,47 @@ ifft_real_fast(u32 count, f32 *signal, c32 *dest)
     }
     ifft_inplace_fast(count, dest);
 }
+
+//
+// NOTE(michiel): 64-bit version
+//
+
+internal void fft_inplace64(u32 count, c64 *data);
+
+internal void
+fft_normal64(u32 count, c64 *signal, c64 *dest)
+{
+    for (u32 index = 0; index < count; ++index) {
+        dest[index] = signal[index];
+    }
+    fft_inplace64(count, dest);
+}
+
+internal void
+fft_real64(u32 count, f64 *signal, c64 *dest)
+{
+    for (u32 index = 0; index < count; ++index) {
+        dest[index] = complex64(signal[index], 0.0);
+    }
+    fft_inplace64(count, dest);
+}
+
+internal void ifft_inplace64(u32 count, c64 *data);
+
+internal void
+ifft_normal64(u32 count, c64 *signal, c64 *dest)
+{
+    for (u32 index = 0; index < count; ++index) {
+        dest[index] = signal[index];
+    }
+    ifft_inplace64(count, dest);
+}
+
+internal void
+ifft_real64(u32 count, f64 *signal, c64 *dest)
+{
+    for (u32 index = 0; index < count; ++index) {
+        dest[index] = complex64(signal[index], 0.0);
+    }
+    ifft_inplace64(count, dest);
+}

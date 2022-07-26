@@ -143,7 +143,6 @@ sin32_4x(f32_4x y)
     return result;
 }
 
-// TODO(michiel): Rename to SinCos32_4x
 internal SinCos32_4x
 sincos32_4x(f32_4x y)
 {

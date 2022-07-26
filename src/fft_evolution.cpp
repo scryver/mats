@@ -1382,3 +1382,1605 @@ fft_inexact6(u32 count, c32 *signal, c32 *dest)
     copy(count * sizeof(c32), signal, dest);
     fft_inplace_inexact6(count, dest);
 }
+
+internal void
+fft_normal2_64(u32 count, c64 *signal, c64 *dest)
+{
+    i_expect(is_pow2(count));
+    i_expect(count > 8);
+
+    u32 halfCount = count / 2;
+    BitScanResult highBit = find_most_significant_set_bit(count);
+    i_expect(highBit.found);
+    for (u32 index = 0; index < halfCount; index += 2)
+    {
+        u32 index0 = index + 0;
+        u32 index1 = index + 1;
+        u32 index2 = index0 + halfCount;
+        u32 index3 = index1 + halfCount;
+
+        u32 revIndex0 = reverse_bits32(index0, highBit.index);
+        u32 revIndex1 = revIndex0 ^ halfCount;
+        u32 revIndex2 = revIndex0 + 1;
+        u32 revIndex3 = revIndex1 + 1;
+        dest[index0] = signal[revIndex0];
+        dest[index1] = signal[revIndex1];
+        dest[index2] = signal[revIndex2];
+        dest[index3] = signal[revIndex3];
+    }
+
+    // NOTE(michiel): w = e^(-i*2pi*j/m)
+    SinCos64 cs4 = sincos64(-0.5 * F64_PI);
+    c64 w4 = complex64(cs4.cos, cs4.sin);
+    SinCos64 cs81 = sincos64(-0.25 * F64_PI);
+    c64 w81 = complex64(cs81.cos, cs81.sin);
+    SinCos64 cs82 = cs4;
+    c64 w82 = complex64(cs82.cos, cs82.sin);
+    SinCos64 cs83 = sincos64(-0.75 * F64_PI);
+    c64 w83 = complex64(cs83.cos, cs83.sin);
+
+    for (u32 k = 0; k < count; k += 8)
+    {
+        c64 *src0 = dest + k + 0;
+        c64 *src1 = dest + k + 1;
+        c64 *src2 = dest + k + 2;
+        c64 *src3 = dest + k + 3;
+        c64 *src4 = dest + k + 4;
+        c64 *src5 = dest + k + 5;
+        c64 *src6 = dest + k + 6;
+        c64 *src7 = dest + k + 7;
+
+        // NOTE(michiel): 2 -> 2
+        c64 E20 = *src0;
+        c64 O20 = *src1;
+        *src0 = E20 + O20;
+        *src1 = E20 - O20;
+        c64 E21 = *src2;
+        c64 O21 = *src3;
+        *src2 = E21 + O21;
+        *src3 = E21 - O21;
+        c64 E22 = *src4;
+        c64 O22 = *src5;
+        *src4 = E22 + O22;
+        *src5 = E22 - O22;
+        c64 E23 = *src6;
+        c64 O23 = *src7;
+        *src6 = E23 + O23;
+        *src7 = E23 - O23;
+
+        // NOTE(michiel): 4 -> 4
+        c64 E40 = *src0;
+        c64 O40 = *src2;
+        *src0 = E40 + O40;
+        *src2 = E40 - O40;
+
+        c64 E41 = *src1;
+        c64 O41 = w4 * *src3;
+        *src1 = E41 + O41;
+        *src3 = E41 - O41;
+
+        c64 E42 = *src4;
+        c64 O42 = *src6;
+        *src4 = E42 + O42;
+        *src6 = E42 - O42;
+
+        c64 E43 = *src5;
+        c64 O43 = w4 * *src7;
+        *src5 = E43 + O43;
+        *src7 = E43 - O43;
+
+        // NOTE(michiel): 8 -> 8
+        c64 E80 = *src0;
+        c64 O80 = *src4;
+        *src0 = E80 + O80;
+        *src4 = E80 - O80;
+
+        c64 E81 = *src1;
+        c64 O81 = w81 * *src5;
+        *src1 = E81 + O81;
+        *src5 = E81 - O81;
+
+        c64 E82 = *src2;
+        c64 O82 = w82 * *src6;
+        *src2 = E82 + O82;
+        *src6 = E82 - O82;
+
+        c64 E83 = *src3;
+        c64 O83 = w83 * *src7;
+        *src3 = E83 + O83;
+        *src7 = E83 - O83;
+    }
+
+    u32 halfM = 8;
+    u32 m = 16;
+    while (m <= count)
+    {
+        f64 oneOverM = (2.0 * F64_PI) / (f64)m;
+
+        for (u32 k = 0; k < count; k += m)
+        {
+            c64 *src0 = dest + k;
+            c64 *src1 = dest + k + halfM;
+            for (u32 j = 0; j < halfM; j += 8)
+            {
+                // NOTE(michiel): w = e^(-i*2pi*j/m)
+                SinCos64 cs0 = sincos64(-(f64)j * oneOverM);
+                c64 w0 = complex64(cs0.cos, cs0.sin);
+                SinCos64 cs1 = sincos64(-(f64)(j + 1) * oneOverM);
+                c64 w1 = complex64(cs1.cos, cs1.sin);
+                SinCos64 cs2 = sincos64(-(f64)(j + 2) * oneOverM);
+                c64 w2 = complex64(cs2.cos, cs2.sin);
+                SinCos64 cs3 = sincos64(-(f64)(j + 3) * oneOverM);
+                c64 w3 = complex64(cs3.cos, cs3.sin);
+                SinCos64 cs4 = sincos64(-(f64)(j + 4) * oneOverM);
+                c64 w4 = complex64(cs4.cos, cs4.sin);
+                SinCos64 cs5 = sincos64(-(f64)(j + 5) * oneOverM);
+                c64 w5 = complex64(cs5.cos, cs5.sin);
+                SinCos64 cs6 = sincos64(-(f64)(j + 6) * oneOverM);
+                c64 w6 = complex64(cs6.cos, cs6.sin);
+                SinCos64 cs7 = sincos64(-(f64)(j + 7) * oneOverM);
+                c64 w7 = complex64(cs7.cos, cs7.sin);
+                c64 E0 = *src0;
+                c64 O0 = w0 * *src1;
+                *src0++ = E0 + O0;
+                *src1++ = E0 - O0;
+                c64 E1 = *src0;
+                c64 O1 = w1 * *src1;
+                *src0++ = E1 + O1;
+                *src1++ = E1 - O1;
+                c64 E2 = *src0;
+                c64 O2 = w2 * *src1;
+                *src0++ = E2 + O2;
+                *src1++ = E2 - O2;
+                c64 E3 = *src0;
+                c64 O3 = w3 * *src1;
+                *src0++ = E3 + O3;
+                *src1++ = E3 - O3;
+                c64 E4 = *src0;
+                c64 O4 = w4 * *src1;
+                *src0++ = E4 + O4;
+                *src1++ = E4 - O4;
+                c64 E5 = *src0;
+                c64 O5 = w5 * *src1;
+                *src0++ = E5 + O5;
+                *src1++ = E5 - O5;
+                c64 E6 = *src0;
+                c64 O6 = w6 * *src1;
+                *src0++ = E6 + O6;
+                *src1++ = E6 - O6;
+                c64 E7 = *src0;
+                c64 O7 = w7 * *src1;
+                *src0++ = E7 + O7;
+                *src1++ = E7 - O7;
+            }
+        }
+        halfM = m;
+        m <<= 1;
+    }
+}
+
+internal void
+fft_normal3_64(u32 count, c64 *signal, c64 *dest)
+{
+    i_expect(is_pow2(count));
+    i_expect(count > 8);
+
+    u32 halfCount = count / 2;
+    BitScanResult highBit = find_most_significant_set_bit(count);
+    i_expect(highBit.found);
+    for (u32 index = 0; index < halfCount; index += 2)
+    {
+        u32 index0 = index + 0;
+        u32 index1 = index + 1;
+        u32 index2 = index0 + halfCount;
+        u32 index3 = index1 + halfCount;
+
+        u32 revIndex0 = reverse_bits32(index0, highBit.index);
+        u32 revIndex1 = revIndex0 ^ halfCount;
+        u32 revIndex2 = revIndex0 + 1;
+        u32 revIndex3 = revIndex1 + 1;
+        dest[index0] = signal[revIndex0];
+        dest[index1] = signal[revIndex1];
+        dest[index2] = signal[revIndex2];
+        dest[index3] = signal[revIndex3];
+    }
+
+    // NOTE(michiel): w = e^(-i*2pi*j/m)
+    SinCos64 csBase0 = sincos64(0.0);
+    SinCos64 csBase1 = sincos64(-0.25 * F64_PI);
+    SinCos64 csBase2 = sincos64(-0.5 * F64_PI);
+    SinCos64 csBase3 = sincos64(-0.75 * F64_PI);
+    f64_2x wReal0 = F64_2x(csBase0.cos, csBase1.cos);
+    f64_2x wReal1 = F64_2x(csBase2.cos, csBase3.cos);
+    f64_2x wImag0 = F64_2x(csBase0.sin, csBase1.sin);
+    f64_2x wImag1 = F64_2x(csBase2.sin, csBase3.sin);
+
+    for (u32 k = 0; k < count; k += 8)
+    {
+        c64 src0 = *(dest + k + 0);
+        c64 src1 = *(dest + k + 1);
+        c64 src2 = *(dest + k + 2);
+        c64 src3 = *(dest + k + 3);
+        c64 src4 = *(dest + k + 4);
+        c64 src5 = *(dest + k + 5);
+        c64 src6 = *(dest + k + 6);
+        c64 src7 = *(dest + k + 7);
+
+        // NOTE(michiel): 2 -> 2
+        f64 E20r = src0.real;
+        f64 E20i = src0.imag;
+        f64 O20r = src1.real;
+        f64 O20i = src1.imag;
+
+        f64 E21r = src2.real;
+        f64 E21i = src2.imag;
+        f64 O21r = src3.real;
+        f64 O21i = src3.imag;
+
+        f64 E22r = src4.real;
+        f64 E22i = src4.imag;
+        f64 O22r = src5.real;
+        f64 O22i = src5.imag;
+
+        f64 E23r = src6.real;
+        f64 E23i = src6.imag;
+        f64 O23r = src7.real;
+        f64 O23i = src7.imag;
+
+        src0.real = E20r + O20r;
+        src0.imag = E20i + O20i;
+        src1.real = E20r - O20r;
+        src1.imag = E20i - O20i;
+
+        src2.real = E21r + O21r;
+        src2.imag = E21i + O21i;
+        src3.real = E21r - O21r;
+        src3.imag = E21i - O21i;
+
+        src4.real = E22r + O22r;
+        src4.imag = E22i + O22i;
+        src5.real = E22r - O22r;
+        src5.imag = E22i - O22i;
+
+        src6.real = E23r + O23r;
+        src6.imag = E23i + O23i;
+        src7.real = E23r - O23r;
+        src7.imag = E23i - O23i;
+
+        // NOTE(michiel): 4 -> 4
+        c64 E40 = src0;
+        c64 E41 = src1;
+        c64 O40 = src2;
+        c64 O41 = complex64(wReal1.e[0], wImag1.e[0]) * src3;
+        c64 E42 = src4;
+        c64 E43 = src5;
+        c64 O42 = src6;
+        c64 O43 = complex64(wReal1.e[0], wImag1.e[0]) * src7;
+
+        src0 = E40 + O40;
+        src1 = E41 + O41;
+        src2 = E40 - O40;
+        src3 = E41 - O41;
+        src4 = E42 + O42;
+        src5 = E43 + O43;
+        src6 = E42 - O42;
+        src7 = E43 - O43;
+
+        // NOTE(michiel): 8 -> 8
+        c64 E80 = src0;
+        c64 E81 = src1;
+        c64 E82 = src2;
+        c64 E83 = src3;
+        c64 O80 = src4;
+        c64 O81 = complex64(wReal0.e[1], wImag0.e[1]) * src5;
+        c64 O82 = complex64(wReal1.e[0], wImag1.e[0]) * src6;
+        c64 O83 = complex64(wReal1.e[1], wImag1.e[1]) * src7;
+
+        src0 = E80 + O80;
+        src1 = E81 + O81;
+        src2 = E82 + O82;
+        src3 = E83 + O83;
+        src4 = E80 - O80;
+        src5 = E81 - O81;
+        src6 = E82 - O82;
+        src7 = E83 - O83;
+
+        *(dest + k + 0) = src0;
+        *(dest + k + 1) = src1;
+        *(dest + k + 2) = src2;
+        *(dest + k + 3) = src3;
+        *(dest + k + 4) = src4;
+        *(dest + k + 5) = src5;
+        *(dest + k + 6) = src6;
+        *(dest + k + 7) = src7;
+    }
+
+    u32 halfM = 8;
+    u32 m = 16;
+    while (m <= count)
+    {
+        f64 oneOverM = (2.0 * F64_PI) / (f64)m;
+
+        for (u32 k = 0; k < count; k += m)
+        {
+            c64 *src0 = dest + k;
+            c64 *src1 = dest + k + halfM;
+            for (u32 j = 0; j < halfM; j += 8)
+            {
+                SinCos64 cs00 = sincos64(-(f64)(j + 0) * oneOverM);
+                SinCos64 cs01 = sincos64(-(f64)(j + 1) * oneOverM);
+                SinCos64 cs02 = sincos64(-(f64)(j + 2) * oneOverM);
+                SinCos64 cs03 = sincos64(-(f64)(j + 3) * oneOverM);
+                SinCos64 cs10 = sincos64(-(f64)(j + 4) * oneOverM);
+                SinCos64 cs11 = sincos64(-(f64)(j + 5) * oneOverM);
+                SinCos64 cs12 = sincos64(-(f64)(j + 6) * oneOverM);
+                SinCos64 cs13 = sincos64(-(f64)(j + 7) * oneOverM);
+
+                f64_2x wReal00 = F64_2x(cs00.cos, cs01.cos);
+                f64_2x wReal01 = F64_2x(cs02.cos, cs03.cos);
+                f64_2x wImag00 = F64_2x(cs00.sin, cs01.sin);
+                f64_2x wImag01 = F64_2x(cs02.sin, cs03.sin);
+                f64_2x wReal10 = F64_2x(cs10.cos, cs11.cos);
+                f64_2x wReal11 = F64_2x(cs12.cos, cs13.cos);
+                f64_2x wImag10 = F64_2x(cs10.sin, cs11.sin);
+                f64_2x wImag11 = F64_2x(cs12.sin, cs13.sin);
+                c64 w0 = complex64(wReal00.e[0], wImag00.e[0]);
+                c64 w1 = complex64(wReal00.e[1], wImag00.e[1]);
+                c64 w2 = complex64(wReal01.e[0], wImag01.e[0]);
+                c64 w3 = complex64(wReal01.e[1], wImag01.e[1]);
+                c64 w4 = complex64(wReal10.e[0], wImag10.e[0]);
+                c64 w5 = complex64(wReal10.e[1], wImag10.e[1]);
+                c64 w6 = complex64(wReal11.e[0], wImag11.e[0]);
+                c64 w7 = complex64(wReal11.e[1], wImag11.e[1]);
+
+                c64 src00 = *(src0 + 0);
+                c64 src01 = *(src0 + 1);
+                c64 src02 = *(src0 + 2);
+                c64 src03 = *(src0 + 3);
+                c64 src04 = *(src0 + 4);
+                c64 src05 = *(src0 + 5);
+                c64 src06 = *(src0 + 6);
+                c64 src07 = *(src0 + 7);
+
+                c64 src10 = *(src1 + 0);
+                c64 src11 = *(src1 + 1);
+                c64 src12 = *(src1 + 2);
+                c64 src13 = *(src1 + 3);
+                c64 src14 = *(src1 + 4);
+                c64 src15 = *(src1 + 5);
+                c64 src16 = *(src1 + 6);
+                c64 src17 = *(src1 + 7);
+
+                c64 E0 = src00;
+                c64 E1 = src01;
+                c64 E2 = src02;
+                c64 E3 = src03;
+                c64 E4 = src04;
+                c64 E5 = src05;
+                c64 E6 = src06;
+                c64 E7 = src07;
+                c64 O0 = w0 * src10;
+                c64 O1 = w1 * src11;
+                c64 O2 = w2 * src12;
+                c64 O3 = w3 * src13;
+                c64 O4 = w4 * src14;
+                c64 O5 = w5 * src15;
+                c64 O6 = w6 * src16;
+                c64 O7 = w7 * src17;
+
+                src00 = E0 + O0;
+                src01 = E1 + O1;
+                src02 = E2 + O2;
+                src03 = E3 + O3;
+                src04 = E4 + O4;
+                src05 = E5 + O5;
+                src06 = E6 + O6;
+                src07 = E7 + O7;
+                src10 = E0 - O0;
+                src11 = E1 - O1;
+                src12 = E2 - O2;
+                src13 = E3 - O3;
+                src14 = E4 - O4;
+                src15 = E5 - O5;
+                src16 = E6 - O6;
+                src17 = E7 - O7;
+
+                *(src0 + 0) = src00;
+                *(src0 + 1) = src01;
+                *(src0 + 2) = src02;
+                *(src0 + 3) = src03;
+                *(src0 + 4) = src04;
+                *(src0 + 5) = src05;
+                *(src0 + 6) = src06;
+                *(src0 + 7) = src07;
+
+                *(src1 + 0) = src10;
+                *(src1 + 1) = src11;
+                *(src1 + 2) = src12;
+                *(src1 + 3) = src13;
+                *(src1 + 4) = src14;
+                *(src1 + 5) = src15;
+                *(src1 + 6) = src16;
+                *(src1 + 7) = src17;
+
+                src0 += 8;
+                src1 += 8;
+            }
+        }
+        halfM = m;
+        m <<= 1;
+    }
+}
+
+internal void
+fft_normal4_64(u32 count, c64 *signal, c64 *dest)
+{
+    i_expect(is_pow2(count));
+    i_expect(count > 8);
+
+    u32 halfCount = count / 2;
+    BitScanResult highBit = find_most_significant_set_bit(count);
+    i_expect(highBit.found);
+    for (u32 index = 0; index < halfCount; index += 2)
+    {
+        u32 index0 = index + 0;
+        u32 index1 = index + 1;
+        u32 index2 = index0 + halfCount;
+        u32 index3 = index1 + halfCount;
+
+        u32 revIndex0 = reverse_bits32(index0, highBit.index);
+        u32 revIndex1 = revIndex0 ^ halfCount;
+        u32 revIndex2 = revIndex0 + 1;
+        u32 revIndex3 = revIndex1 + 1;
+        dest[index0] = signal[revIndex0];
+        dest[index1] = signal[revIndex1];
+        dest[index2] = signal[revIndex2];
+        dest[index3] = signal[revIndex3];
+    }
+
+    // NOTE(michiel): w = e^(-i*2pi*j/m)
+    SinCos64 csBase0 = sincos64(0.0);
+    SinCos64 csBase1 = sincos64(-0.25 * F64_PI);
+    SinCos64 csBase2 = sincos64(-0.5 * F64_PI);
+    SinCos64 csBase3 = sincos64(-0.75 * F64_PI);
+    f64_2x wReal0 = F64_2x(csBase0.cos, csBase1.cos);
+    f64_2x wReal1 = F64_2x(csBase2.cos, csBase3.cos);
+    f64_2x wImag0 = F64_2x(csBase0.sin, csBase1.sin);
+    f64_2x wImag1 = F64_2x(csBase2.sin, csBase3.sin);
+
+    for (u32 k = 0; k < count; k += 8)
+    {
+        c64 src0 = *(dest + k + 0);
+        c64 src1 = *(dest + k + 1);
+        c64 src2 = *(dest + k + 2);
+        c64 src3 = *(dest + k + 3);
+        c64 src4 = *(dest + k + 4);
+        c64 src5 = *(dest + k + 5);
+        c64 src6 = *(dest + k + 6);
+        c64 src7 = *(dest + k + 7);
+
+        // NOTE(michiel): 2 -> 2
+        f64 E20r = src0.real;
+        f64 E20i = src0.imag;
+        f64 O20r = src1.real;
+        f64 O20i = src1.imag;
+
+        f64 E21r = src2.real;
+        f64 E21i = src2.imag;
+        f64 O21r = src3.real;
+        f64 O21i = src3.imag;
+
+        f64 E22r = src4.real;
+        f64 E22i = src4.imag;
+        f64 O22r = src5.real;
+        f64 O22i = src5.imag;
+
+        f64 E23r = src6.real;
+        f64 E23i = src6.imag;
+        f64 O23r = src7.real;
+        f64 O23i = src7.imag;
+
+        f64 o41hr = E21r - O21r;
+        f64 o41hi = E21i - O21i;
+        f64 o43hr = E23r - O23r;
+        f64 o43hi = E23i - O23i;
+
+        // NOTE(michiel): 4 -> 4
+        f64 E40r = E20r + O20r;
+        f64 E40i = E20i + O20i;
+        f64 E41r = E20r - O20r;
+        f64 E41i = E20i - O20i;
+
+        f64 O40r = E21r + O21r;
+        f64 O40i = E21i + O21i;
+        f64 O41r = wReal1.e[0] * o41hr - wImag1.e[0] * o41hi;
+        f64 O41i = wReal1.e[0] * o41hi + wImag1.e[0] * o41hr;
+
+        f64 E42r = E22r + O22r;
+        f64 E42i = E22i + O22i;
+        f64 E43r = E22r - O22r;
+        f64 E43i = E22i - O22i;
+
+        f64 O42r = E23r + O23r;
+        f64 O42i = E23i + O23i;
+        f64 O43r = wReal1.e[0] * o43hr - wImag1.e[0] * o43hi;
+        f64 O43i = wReal1.e[0] * o43hi + wImag1.e[0] * o43hr;
+
+        f64 o80hr = E42r + O42r;
+        f64 o80hi = E42i + O42i;
+        f64 o81hr = E43r + O43r;
+        f64 o81hi = E43i + O43i;
+        f64 o82hr = E42r - O42r;
+        f64 o82hi = E42i - O42i;
+        f64 o83hr = E43r - O43r;
+        f64 o83hi = E43i - O43i;
+
+        // NOTE(michiel): 8 -> 8
+        f64 E80r = E40r + O40r;
+        f64 E80i = E40i + O40i;
+        f64 E81r = E41r + O41r;
+        f64 E81i = E41i + O41i;
+        f64 E82r = E40r - O40r;
+        f64 E82i = E40i - O40i;
+        f64 E83r = E41r - O41r;
+        f64 E83i = E41i - O41i;
+        f64 O80r = wReal0.e[0] * o80hr - wImag0.e[0] * o80hi;
+        f64 O80i = wReal0.e[0] * o80hi + wImag0.e[0] * o80hr;
+        f64 O81r = wReal0.e[1] * o81hr - wImag0.e[1] * o81hi;
+        f64 O81i = wReal0.e[1] * o81hi + wImag0.e[1] * o81hr;
+
+        f64 O82r = wReal1.e[0] * o82hr - wImag1.e[0] * o82hi;
+        f64 O82i = wReal1.e[0] * o82hi + wImag1.e[0] * o82hr;
+        f64 O83r = wReal1.e[1] * o83hr - wImag1.e[1] * o83hi;
+        f64 O83i = wReal1.e[1] * o83hi + wImag1.e[1] * o83hr;
+
+        src0.real = E80r + O80r;
+        src0.imag = E80i + O80i;
+        src1.real = E81r + O81r;
+        src1.imag = E81i + O81i;
+
+        src2.real = E82r + O82r;
+        src2.imag = E82i + O82i;
+        src3.real = E83r + O83r;
+        src3.imag = E83i + O83i;
+
+        src4.real = E80r - O80r;
+        src4.imag = E80i - O80i;
+        src5.real = E81r - O81r;
+        src5.imag = E81i - O81i;
+
+        src6.real = E82r - O82r;
+        src6.imag = E82i - O82i;
+        src7.real = E83r - O83r;
+        src7.imag = E83i - O83i;
+
+        *(dest + k + 0) = src0;
+        *(dest + k + 1) = src1;
+        *(dest + k + 2) = src2;
+        *(dest + k + 3) = src3;
+        *(dest + k + 4) = src4;
+        *(dest + k + 5) = src5;
+        *(dest + k + 6) = src6;
+        *(dest + k + 7) = src7;
+    }
+
+    u32 halfM = 8;
+    u32 m = 16;
+    while (m <= count)
+    {
+        f64 oneOverM = (2.0 * F64_PI) / (f64)m;
+
+        for (u32 k = 0; k < count; k += m)
+        {
+            c64 *src0 = dest + k;
+            c64 *src1 = dest + k + halfM;
+            for (u32 j = 0; j < halfM; j += 8)
+            {
+                SinCos64 cs00 = sincos64(-(f64)(j + 0) * oneOverM);
+                SinCos64 cs01 = sincos64(-(f64)(j + 1) * oneOverM);
+                SinCos64 cs02 = sincos64(-(f64)(j + 2) * oneOverM);
+                SinCos64 cs03 = sincos64(-(f64)(j + 3) * oneOverM);
+                SinCos64 cs10 = sincos64(-(f64)(j + 4) * oneOverM);
+                SinCos64 cs11 = sincos64(-(f64)(j + 5) * oneOverM);
+                SinCos64 cs12 = sincos64(-(f64)(j + 6) * oneOverM);
+                SinCos64 cs13 = sincos64(-(f64)(j + 7) * oneOverM);
+
+                c64 src00 = *(src0 + 0);
+                c64 src01 = *(src0 + 1);
+                c64 src02 = *(src0 + 2);
+                c64 src03 = *(src0 + 3);
+                c64 src04 = *(src0 + 4);
+                c64 src05 = *(src0 + 5);
+                c64 src06 = *(src0 + 6);
+                c64 src07 = *(src0 + 7);
+
+                c64 src10 = *(src1 + 0);
+                c64 src11 = *(src1 + 1);
+                c64 src12 = *(src1 + 2);
+                c64 src13 = *(src1 + 3);
+                c64 src14 = *(src1 + 4);
+                c64 src15 = *(src1 + 5);
+                c64 src16 = *(src1 + 6);
+                c64 src17 = *(src1 + 7);
+
+                f64 E0r = src00.real;
+                f64 E0i = src00.imag;
+                f64 E1r = src01.real;
+                f64 E1i = src01.imag;
+
+                f64 E2r = src02.real;
+                f64 E2i = src02.imag;
+                f64 E3r = src03.real;
+                f64 E3i = src03.imag;
+
+                f64 E4r = src04.real;
+                f64 E4i = src04.imag;
+                f64 E5r = src05.real;
+                f64 E5i = src05.imag;
+
+                f64 E6r = src06.real;
+                f64 E6i = src06.imag;
+                f64 E7r = src07.real;
+                f64 E7i = src07.imag;
+
+                f64 O0r = cs00.cos * src10.real - cs00.sin * src10.imag;
+                f64 O0i = cs00.cos * src10.imag + cs00.sin * src10.real;
+                f64 O1r = cs01.cos * src11.real - cs01.sin * src11.imag;
+                f64 O1i = cs01.cos * src11.imag + cs01.sin * src11.real;
+
+                f64 O2r = cs02.cos * src12.real - cs02.sin * src12.imag;
+                f64 O2i = cs02.cos * src12.imag + cs02.sin * src12.real;
+                f64 O3r = cs03.cos * src13.real - cs03.sin * src13.imag;
+                f64 O3i = cs03.cos * src13.imag + cs03.sin * src13.real;
+
+                f64 O4r = cs10.cos * src14.real - cs10.sin * src14.imag;
+                f64 O4i = cs10.cos * src14.imag + cs10.sin * src14.real;
+                f64 O5r = cs11.cos * src15.real - cs11.sin * src15.imag;
+                f64 O5i = cs11.cos * src15.imag + cs11.sin * src15.real;
+
+                f64 O6r = cs12.cos * src16.real - cs12.sin * src16.imag;
+                f64 O6i = cs12.cos * src16.imag + cs12.sin * src16.real;
+                f64 O7r = cs13.cos * src17.real - cs13.sin * src17.imag;
+                f64 O7i = cs13.cos * src17.imag + cs13.sin * src17.real;
+
+                src00.real = E0r + O0r;
+                src00.imag = E0i + O0i;
+                src01.real = E1r + O1r;
+                src01.imag = E1i + O1i;
+
+                src02.real = E2r + O2r;
+                src02.imag = E2i + O2i;
+                src03.real = E3r + O3r;
+                src03.imag = E3i + O3i;
+
+                src04.real = E4r + O4r;
+                src04.imag = E4i + O4i;
+                src05.real = E5r + O5r;
+                src05.imag = E5i + O5i;
+
+                src06.real = E6r + O6r;
+                src06.imag = E6i + O6i;
+                src07.real = E7r + O7r;
+                src07.imag = E7i + O7i;
+
+                src10.real = E0r - O0r;
+                src10.imag = E0i - O0i;
+                src11.real = E1r - O1r;
+                src11.imag = E1i - O1i;
+
+                src12.real = E2r - O2r;
+                src12.imag = E2i - O2i;
+                src13.real = E3r - O3r;
+                src13.imag = E3i - O3i;
+
+                src14.real = E4r - O4r;
+                src14.imag = E4i - O4i;
+                src15.real = E5r - O5r;
+                src15.imag = E5i - O5i;
+
+                src16.real = E6r - O6r;
+                src16.imag = E6i - O6i;
+                src17.real = E7r - O7r;
+                src17.imag = E7i - O7i;
+
+                *(src0 + 0) = src00;
+                *(src0 + 1) = src01;
+                *(src0 + 2) = src02;
+                *(src0 + 3) = src03;
+                *(src0 + 4) = src04;
+                *(src0 + 5) = src05;
+                *(src0 + 6) = src06;
+                *(src0 + 7) = src07;
+
+                *(src1 + 0) = src10;
+                *(src1 + 1) = src11;
+                *(src1 + 2) = src12;
+                *(src1 + 3) = src13;
+                *(src1 + 4) = src14;
+                *(src1 + 5) = src15;
+                *(src1 + 6) = src16;
+                *(src1 + 7) = src17;
+
+                src0 += 8;
+                src1 += 8;
+            }
+        }
+        halfM = m;
+        m <<= 1;
+    }
+}
+
+internal void
+fft_normal5_64(u32 count, c64 *signal, c64 *dest)
+{
+    i_expect(is_pow2(count));
+    i_expect(count > 8);
+
+    u32 halfCount = count / 2;
+    BitScanResult highBit = find_most_significant_set_bit(count);
+    i_expect(highBit.found);
+    for (u32 index = 0; index < halfCount; index += 2)
+    {
+        u32 index0 = index + 0;
+        u32 index1 = index + 1;
+        u32 index2 = index0 + halfCount;
+        u32 index3 = index1 + halfCount;
+
+        u32 revIndex0 = reverse_bits32(index0, highBit.index);
+        u32 revIndex1 = revIndex0 ^ halfCount;
+        u32 revIndex2 = revIndex0 + 1;
+        u32 revIndex3 = revIndex1 + 1;
+        dest[index0] = signal[revIndex0];
+        dest[index1] = signal[revIndex1];
+        dest[index2] = signal[revIndex2];
+        dest[index3] = signal[revIndex3];
+    }
+
+    // NOTE(michiel): w = e^(-i*2pi*j/m)
+    SinCos64 csBase0 = sincos64(0.0);
+    SinCos64 csBase1 = sincos64(-0.25 * F64_PI);
+    SinCos64 csBase2 = sincos64(-0.5 * F64_PI);
+    SinCos64 csBase3 = sincos64(-0.75 * F64_PI);
+    f64_2x cos42 = F64_2x(csBase2.cos, csBase2.cos);
+    f64_2x sin42 = F64_2x(csBase2.sin, csBase2.sin);
+    f64_2x cos80 = F64_2x(csBase0.cos, csBase0.cos);
+    f64_2x cos81 = F64_2x(csBase1.cos, csBase1.cos);
+    f64_2x cos82 = F64_2x(csBase2.cos, csBase2.cos);
+    f64_2x cos83 = F64_2x(csBase3.cos, csBase3.cos);
+    f64_2x sin80 = F64_2x(csBase0.sin, csBase0.sin);
+    f64_2x sin81 = F64_2x(csBase1.sin, csBase1.sin);
+    f64_2x sin82 = F64_2x(csBase2.sin, csBase2.sin);
+    f64_2x sin83 = F64_2x(csBase3.sin, csBase3.sin);
+
+    for (u32 k = 0; k < count; k += 8)
+    {
+        f64_2x E20ri = F64_2x((f64 *)(dest + k + 0));
+        f64_2x O20ri = F64_2x((f64 *)(dest + k + 1));
+        f64_2x E21ri = F64_2x((f64 *)(dest + k + 2));
+        f64_2x O21ri = F64_2x((f64 *)(dest + k + 3));
+        f64_2x E22ri = F64_2x((f64 *)(dest + k + 4));
+        f64_2x O22ri = F64_2x((f64 *)(dest + k + 5));
+        f64_2x E23ri = F64_2x((f64 *)(dest + k + 6));
+        f64_2x O23ri = F64_2x((f64 *)(dest + k + 7));
+
+        f64_2x E40ri = E20ri + O20ri;
+        f64_2x E41ri = E20ri - O20ri;
+        f64_2x E42ri = E22ri + O22ri;
+        f64_2x E43ri = E22ri - O22ri;
+
+        f64_2x O40ri = E21ri + O21ri;
+        f64_2x o41hri = E21ri - O21ri;
+        f64_2x o41hir; o41hir.md = _mm_shuffle_pd(o41hri.md, o41hri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+        f64_2x O41ri; O41ri.md = _mm_addsub_pd((cos42 * o41hri).md, (sin42 * o41hir).md);
+        f64_2x O42ri = E23ri + O23ri;
+        f64_2x o43hri = E23ri - O23ri;
+        f64_2x o43hir; o43hir.md = _mm_shuffle_pd(o43hri.md, o43hri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+        f64_2x O43ri; O43ri.md = _mm_addsub_pd((cos42 * o43hri).md, (sin42 * o43hir).md);
+
+        f64_2x EpO40ri = E40ri + O40ri;
+        f64_2x EmO40ri = E40ri - O40ri;
+        f64_2x EpO41ri = E41ri + O41ri;
+        f64_2x EmO41ri = E41ri - O41ri;
+        f64_2x EpO42ri = E42ri + O42ri;
+        f64_2x EmO42ri = E42ri - O42ri;
+        f64_2x EpO43ri = E43ri + O43ri;
+        f64_2x EmO43ri = E43ri - O43ri;
+
+        f64_2x E80ri = EpO40ri;
+        f64_2x E81ri = EpO41ri;
+        f64_2x E82ri = EmO40ri;
+        f64_2x E83ri = EmO41ri;
+
+        f64_2x o80hri = EpO42ri;
+        f64_2x o80hir; o80hir.md = _mm_shuffle_pd(EpO42ri.md, EpO42ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+        f64_2x O80ri; O80ri.md = _mm_addsub_pd((cos80 * o80hri).md, (sin80 * o80hir).md);
+        f64_2x o81hri = EpO43ri;
+        f64_2x o81hir; o81hir.md = _mm_shuffle_pd(EpO43ri.md, EpO43ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+        f64_2x O81ri; O81ri.md = _mm_addsub_pd((cos81 * o81hri).md, (sin81 * o81hir).md);
+
+        f64_2x o82hri = EmO42ri;
+        f64_2x o82hir; o82hir.md = _mm_shuffle_pd(EmO42ri.md, EmO42ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+        f64_2x O82ri; O82ri.md = _mm_addsub_pd((cos82 * o82hri).md, (sin82 * o82hir).md);
+        f64_2x o83hri = EmO43ri;
+        f64_2x o83hir; o83hir.md = _mm_shuffle_pd(EmO43ri.md, EmO43ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+        f64_2x O83ri; O83ri.md = _mm_addsub_pd((cos83 * o83hri).md, (sin83 * o83hir).md);
+
+        f64_2x EpO80 = E80ri + O80ri;
+        f64_2x EpO81 = E81ri + O81ri;
+        f64_2x EpO82 = E82ri + O82ri;
+        f64_2x EpO83 = E83ri + O83ri;
+        f64_2x EmO80 = E80ri - O80ri;
+        f64_2x EmO81 = E81ri - O81ri;
+        f64_2x EmO82 = E82ri - O82ri;
+        f64_2x EmO83 = E83ri - O83ri;
+
+        _mm_store_pd((f64 *)(dest + k + 0), EpO80.md);
+        _mm_store_pd((f64 *)(dest + k + 1), EpO81.md);
+        _mm_store_pd((f64 *)(dest + k + 2), EpO82.md);
+        _mm_store_pd((f64 *)(dest + k + 3), EpO83.md);
+        _mm_store_pd((f64 *)(dest + k + 4), EmO80.md);
+        _mm_store_pd((f64 *)(dest + k + 5), EmO81.md);
+        _mm_store_pd((f64 *)(dest + k + 6), EmO82.md);
+        _mm_store_pd((f64 *)(dest + k + 7), EmO83.md);
+    }
+
+    u32 halfM = 8;
+    u32 m = 16;
+    while (m <= count)
+    {
+        f64 oneOverM = (2.0 * F64_PI) / (f64)m;
+
+        for (u32 k = 0; k < count; k += m)
+        {
+            c64 *src0 = dest + k;
+            c64 *src1 = dest + k + halfM;
+            for (u32 j = 0; j < halfM; j += 8)
+            {
+                SinCos64 cs00 = sincos64(-(f64)(j + 0) * oneOverM);
+                SinCos64 cs01 = sincos64(-(f64)(j + 1) * oneOverM);
+                SinCos64 cs02 = sincos64(-(f64)(j + 2) * oneOverM);
+                SinCos64 cs03 = sincos64(-(f64)(j + 3) * oneOverM);
+                SinCos64 cs10 = sincos64(-(f64)(j + 4) * oneOverM);
+                SinCos64 cs11 = sincos64(-(f64)(j + 5) * oneOverM);
+                SinCos64 cs12 = sincos64(-(f64)(j + 6) * oneOverM);
+                SinCos64 cs13 = sincos64(-(f64)(j + 7) * oneOverM);
+
+                c64 src00 = *(src0 + 0);
+                c64 src01 = *(src0 + 1);
+                c64 src02 = *(src0 + 2);
+                c64 src03 = *(src0 + 3);
+                c64 src04 = *(src0 + 4);
+                c64 src05 = *(src0 + 5);
+                c64 src06 = *(src0 + 6);
+                c64 src07 = *(src0 + 7);
+
+                c64 src10 = *(src1 + 0);
+                c64 src11 = *(src1 + 1);
+                c64 src12 = *(src1 + 2);
+                c64 src13 = *(src1 + 3);
+                c64 src14 = *(src1 + 4);
+                c64 src15 = *(src1 + 5);
+                c64 src16 = *(src1 + 6);
+                c64 src17 = *(src1 + 7);
+
+                f64 E0r = src00.real;
+                f64 E0i = src00.imag;
+                f64 E1r = src01.real;
+                f64 E1i = src01.imag;
+
+                f64 E2r = src02.real;
+                f64 E2i = src02.imag;
+                f64 E3r = src03.real;
+                f64 E3i = src03.imag;
+
+                f64 E4r = src04.real;
+                f64 E4i = src04.imag;
+                f64 E5r = src05.real;
+                f64 E5i = src05.imag;
+
+                f64 E6r = src06.real;
+                f64 E6i = src06.imag;
+                f64 E7r = src07.real;
+                f64 E7i = src07.imag;
+
+                f64 O0r = cs00.cos * src10.real - cs00.sin * src10.imag;
+                f64 O0i = cs00.cos * src10.imag + cs00.sin * src10.real;
+                f64 O1r = cs01.cos * src11.real - cs01.sin * src11.imag;
+                f64 O1i = cs01.cos * src11.imag + cs01.sin * src11.real;
+
+                f64 O2r = cs02.cos * src12.real - cs02.sin * src12.imag;
+                f64 O2i = cs02.cos * src12.imag + cs02.sin * src12.real;
+                f64 O3r = cs03.cos * src13.real - cs03.sin * src13.imag;
+                f64 O3i = cs03.cos * src13.imag + cs03.sin * src13.real;
+
+                f64 O4r = cs10.cos * src14.real - cs10.sin * src14.imag;
+                f64 O4i = cs10.cos * src14.imag + cs10.sin * src14.real;
+                f64 O5r = cs11.cos * src15.real - cs11.sin * src15.imag;
+                f64 O5i = cs11.cos * src15.imag + cs11.sin * src15.real;
+
+                f64 O6r = cs12.cos * src16.real - cs12.sin * src16.imag;
+                f64 O6i = cs12.cos * src16.imag + cs12.sin * src16.real;
+                f64 O7r = cs13.cos * src17.real - cs13.sin * src17.imag;
+                f64 O7i = cs13.cos * src17.imag + cs13.sin * src17.real;
+
+                src00.real = E0r + O0r;
+                src00.imag = E0i + O0i;
+                src01.real = E1r + O1r;
+                src01.imag = E1i + O1i;
+
+                src02.real = E2r + O2r;
+                src02.imag = E2i + O2i;
+                src03.real = E3r + O3r;
+                src03.imag = E3i + O3i;
+
+                src04.real = E4r + O4r;
+                src04.imag = E4i + O4i;
+                src05.real = E5r + O5r;
+                src05.imag = E5i + O5i;
+
+                src06.real = E6r + O6r;
+                src06.imag = E6i + O6i;
+                src07.real = E7r + O7r;
+                src07.imag = E7i + O7i;
+
+                src10.real = E0r - O0r;
+                src10.imag = E0i - O0i;
+                src11.real = E1r - O1r;
+                src11.imag = E1i - O1i;
+
+                src12.real = E2r - O2r;
+                src12.imag = E2i - O2i;
+                src13.real = E3r - O3r;
+                src13.imag = E3i - O3i;
+
+                src14.real = E4r - O4r;
+                src14.imag = E4i - O4i;
+                src15.real = E5r - O5r;
+                src15.imag = E5i - O5i;
+
+                src16.real = E6r - O6r;
+                src16.imag = E6i - O6i;
+                src17.real = E7r - O7r;
+                src17.imag = E7i - O7i;
+
+                *(src0 + 0) = src00;
+                *(src0 + 1) = src01;
+                *(src0 + 2) = src02;
+                *(src0 + 3) = src03;
+                *(src0 + 4) = src04;
+                *(src0 + 5) = src05;
+                *(src0 + 6) = src06;
+                *(src0 + 7) = src07;
+
+                *(src1 + 0) = src10;
+                *(src1 + 1) = src11;
+                *(src1 + 2) = src12;
+                *(src1 + 3) = src13;
+                *(src1 + 4) = src14;
+                *(src1 + 5) = src15;
+                *(src1 + 6) = src16;
+                *(src1 + 7) = src17;
+
+                src0 += 8;
+                src1 += 8;
+            }
+        }
+        halfM = m;
+        m <<= 1;
+    }
+}
+
+internal void
+fft_inplace6_64(u32 count, c64 *dest)
+{
+    i_expect(is_pow2(count));
+    i_expect(count > 8);
+
+    u32 halfCount = count / 2;
+    BitScanResult highBit = find_most_significant_set_bit(count);
+    i_expect(highBit.found);
+    for (u32 index = 0; index < halfCount; index += 2)
+    {
+        u32 index0 = index + 0;
+        u32 index1 = index + 1;
+        u32 index2 = index0 + halfCount;
+        u32 index3 = index1 + halfCount;
+
+        u32 revIndex0 = reverse_bits32(index0, highBit.index);
+        u32 revIndex1 = revIndex0 ^ halfCount;
+        u32 revIndex2 = revIndex0 + 1;
+        u32 revIndex3 = revIndex1 + 1;
+
+        if (revIndex0 > index0) {
+            c64 temp = dest[index0];
+            dest[index0] = dest[revIndex0];
+            dest[revIndex0] = temp;
+        }
+        if (revIndex1 > index1) {
+            c64 temp = dest[index1];
+            dest[index1] = dest[revIndex1];
+            dest[revIndex1] = temp;
+        }
+        if (revIndex2 > index2) {
+            c64 temp = dest[index2];
+            dest[index2] = dest[revIndex2];
+            dest[revIndex2] = temp;
+        }
+        if (revIndex3 > index3) {
+            c64 temp = dest[index3];
+            dest[index3] = dest[revIndex3];
+            dest[revIndex3] = temp;
+        }
+    }
+
+    // NOTE(michiel): w = e^(-i*2pi*j/m)
+    SinCos64 csBase0 = sincos64(0.0);
+    SinCos64 csBase1 = sincos64(-0.25 * F64_PI);
+    SinCos64 csBase2 = sincos64(-0.5 * F64_PI);
+    SinCos64 csBase3 = sincos64(-0.75 * F64_PI);
+    f64_2x cos42 = F64_2x(csBase2.cos, csBase2.cos);
+    f64_2x sin42 = F64_2x(csBase2.sin, csBase2.sin);
+    f64_2x cos80 = F64_2x(csBase0.cos, csBase0.cos);
+    f64_2x cos81 = F64_2x(csBase1.cos, csBase1.cos);
+    f64_2x cos82 = F64_2x(csBase2.cos, csBase2.cos);
+    f64_2x cos83 = F64_2x(csBase3.cos, csBase3.cos);
+    f64_2x sin80 = F64_2x(csBase0.sin, csBase0.sin);
+    f64_2x sin81 = F64_2x(csBase1.sin, csBase1.sin);
+    f64_2x sin82 = F64_2x(csBase2.sin, csBase2.sin);
+    f64_2x sin83 = F64_2x(csBase3.sin, csBase3.sin);
+
+    for (u32 k = 0; k < count; k += 8)
+    {
+        f64_2x E20ri = F64_2x((f64 *)(dest + k + 0));
+        f64_2x O20ri = F64_2x((f64 *)(dest + k + 1));
+        f64_2x E21ri = F64_2x((f64 *)(dest + k + 2));
+        f64_2x O21ri = F64_2x((f64 *)(dest + k + 3));
+        f64_2x E22ri = F64_2x((f64 *)(dest + k + 4));
+        f64_2x O22ri = F64_2x((f64 *)(dest + k + 5));
+        f64_2x E23ri = F64_2x((f64 *)(dest + k + 6));
+        f64_2x O23ri = F64_2x((f64 *)(dest + k + 7));
+
+        f64_2x E40ri = E20ri + O20ri;
+        f64_2x E41ri = E20ri - O20ri;
+        f64_2x E42ri = E22ri + O22ri;
+        f64_2x E43ri = E22ri - O22ri;
+
+        f64_2x O40ri = E21ri + O21ri;
+        f64_2x o41hri = E21ri - O21ri;
+        f64_2x o41hir; o41hir.md = _mm_shuffle_pd(o41hri.md, o41hri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+        f64_2x O41ri; O41ri.md = _mm_addsub_pd((cos42 * o41hri).md, (sin42 * o41hir).md);
+        f64_2x O42ri = E23ri + O23ri;
+        f64_2x o43hri = E23ri - O23ri;
+        f64_2x o43hir; o43hir.md = _mm_shuffle_pd(o43hri.md, o43hri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+        f64_2x O43ri; O43ri.md = _mm_addsub_pd((cos42 * o43hri).md, (sin42 * o43hir).md);
+
+        f64_2x EpO40ri = E40ri + O40ri;
+        f64_2x EmO40ri = E40ri - O40ri;
+        f64_2x EpO41ri = E41ri + O41ri;
+        f64_2x EmO41ri = E41ri - O41ri;
+        f64_2x EpO42ri = E42ri + O42ri;
+        f64_2x EmO42ri = E42ri - O42ri;
+        f64_2x EpO43ri = E43ri + O43ri;
+        f64_2x EmO43ri = E43ri - O43ri;
+
+        f64_2x o80hir; o80hir.md = _mm_shuffle_pd(EpO42ri.md, EpO42ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+        f64_2x O80ri; O80ri.md = _mm_addsub_pd((cos80 * EpO42ri).md, (sin80 * o80hir).md);
+        f64_2x o81hir; o81hir.md = _mm_shuffle_pd(EpO43ri.md, EpO43ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+        f64_2x O81ri; O81ri.md = _mm_addsub_pd((cos81 * EpO43ri).md, (sin81 * o81hir).md);
+
+        f64_2x o82hir; o82hir.md = _mm_shuffle_pd(EmO42ri.md, EmO42ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+        f64_2x O82ri; O82ri.md = _mm_addsub_pd((cos82 * EmO42ri).md, (sin82 * o82hir).md);
+        f64_2x o83hir; o83hir.md = _mm_shuffle_pd(EmO43ri.md, EmO43ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+        f64_2x O83ri; O83ri.md = _mm_addsub_pd((cos83 * EmO43ri).md, (sin83 * o83hir).md);
+
+        f64_2x EpO80 = EpO40ri + O80ri;
+        f64_2x EpO81 = EpO41ri + O81ri;
+        f64_2x EpO82 = EmO40ri + O82ri;
+        f64_2x EpO83 = EmO41ri + O83ri;
+        f64_2x EmO80 = EpO40ri - O80ri;
+        f64_2x EmO81 = EpO41ri - O81ri;
+        f64_2x EmO82 = EmO40ri - O82ri;
+        f64_2x EmO83 = EmO41ri - O83ri;
+
+        _mm_store_pd((f64 *)(dest + k + 0), EpO80.md);
+        _mm_store_pd((f64 *)(dest + k + 1), EpO81.md);
+        _mm_store_pd((f64 *)(dest + k + 2), EpO82.md);
+        _mm_store_pd((f64 *)(dest + k + 3), EpO83.md);
+        _mm_store_pd((f64 *)(dest + k + 4), EmO80.md);
+        _mm_store_pd((f64 *)(dest + k + 5), EmO81.md);
+        _mm_store_pd((f64 *)(dest + k + 6), EmO82.md);
+        _mm_store_pd((f64 *)(dest + k + 7), EmO83.md);
+    }
+
+    u32 halfM = 8;
+    u32 m = 16;
+    while (m <= count)
+    {
+        f64 oneOverM = (2.0 * F64_PI) / (f64)m;
+
+        for (u32 k = 0; k < count; k += m)
+        {
+            c64 *src0 = dest + k;
+            c64 *src1 = dest + k + halfM;
+
+            f64 *EGrab = (f64 *)src0;
+            f64 *OGrab = (f64 *)src1;
+            f64 *EPut  = (f64 *)src0;
+            f64 *OPut  = (f64 *)src1;
+
+            for (u32 j = 0; j < halfM; j += 8)
+            {
+                SinCos64 cs0 = sincos64(-(f64)(j + 0) * oneOverM);
+                SinCos64 cs1 = sincos64(-(f64)(j + 1) * oneOverM);
+                SinCos64 cs2 = sincos64(-(f64)(j + 2) * oneOverM);
+                SinCos64 cs3 = sincos64(-(f64)(j + 3) * oneOverM);
+                SinCos64 cs4 = sincos64(-(f64)(j + 4) * oneOverM);
+                SinCos64 cs5 = sincos64(-(f64)(j + 5) * oneOverM);
+                SinCos64 cs6 = sincos64(-(f64)(j + 6) * oneOverM);
+                SinCos64 cs7 = sincos64(-(f64)(j + 7) * oneOverM);
+
+                f64_2x oSrc0ri = F64_2x(OGrab);
+                OGrab += 2;
+                f64_2x oSrc1ri = F64_2x(OGrab);
+                OGrab += 2;
+                f64_2x oSrc2ri = F64_2x(OGrab);
+                OGrab += 2;
+                f64_2x oSrc3ri = F64_2x(OGrab);
+                OGrab += 2;
+                f64_2x oSrc4ri = F64_2x(OGrab);
+                OGrab += 2;
+                f64_2x oSrc5ri = F64_2x(OGrab);
+                OGrab += 2;
+                f64_2x oSrc6ri = F64_2x(OGrab);
+                OGrab += 2;
+                f64_2x oSrc7ri = F64_2x(OGrab);
+                OGrab += 2;
+
+                f64_2x oSrc0ir; oSrc0ir.md = _mm_shuffle_pd(oSrc0ri.md, oSrc0ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+                f64_2x ocs0ri = F64_2x(cs0.cos) * oSrc0ri;
+                f64_2x osc0ir = F64_2x(cs0.sin) * oSrc0ir;
+                f64_2x o0ri; o0ri.md = _mm_addsub_pd(ocs0ri.md, osc0ir.md);
+
+                f64_2x oSrc1ir; oSrc1ir.md = _mm_shuffle_pd(oSrc1ri.md, oSrc1ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+                f64_2x ocs1ri = F64_2x(cs1.cos) * oSrc1ri;
+                f64_2x osc1ir = F64_2x(cs1.sin) * oSrc1ir;
+                f64_2x o1ri; o1ri.md = _mm_addsub_pd(ocs1ri.md, osc1ir.md);
+
+                f64_2x oSrc2ir; oSrc2ir.md = _mm_shuffle_pd(oSrc2ri.md, oSrc2ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+                f64_2x ocs2ri = F64_2x(cs2.cos) * oSrc2ri;
+                f64_2x osc2ir = F64_2x(cs2.sin) * oSrc2ir;
+                f64_2x o2ri; o2ri.md = _mm_addsub_pd(ocs2ri.md, osc2ir.md);
+
+                f64_2x oSrc3ir; oSrc3ir.md = _mm_shuffle_pd(oSrc3ri.md, oSrc3ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+                f64_2x ocs3ri = F64_2x(cs3.cos) * oSrc3ri;
+                f64_2x osc3ir = F64_2x(cs3.sin) * oSrc3ir;
+                f64_2x o3ri; o3ri.md = _mm_addsub_pd(ocs3ri.md, osc3ir.md);
+
+                f64_2x oSrc4ir; oSrc4ir.md = _mm_shuffle_pd(oSrc4ri.md, oSrc4ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+                f64_2x ocs4ri = F64_2x(cs4.cos) * oSrc4ri;
+                f64_2x osc4ir = F64_2x(cs4.sin) * oSrc4ir;
+                f64_2x o4ri; o4ri.md = _mm_addsub_pd(ocs4ri.md, osc4ir.md);
+
+                f64_2x oSrc5ir; oSrc5ir.md = _mm_shuffle_pd(oSrc5ri.md, oSrc5ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+                f64_2x ocs5ri = F64_2x(cs5.cos) * oSrc5ri;
+                f64_2x osc5ir = F64_2x(cs5.sin) * oSrc5ir;
+                f64_2x o5ri; o5ri.md = _mm_addsub_pd(ocs5ri.md, osc5ir.md);
+
+                f64_2x oSrc6ir; oSrc6ir.md = _mm_shuffle_pd(oSrc6ri.md, oSrc6ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+                f64_2x ocs6ri = F64_2x(cs6.cos) * oSrc6ri;
+                f64_2x osc6ir = F64_2x(cs6.sin) * oSrc6ir;
+                f64_2x o6ri; o6ri.md = _mm_addsub_pd(ocs6ri.md, osc6ir.md);
+
+                f64_2x oSrc7ir; oSrc7ir.md = _mm_shuffle_pd(oSrc7ri.md, oSrc7ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+                f64_2x ocs7ri = F64_2x(cs7.cos) * oSrc7ri;
+                f64_2x osc7ir = F64_2x(cs7.sin) * oSrc7ir;
+                f64_2x o7ri; o7ri.md = _mm_addsub_pd(ocs7ri.md, osc7ir.md);
+
+                f64_2x e0ri = F64_2x(EGrab);
+                EGrab += 2;
+                f64_2x e1ri = F64_2x(EGrab);
+                EGrab += 2;
+                f64_2x e2ri = F64_2x(EGrab);
+                EGrab += 2;
+                f64_2x e3ri = F64_2x(EGrab);
+                EGrab += 2;
+                f64_2x e4ri = F64_2x(EGrab);
+                EGrab += 2;
+                f64_2x e5ri = F64_2x(EGrab);
+                EGrab += 2;
+                f64_2x e6ri = F64_2x(EGrab);
+                EGrab += 2;
+                f64_2x e7ri = F64_2x(EGrab);
+                EGrab += 2;
+
+                f64_2x s00ri = e0ri + o0ri;
+                f64_2x s10ri = e0ri - o0ri;
+
+                f64_2x s01ri = e1ri + o1ri;
+                f64_2x s11ri = e1ri - o1ri;
+
+                f64_2x s02ri = e2ri + o2ri;
+                f64_2x s12ri = e2ri - o2ri;
+
+                f64_2x s03ri = e3ri + o3ri;
+                f64_2x s13ri = e3ri - o3ri;
+
+                f64_2x s04ri = e4ri + o4ri;
+                f64_2x s14ri = e4ri - o4ri;
+
+                f64_2x s05ri = e5ri + o5ri;
+                f64_2x s15ri = e5ri - o5ri;
+
+                f64_2x s06ri = e6ri + o6ri;
+                f64_2x s16ri = e6ri - o6ri;
+
+                f64_2x s07ri = e7ri + o7ri;
+                f64_2x s17ri = e7ri - o7ri;
+
+                _mm_store_pd(EPut, s00ri.md);
+                EPut += 2;
+                _mm_store_pd(OPut, s10ri.md);
+                OPut += 2;
+                _mm_store_pd(EPut, s01ri.md);
+                EPut += 2;
+                _mm_store_pd(OPut, s11ri.md);
+                OPut += 2;
+                _mm_store_pd(EPut, s02ri.md);
+                EPut += 2;
+                _mm_store_pd(OPut, s12ri.md);
+                OPut += 2;
+                _mm_store_pd(EPut, s03ri.md);
+                EPut += 2;
+                _mm_store_pd(OPut, s13ri.md);
+                OPut += 2;
+                _mm_store_pd(EPut, s04ri.md);
+                EPut += 2;
+                _mm_store_pd(OPut, s14ri.md);
+                OPut += 2;
+                _mm_store_pd(EPut, s05ri.md);
+                EPut += 2;
+                _mm_store_pd(OPut, s15ri.md);
+                OPut += 2;
+                _mm_store_pd(EPut, s06ri.md);
+                EPut += 2;
+                _mm_store_pd(OPut, s16ri.md);
+                OPut += 2;
+                _mm_store_pd(EPut, s07ri.md);
+                EPut += 2;
+                _mm_store_pd(OPut, s17ri.md);
+                OPut += 2;
+            }
+        }
+        halfM = m;
+        m <<= 1;
+    }
+}
+
+#if 0
+internal void
+fft_inplace_inexact6_64(u32 count, c64 *dest)
+{
+    i_expect(is_pow2(count));
+    i_expect(count > 8);
+
+    u32 halfCount = count / 2;
+    BitScanResult highBit = find_most_significant_set_bit(count);
+    i_expect(highBit.found);
+    for (u32 index = 0; index < halfCount; index += 2)
+    {
+        u32 index0 = index + 0;
+        u32 index1 = index + 1;
+        u32 index2 = index0 + halfCount;
+        u32 index3 = index1 + halfCount;
+
+        u32 revIndex0 = reverse_bits32(index0, highBit.index);
+        u32 revIndex1 = revIndex0 ^ halfCount;
+        u32 revIndex2 = revIndex0 + 1;
+        u32 revIndex3 = revIndex1 + 1;
+
+        if (revIndex0 > index0) {
+            c64 temp = dest[index0];
+            dest[index0] = dest[revIndex0];
+            dest[revIndex0] = temp;
+        }
+        if (revIndex1 > index1) {
+            c64 temp = dest[index1];
+            dest[index1] = dest[revIndex1];
+            dest[revIndex1] = temp;
+        }
+        if (revIndex2 > index2) {
+            c64 temp = dest[index2];
+            dest[index2] = dest[revIndex2];
+            dest[revIndex2] = temp;
+        }
+        if (revIndex3 > index3) {
+            c64 temp = dest[index3];
+            dest[index3] = dest[revIndex3];
+            dest[revIndex3] = temp;
+        }
+    }
+
+    // NOTE(michiel): w = e^(-i*2pi*j/m)
+    SinCos64 csBase0 = sincos64(0.0);
+    SinCos64 csBase1 = sincos64(-0.25 * F64_PI);
+    SinCos64 csBase2 = sincos64(-0.5 * F64_PI);
+    SinCos64 csBase3 = sincos64(-0.75 * F64_PI);
+    f64_2x cos42 = F64_2x(csBase2.cos, csBase2.cos);
+    f64_2x sin42 = F64_2x(csBase2.sin, csBase2.sin);
+    f64_2x cos80 = F64_2x(csBase0.cos, csBase0.cos);
+    f64_2x cos81 = F64_2x(csBase1.cos, csBase1.cos);
+    f64_2x cos82 = F64_2x(csBase2.cos, csBase2.cos);
+    f64_2x cos83 = F64_2x(csBase3.cos, csBase3.cos);
+    f64_2x sin80 = F64_2x(csBase0.sin, csBase0.sin);
+    f64_2x sin81 = F64_2x(csBase1.sin, csBase1.sin);
+    f64_2x sin82 = F64_2x(csBase2.sin, csBase2.sin);
+    f64_2x sin83 = F64_2x(csBase3.sin, csBase3.sin);
+
+    for (u32 k = 0; k < count; k += 8)
+    {
+        f64_2x E20ri = F64_2x((f64 *)(dest + k + 0));
+        f64_2x O20ri = F64_2x((f64 *)(dest + k + 1));
+        f64_2x E21ri = F64_2x((f64 *)(dest + k + 2));
+        f64_2x O21ri = F64_2x((f64 *)(dest + k + 3));
+        f64_2x E22ri = F64_2x((f64 *)(dest + k + 4));
+        f64_2x O22ri = F64_2x((f64 *)(dest + k + 5));
+        f64_2x E23ri = F64_2x((f64 *)(dest + k + 6));
+        f64_2x O23ri = F64_2x((f64 *)(dest + k + 7));
+
+        f64_2x E40ri = E20ri + O20ri;
+        f64_2x E41ri = E20ri - O20ri;
+        f64_2x E42ri = E22ri + O22ri;
+        f64_2x E43ri = E22ri - O22ri;
+
+        f64_2x O40ri = E21ri + O21ri;
+        f64_2x o41hri = E21ri - O21ri;
+        f64_2x o41hir; o41hir.md = _mm_shuffle_pd(o41hri.md, o41hri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+        f64_2x O41ri; O41ri.md = _mm_addsub_pd((cos42 * o41hri).md, (sin42 * o41hir).md);
+        f64_2x O42ri = E23ri + O23ri;
+        f64_2x o43hri = E23ri - O23ri;
+        f64_2x o43hir; o43hir.md = _mm_shuffle_pd(o43hri.md, o43hri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+        f64_2x O43ri; O43ri.md = _mm_addsub_pd((cos42 * o43hri).md, (sin42 * o43hir).md);
+
+        f64_2x EpO40ri = E40ri + O40ri;
+        f64_2x EmO40ri = E40ri - O40ri;
+        f64_2x EpO41ri = E41ri + O41ri;
+        f64_2x EmO41ri = E41ri - O41ri;
+        f64_2x EpO42ri = E42ri + O42ri;
+        f64_2x EmO42ri = E42ri - O42ri;
+        f64_2x EpO43ri = E43ri + O43ri;
+        f64_2x EmO43ri = E43ri - O43ri;
+
+        f64_2x o80hir; o80hir.md = _mm_shuffle_pd(EpO42ri.md, EpO42ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+        f64_2x O80ri; O80ri.md = _mm_addsub_pd((cos80 * EpO42ri).md, (sin80 * o80hir).md);
+        f64_2x o81hir; o81hir.md = _mm_shuffle_pd(EpO43ri.md, EpO43ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+        f64_2x O81ri; O81ri.md = _mm_addsub_pd((cos81 * EpO43ri).md, (sin81 * o81hir).md);
+
+        f64_2x o82hir; o82hir.md = _mm_shuffle_pd(EmO42ri.md, EmO42ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+        f64_2x O82ri; O82ri.md = _mm_addsub_pd((cos82 * EmO42ri).md, (sin82 * o82hir).md);
+        f64_2x o83hir; o83hir.md = _mm_shuffle_pd(EmO43ri.md, EmO43ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+        f64_2x O83ri; O83ri.md = _mm_addsub_pd((cos83 * EmO43ri).md, (sin83 * o83hir).md);
+
+        f64_2x EpO80 = EpO40ri + O80ri;
+        f64_2x EpO81 = EpO41ri + O81ri;
+        f64_2x EpO82 = EmO40ri + O82ri;
+        f64_2x EpO83 = EmO41ri + O83ri;
+        f64_2x EmO80 = EpO40ri - O80ri;
+        f64_2x EmO81 = EpO41ri - O81ri;
+        f64_2x EmO82 = EmO40ri - O82ri;
+        f64_2x EmO83 = EmO41ri - O83ri;
+
+        _mm_store_pd((f64 *)(dest + k + 0), EpO80.md);
+        _mm_store_pd((f64 *)(dest + k + 1), EpO81.md);
+        _mm_store_pd((f64 *)(dest + k + 2), EpO82.md);
+        _mm_store_pd((f64 *)(dest + k + 3), EpO83.md);
+        _mm_store_pd((f64 *)(dest + k + 4), EmO80.md);
+        _mm_store_pd((f64 *)(dest + k + 5), EmO81.md);
+        _mm_store_pd((f64 *)(dest + k + 6), EmO82.md);
+        _mm_store_pd((f64 *)(dest + k + 7), EmO83.md);
+    }
+
+    u32 halfM = 8;
+    u32 m = 16;
+
+    f64 oneOverMpre = (2.0 * F64_PI) / (f64)m;
+    SinCos64 csPre0 = sincos64(-oneOverMpre);
+    SinCos64 csPre1 = sincos64(-oneOverMpre*2.0);
+    SinCos64 csPre2 = sincos64(-oneOverMpre*3.0);
+    SinCos64 csPre3 = sincos64(-oneOverMpre*4.0);
+
+    c64 wm1 = complex64(csPre0.cos, csPre0.sin);
+    c64 wm2 = complex64(csPre1.cos, csPre1.sin);
+    c64 wm3 = complex64(csPre2.cos, csPre2.sin);
+    c64 wm4 = complex64(csPre3.cos, csPre3.sin);
+
+    while (m <= count)
+    {
+        f64 oneOverM = 0.5 * oneOverMpre;
+        oneOverMpre = oneOverM;
+
+        c64 wm8 = wm4;
+        c64 wm6 = wm3;
+        wm4 = wm2;
+        wm2 = wm1;
+
+        SinCos64 csLoop0 = sincos64(-oneOverM);
+        SinCos64 csLoop1 = sincos64(-oneOverM*3.0);
+        SinCos64 csLoop2 = sincos64(-oneOverM*5.0);
+        SinCos64 csLoop3 = sincos64(-oneOverM*7.0);
+
+        wm1 = complex64(csLoop0.cos, csLoop0.sin);
+        wm3 = complex64(csLoop1.cos, csLoop1.sin);
+        c64 wm5 = complex64(csLoop2.cos, csLoop2.sin);
+        c64 wm7 = complex64(csLoop3.cos, csLoop3.sin);
+
+        f64_2x wStepr = F64_2x(wm8.real);
+        f64_2x wStepi = F64_2x(wm8.imag);
+
+        f64_2x w0Startr = F64_2x(1.0, wm1.real);
+        f64_2x w0Starti = F64_2x(0.0, wm1.imag);
+        f64_2x w1Startr = F64_2x(wm2.real, wm3.real);
+        f64_2x w1Starti = F64_2x(wm2.real, wm3.imag);
+        f64_2x w2Startr = F64_2x(wm4.real, wm5.real);
+        f64_2x w2Starti = F64_2x(wm4.real, wm5.imag);
+        f64_2x w3Startr = F64_2x(wm6.real, wm7.real);
+        f64_2x w3Starti = F64_2x(wm6.real, wm7.imag);
+
+        for (u32 k = 0; k < count; k += m)
+        {
+            c64 *src0 = dest + k;
+            c64 *src1 = dest + k + halfM;
+
+            f64_2x w0r = w0Startr;
+            f64_2x w0i = w0Starti;
+            f64_2x w1r = w1Startr;
+            f64_2x w1i = w1Starti;
+            f64_2x w2r = w2Startr;
+            f64_2x w2i = w2Starti;
+            f64_2x w3r = w3Startr;
+            f64_2x w3i = w3Starti;
+
+            f64 *EGrab = (f64 *)src0;
+            f64 *OGrab = (f64 *)src1;
+            f64 *EPut  = (f64 *)src0;
+            f64 *OPut  = (f64 *)src1;
+
+            for (u32 j = 0; j < halfM; j += 8)
+            {
+                f64_2x oSrc0ri = F64_2x(OGrab);
+                OGrab += 2;
+                f64_2x oSrc1ri = F64_2x(OGrab);
+                OGrab += 2;
+                f64_2x oSrc2ri = F64_2x(OGrab);
+                OGrab += 2;
+                f64_2x oSrc3ri = F64_2x(OGrab);
+                OGrab += 2;
+                f64_2x oSrc4ri = F64_2x(OGrab);
+                OGrab += 2;
+                f64_2x oSrc5ri = F64_2x(OGrab);
+                OGrab += 2;
+                f64_2x oSrc6ri = F64_2x(OGrab);
+                OGrab += 2;
+                f64_2x oSrc7ri = F64_2x(OGrab);
+                OGrab += 2;
+
+                // TODO(michiel): How to map the wN sin/cos to these values?
+                f64_2x oSrc0ir; oSrc0ir.md = _mm_shuffle_pd(oSrc0ri.md, oSrc0ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+                f64_2x ocs0ri = F64_2x(cs0.cos) * oSrc0ri;
+                f64_2x osc0ir = F64_2x(cs0.sin) * oSrc0ir;
+                f64_2x o0ri; o0ri.md = _mm_addsub_pd(ocs0ri.md, osc0ir.md);
+
+                f64_2x oSrc1ir; oSrc1ir.md = _mm_shuffle_pd(oSrc1ri.md, oSrc1ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+                f64_2x ocs1ri = F64_2x(cs1.cos) * oSrc1ri;
+                f64_2x osc1ir = F64_2x(cs1.sin) * oSrc1ir;
+                f64_2x o1ri; o1ri.md = _mm_addsub_pd(ocs1ri.md, osc1ir.md);
+
+                f64_2x oSrc2ir; oSrc2ir.md = _mm_shuffle_pd(oSrc2ri.md, oSrc2ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+                f64_2x ocs2ri = F64_2x(cs2.cos) * oSrc2ri;
+                f64_2x osc2ir = F64_2x(cs2.sin) * oSrc2ir;
+                f64_2x o2ri; o2ri.md = _mm_addsub_pd(ocs2ri.md, osc2ir.md);
+
+                f64_2x oSrc3ir; oSrc3ir.md = _mm_shuffle_pd(oSrc3ri.md, oSrc3ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+                f64_2x ocs3ri = F64_2x(cs3.cos) * oSrc3ri;
+                f64_2x osc3ir = F64_2x(cs3.sin) * oSrc3ir;
+                f64_2x o3ri; o3ri.md = _mm_addsub_pd(ocs3ri.md, osc3ir.md);
+
+                f64_2x oSrc4ir; oSrc4ir.md = _mm_shuffle_pd(oSrc4ri.md, oSrc4ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+                f64_2x ocs4ri = F64_2x(cs4.cos) * oSrc4ri;
+                f64_2x osc4ir = F64_2x(cs4.sin) * oSrc4ir;
+                f64_2x o4ri; o4ri.md = _mm_addsub_pd(ocs4ri.md, osc4ir.md);
+
+                f64_2x oSrc5ir; oSrc5ir.md = _mm_shuffle_pd(oSrc5ri.md, oSrc5ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+                f64_2x ocs5ri = F64_2x(cs5.cos) * oSrc5ri;
+                f64_2x osc5ir = F64_2x(cs5.sin) * oSrc5ir;
+                f64_2x o5ri; o5ri.md = _mm_addsub_pd(ocs5ri.md, osc5ir.md);
+
+                f64_2x oSrc6ir; oSrc6ir.md = _mm_shuffle_pd(oSrc6ri.md, oSrc6ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+                f64_2x ocs6ri = F64_2x(cs6.cos) * oSrc6ri;
+                f64_2x osc6ir = F64_2x(cs6.sin) * oSrc6ir;
+                f64_2x o6ri; o6ri.md = _mm_addsub_pd(ocs6ri.md, osc6ir.md);
+
+                f64_2x oSrc7ir; oSrc7ir.md = _mm_shuffle_pd(oSrc7ri.md, oSrc7ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+                f64_2x ocs7ri = F64_2x(cs7.cos) * oSrc7ri;
+                f64_2x osc7ir = F64_2x(cs7.sin) * oSrc7ir;
+                f64_2x o7ri; o7ri.md = _mm_addsub_pd(ocs7ri.md, osc7ir.md);
+
+                f64_2x e0ri = F64_2x(EGrab);
+                EGrab += 2;
+                f64_2x e1ri = F64_2x(EGrab);
+                EGrab += 2;
+                f64_2x e2ri = F64_2x(EGrab);
+                EGrab += 2;
+                f64_2x e3ri = F64_2x(EGrab);
+                EGrab += 2;
+                f64_2x e4ri = F64_2x(EGrab);
+                EGrab += 2;
+                f64_2x e5ri = F64_2x(EGrab);
+                EGrab += 2;
+                f64_2x e6ri = F64_2x(EGrab);
+                EGrab += 2;
+                f64_2x e7ri = F64_2x(EGrab);
+                EGrab += 2;
+
+                f64_2x s00ri = e0ri + o0ri;
+                f64_2x s10ri = e0ri - o0ri;
+
+                f64_2x s01ri = e1ri + o1ri;
+                f64_2x s11ri = e1ri - o1ri;
+
+                f64_2x s02ri = e2ri + o2ri;
+                f64_2x s12ri = e2ri - o2ri;
+
+                f64_2x s03ri = e3ri + o3ri;
+                f64_2x s13ri = e3ri - o3ri;
+
+                f64_2x s04ri = e4ri + o4ri;
+                f64_2x s14ri = e4ri - o4ri;
+
+                f64_2x s05ri = e5ri + o5ri;
+                f64_2x s15ri = e5ri - o5ri;
+
+                f64_2x s06ri = e6ri + o6ri;
+                f64_2x s16ri = e6ri - o6ri;
+
+                f64_2x s07ri = e7ri + o7ri;
+                f64_2x s17ri = e7ri - o7ri;
+
+                _mm_store_pd(EPut, s00ri.md);
+                EPut += 2;
+                _mm_store_pd(OPut, s10ri.md);
+                OPut += 2;
+                _mm_store_pd(EPut, s01ri.md);
+                EPut += 2;
+                _mm_store_pd(OPut, s11ri.md);
+                OPut += 2;
+                _mm_store_pd(EPut, s02ri.md);
+                EPut += 2;
+                _mm_store_pd(OPut, s12ri.md);
+                OPut += 2;
+                _mm_store_pd(EPut, s03ri.md);
+                EPut += 2;
+                _mm_store_pd(OPut, s13ri.md);
+                OPut += 2;
+                _mm_store_pd(EPut, s04ri.md);
+                EPut += 2;
+                _mm_store_pd(OPut, s14ri.md);
+                OPut += 2;
+                _mm_store_pd(EPut, s05ri.md);
+                EPut += 2;
+                _mm_store_pd(OPut, s15ri.md);
+                OPut += 2;
+                _mm_store_pd(EPut, s06ri.md);
+                EPut += 2;
+                _mm_store_pd(OPut, s16ri.md);
+                OPut += 2;
+                _mm_store_pd(EPut, s07ri.md);
+                EPut += 2;
+                _mm_store_pd(OPut, s17ri.md);
+                OPut += 2;
+            }
+        }
+        halfM = m;
+        m <<= 1;
+    }
+}
+#endif
