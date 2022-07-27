@@ -13,6 +13,18 @@
 #include "../mats/mats_fft.h"
 
 internal f32
+square(f32 x)
+{
+    return x * x;
+}
+
+internal f64
+square(f64 x)
+{
+    return x * x;
+}
+
+internal f32
 cos_pi(f32 x)
 {
     return cos32(x);
@@ -361,7 +373,7 @@ s32 main(s32 argc, char **argv)
     {
         //inputSignal[index].real = 0.5*cos64(5.0 * 2.0 * F64_PI * (f64)index / (f64)FFT_COUNT);
         //inputSignal[index].imag = 0.5*sin64(5.0 * 2.0 * F64_PI * (f64)index / (f64)FFT_COUNT);
-        inputSignal64[index].real = sin64(5.0 * 2.0 * F64_PI * (f64)index / (f64)FFT_COUNT);
+        inputSignal64[index].real = sin64(2.0 * 2.0 * F64_PI * (f64)index / (f64)FFT_COUNT);
     }
     fft_normal0_64(fftCount, inputSignal64, outputSignal64);
     fft_normal2_64(fftCount, inputSignal64, outpu2Signal64);
@@ -373,6 +385,12 @@ s32 main(s32 argc, char **argv)
     //fft_inplace0_64(fftCount, inputSignal64);
     copy(FFT_COUNT * sizeof(c64), inputSignal64, outpu3Signal64);
     fft_inplace6_64(fftCount, outpu3Signal64);
+
+    f64 magnitude64[FFT_COUNT];
+    f64 phase64[FFT_COUNT];
+    db_from_fft64(fftCount, outpu3Signal64, magnitude64);
+    unwrapped_phase_from_fft64(fftCount, outpu3Signal64, phase64);
+
     for (u32 index = 0; index < FFT_COUNT; ++index)
     {
         fprintf(stdout, "FFT64[%3u]: ", index);
@@ -399,11 +417,16 @@ s32 main(s32 argc, char **argv)
         }
         fprintf(stdout, " | ");
         {
+            fprintf(stdout, "%-22a % 7.3f [% 7.2f dB]", pow64(10.0, magnitude64[index] / 20.0), phase64[index], magnitude64[index]);
+        }
+#if 0
+        {
             f64 magnitude = absolute64(outpu3Signal64[index]) / (0.5 * (f64)fftCount);
             f64 phase     = argument64(outpu3Signal64[index]);
             f64 magIndB   = 20.0 * log10_64(magnitude);
             fprintf(stdout, "%-22a % 7.3f [% 7.2f dB]", magnitude, phase, magIndB);
         }
+#endif
 
         fprintf(stdout, "\n");
     }

@@ -1,3 +1,109 @@
+internal void
+db_from_fft32(u32 count, c32 *source, f32 *dest)
+{
+    // NOTE(michiel): 20 * log10(sqrt(real^2 + imag^2)) => 20 * log10((real^2 + imag^2)^0.5) => 20 * 0.5 * log10(real^2 + imag^2)
+    c32 *src = source;
+    f32 *dst = dest;
+    f32 scaleFactor = 20.0f * log10_32(1.0f / (0.5f * (f32)count));
+    for (u32 index = 0; index < count; ++index)
+    {
+        *dst++ = scaleFactor + 10.0f * log10_32(square(src->real) + square(src->imag));
+        ++src;
+    }
+}
+
+internal void
+phase_from_fft32(u32 count, c32 *source, f32 *dest)
+{
+    c32 *src = source;
+    f32 *dst = dest;
+    for (u32 index = 0; index < count; ++index)
+    {
+        *dst++ = argument32(*src++);
+    }
+}
+
+internal void
+unwrapped_phase_from_fft32(u32 count, c32 *source, f32 *dest)
+{
+    c32 *src = source;
+    f32 *dst = dest;
+    f32 unwrapper = 0.0f;
+    if (count)
+    {
+        f32 prev = argument32(*src++);
+        *dst++ = prev;
+        for (u32 index = 1; index < count; ++index)
+        {
+            f32 next = argument32(*src++) + unwrapper;
+            f32 diff = next - prev;
+            while (diff > F32_PI) {
+                unwrapper -= F32_TAU;
+                next -= F32_TAU;
+                diff = next - prev;
+            }
+            while (diff < -F32_PI) {
+                unwrapper += F32_TAU;
+                next += F32_TAU;
+                diff = next - prev;
+            }
+            *dst++ = prev = next;
+        }
+    }
+}
+
+internal void
+db_from_fft64(u32 count, c64 *source, f64 *dest)
+{
+    c64 *src = source;
+    f64 *dst = dest;
+    f64 scaleFactor = 20.0 * log10_64(1.0 / (0.5 * (f64)count));
+    for (u32 index = 0; index < count; ++index)
+    {
+        *dst++ = scaleFactor + 10.0 * log10_64(square(src->real) + square(src->imag));
+        ++src;
+    }
+}
+
+internal void
+phase_from_fft64(u32 count, c64 *source, f64 *dest)
+{
+    c64 *src = source;
+    f64 *dst = dest;
+    for (u32 index = 0; index < count; ++index)
+    {
+        *dst++ = argument64(*src++);
+    }
+}
+
+internal void
+unwrapped_phase_from_fft64(u32 count, c64 *source, f64 *dest)
+{
+    c64 *src = source;
+    f64 *dst = dest;
+    f64 unwrapper = 0.0f;
+    if (count)
+    {
+        f64 prev = argument64(*src++);
+        *dst++ = prev;
+        for (u32 index = 1; index < count; ++index)
+        {
+            f64 next = argument64(*src++) + unwrapper;
+            f64 diff = next - prev;
+            while (diff > F64_PI) {
+                unwrapper -= F64_TAU;
+                next -= F64_TAU;
+                diff = next - prev;
+            }
+            while (diff < -F64_PI) {
+                unwrapper += F64_TAU;
+                next += F64_TAU;
+                diff = next - prev;
+            }
+            *dst++ = prev = next;
+        }
+    }
+}
 
 internal void
 fft_inplace(u32 count, c32 *dest)
