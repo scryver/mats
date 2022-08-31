@@ -1,4 +1,16 @@
 internal void
+magnitude_from_fft32(u32 count, c32 *source, f32 *dest)
+{
+    // NOTE(michiel): sqrt(real^2 + imag^2)
+    c32 *src = source;
+    f32 *dst = dest;
+    for (u32 index = 0; index < count; ++index)
+    {
+        *dst++ = absolute32(*src++);
+    }
+}
+
+internal void
 db_from_fft32(u32 count, c32 *source, f32 *dest)
 {
     // NOTE(michiel): 20 * log10(sqrt(real^2 + imag^2)) => 20 * log10((real^2 + imag^2)^0.5) => 20 * 0.5 * log10(real^2 + imag^2)
@@ -49,6 +61,17 @@ unwrapped_phase_from_fft32(u32 count, c32 *source, f32 *dest)
             }
             *dst++ = prev = next;
         }
+    }
+}
+internal void
+magnitude_from_fft64(u32 count, c64 *source, f64 *dest)
+{
+    // NOTE(michiel): sqrt(real^2 + imag^2)
+    c64 *src = source;
+    f64 *dst = dest;
+    for (u32 index = 0; index < count; ++index)
+    {
+        *dst++ = absolute64(*src++);
     }
 }
 

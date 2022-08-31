@@ -70,6 +70,12 @@ complex32(f32 real, f32 imag)
 }
 
 internal c32
+complex32_from_mag_phase(f32 magnitude, f32 phase)
+{
+    return complex32(magnitude * cos32(phase), magnitude * sin32(phase));
+}
+
+internal c32
 operator -(c32 a)
 {
     c32 result;
@@ -587,6 +593,12 @@ complex64(f64 real, f64 imag)
     result.real = real;
     result.imag = imag;
     return result;
+}
+
+internal c64
+complex64_from_mag_phase(f64 magnitude, f64 phase)
+{
+    return complex64(magnitude * cos64(phase), magnitude * sin64(phase));
 }
 
 internal c64
