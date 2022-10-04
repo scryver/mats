@@ -484,3 +484,15 @@ pow64(f64 x, f64 y)
 #endif
     return pow64_exp(ehi, elo, signBias);
 }
+
+internal f64
+pow10_64(f64 x)
+{
+    return pow64(10.0, x);
+}
+
+internal f64
+exp10_64(f64 x)
+{
+    return pow64(10.0, x);
+}
