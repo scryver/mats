@@ -2656,7 +2656,6 @@ fft_inplace6_64(u32 count, c64 *dest)
     }
 }
 
-#if 0
 internal void
 fft_inplace_inexact6_64(u32 count, c64 *dest)
 {
@@ -2782,7 +2781,7 @@ fft_inplace_inexact6_64(u32 count, c64 *dest)
     u32 halfM = 8;
     u32 m = 16;
 
-    f64 oneOverMpre = (2.0 * F64_PI) / (f64)m;
+    f64 oneOverMpre = (4.0 * F64_PI) / (f64)m;
     SinCos64 csPre0 = sincos64(-oneOverMpre);
     SinCos64 csPre1 = sincos64(-oneOverMpre*2.0);
     SinCos64 csPre2 = sincos64(-oneOverMpre*3.0);
@@ -2819,11 +2818,11 @@ fft_inplace_inexact6_64(u32 count, c64 *dest)
         f64_2x w0Startr = F64_2x(1.0, wm1.real);
         f64_2x w0Starti = F64_2x(0.0, wm1.imag);
         f64_2x w1Startr = F64_2x(wm2.real, wm3.real);
-        f64_2x w1Starti = F64_2x(wm2.real, wm3.imag);
+        f64_2x w1Starti = F64_2x(wm2.imag, wm3.imag);
         f64_2x w2Startr = F64_2x(wm4.real, wm5.real);
-        f64_2x w2Starti = F64_2x(wm4.real, wm5.imag);
+        f64_2x w2Starti = F64_2x(wm4.imag, wm5.imag);
         f64_2x w3Startr = F64_2x(wm6.real, wm7.real);
-        f64_2x w3Starti = F64_2x(wm6.real, wm7.imag);
+        f64_2x w3Starti = F64_2x(wm6.imag, wm7.imag);
 
         for (u32 k = 0; k < count; k += m)
         {
@@ -2846,141 +2845,144 @@ fft_inplace_inexact6_64(u32 count, c64 *dest)
 
             for (u32 j = 0; j < halfM; j += 8)
             {
-                f64_2x oSrc0ri = F64_2x(OGrab);
+                f64_2x oSrc01 = F64_2x(OGrab);
+                f64_2x eSrc01 = F64_2x(EGrab);
                 OGrab += 2;
-                f64_2x oSrc1ri = F64_2x(OGrab);
-                OGrab += 2;
-                f64_2x oSrc2ri = F64_2x(OGrab);
-                OGrab += 2;
-                f64_2x oSrc3ri = F64_2x(OGrab);
-                OGrab += 2;
-                f64_2x oSrc4ri = F64_2x(OGrab);
-                OGrab += 2;
-                f64_2x oSrc5ri = F64_2x(OGrab);
-                OGrab += 2;
-                f64_2x oSrc6ri = F64_2x(OGrab);
-                OGrab += 2;
-                f64_2x oSrc7ri = F64_2x(OGrab);
-                OGrab += 2;
-
-                // TODO(michiel): How to map the wN sin/cos to these values?
-                f64_2x oSrc0ir; oSrc0ir.md = _mm_shuffle_pd(oSrc0ri.md, oSrc0ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
-                f64_2x ocs0ri = F64_2x(cs0.cos) * oSrc0ri;
-                f64_2x osc0ir = F64_2x(cs0.sin) * oSrc0ir;
-                f64_2x o0ri; o0ri.md = _mm_addsub_pd(ocs0ri.md, osc0ir.md);
-
-                f64_2x oSrc1ir; oSrc1ir.md = _mm_shuffle_pd(oSrc1ri.md, oSrc1ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
-                f64_2x ocs1ri = F64_2x(cs1.cos) * oSrc1ri;
-                f64_2x osc1ir = F64_2x(cs1.sin) * oSrc1ir;
-                f64_2x o1ri; o1ri.md = _mm_addsub_pd(ocs1ri.md, osc1ir.md);
-
-                f64_2x oSrc2ir; oSrc2ir.md = _mm_shuffle_pd(oSrc2ri.md, oSrc2ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
-                f64_2x ocs2ri = F64_2x(cs2.cos) * oSrc2ri;
-                f64_2x osc2ir = F64_2x(cs2.sin) * oSrc2ir;
-                f64_2x o2ri; o2ri.md = _mm_addsub_pd(ocs2ri.md, osc2ir.md);
-
-                f64_2x oSrc3ir; oSrc3ir.md = _mm_shuffle_pd(oSrc3ri.md, oSrc3ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
-                f64_2x ocs3ri = F64_2x(cs3.cos) * oSrc3ri;
-                f64_2x osc3ir = F64_2x(cs3.sin) * oSrc3ir;
-                f64_2x o3ri; o3ri.md = _mm_addsub_pd(ocs3ri.md, osc3ir.md);
-
-                f64_2x oSrc4ir; oSrc4ir.md = _mm_shuffle_pd(oSrc4ri.md, oSrc4ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
-                f64_2x ocs4ri = F64_2x(cs4.cos) * oSrc4ri;
-                f64_2x osc4ir = F64_2x(cs4.sin) * oSrc4ir;
-                f64_2x o4ri; o4ri.md = _mm_addsub_pd(ocs4ri.md, osc4ir.md);
-
-                f64_2x oSrc5ir; oSrc5ir.md = _mm_shuffle_pd(oSrc5ri.md, oSrc5ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
-                f64_2x ocs5ri = F64_2x(cs5.cos) * oSrc5ri;
-                f64_2x osc5ir = F64_2x(cs5.sin) * oSrc5ir;
-                f64_2x o5ri; o5ri.md = _mm_addsub_pd(ocs5ri.md, osc5ir.md);
-
-                f64_2x oSrc6ir; oSrc6ir.md = _mm_shuffle_pd(oSrc6ri.md, oSrc6ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
-                f64_2x ocs6ri = F64_2x(cs6.cos) * oSrc6ri;
-                f64_2x osc6ir = F64_2x(cs6.sin) * oSrc6ir;
-                f64_2x o6ri; o6ri.md = _mm_addsub_pd(ocs6ri.md, osc6ir.md);
-
-                f64_2x oSrc7ir; oSrc7ir.md = _mm_shuffle_pd(oSrc7ri.md, oSrc7ri.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
-                f64_2x ocs7ri = F64_2x(cs7.cos) * oSrc7ri;
-                f64_2x osc7ir = F64_2x(cs7.sin) * oSrc7ir;
-                f64_2x o7ri; o7ri.md = _mm_addsub_pd(ocs7ri.md, osc7ir.md);
-
-                f64_2x e0ri = F64_2x(EGrab);
-                EGrab += 2;
-                f64_2x e1ri = F64_2x(EGrab);
-                EGrab += 2;
-                f64_2x e2ri = F64_2x(EGrab);
-                EGrab += 2;
-                f64_2x e3ri = F64_2x(EGrab);
-                EGrab += 2;
-                f64_2x e4ri = F64_2x(EGrab);
-                EGrab += 2;
-                f64_2x e5ri = F64_2x(EGrab);
-                EGrab += 2;
-                f64_2x e6ri = F64_2x(EGrab);
-                EGrab += 2;
-                f64_2x e7ri = F64_2x(EGrab);
                 EGrab += 2;
 
-                f64_2x s00ri = e0ri + o0ri;
-                f64_2x s10ri = e0ri - o0ri;
+                f64_2x oSrc23 = F64_2x(OGrab);
+                f64_2x eSrc23 = F64_2x(EGrab);
+                OGrab += 2;
+                EGrab += 2;
 
-                f64_2x s01ri = e1ri + o1ri;
-                f64_2x s11ri = e1ri - o1ri;
+                f64_2x w0r0; w0r0.md = _mm_shuffle_pd(w0r.md, w0r.md, MULTILANE_SHUFFLE_MASK_D(0, 0));
+                f64_2x w0i0; w0i0.md = _mm_shuffle_pd(w0i.md, w0i.md, MULTILANE_SHUFFLE_MASK_D(0, 0));
+                f64_2x src10; src10.md = _mm_shuffle_pd(oSrc01.md, oSrc01.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+                f64_2x O01ri; O01ri.md = _mm_addsub_pd((oSrc01*w0r0).md, (src10*w0i0).md);
 
-                f64_2x s02ri = e2ri + o2ri;
-                f64_2x s12ri = e2ri - o2ri;
+                f64_2x w0r1; w0r1.md = _mm_shuffle_pd(w0r.md, w0r.md, MULTILANE_SHUFFLE_MASK_D(1, 1));
+                f64_2x w0i1; w0i1.md = _mm_shuffle_pd(w0i.md, w0i.md, MULTILANE_SHUFFLE_MASK_D(1, 1));
+                f64_2x src32; src32.md = _mm_shuffle_pd(oSrc23.md, oSrc23.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+                f64_2x O23ri; O23ri.md = _mm_addsub_pd((oSrc23*w0r1).md, (src32*w0i1).md);
 
-                f64_2x s03ri = e3ri + o3ri;
-                f64_2x s13ri = e3ri - o3ri;
+                _mm_store_pd(EPut, (eSrc01 + O01ri).md);
+                EPut += 2;
+                _mm_store_pd(OPut, (eSrc01 - O01ri).md);
+                OPut += 2;
 
-                f64_2x s04ri = e4ri + o4ri;
-                f64_2x s14ri = e4ri - o4ri;
+                _mm_store_pd(EPut, (eSrc23 + O23ri).md);
+                EPut += 2;
+                _mm_store_pd(OPut, (eSrc23 - O23ri).md);
+                OPut += 2;
 
-                f64_2x s05ri = e5ri + o5ri;
-                f64_2x s15ri = e5ri - o5ri;
+                f64_2x tempW0 = w0r * wStepr - w0i * wStepi;
+                w0i = w0r * wStepi + w0i * wStepr;
+                w0r = tempW0;
 
-                f64_2x s06ri = e6ri + o6ri;
-                f64_2x s16ri = e6ri - o6ri;
+                f64_2x oSrc45 = F64_2x(OGrab);
+                f64_2x eSrc45 = F64_2x(EGrab);
+                OGrab += 2;
+                EGrab += 2;
 
-                f64_2x s07ri = e7ri + o7ri;
-                f64_2x s17ri = e7ri - o7ri;
+                f64_2x oSrc67 = F64_2x(OGrab);
+                f64_2x eSrc67 = F64_2x(EGrab);
+                OGrab += 2;
+                EGrab += 2;
 
-                _mm_store_pd(EPut, s00ri.md);
+                f64_2x w1r0; w1r0.md = _mm_shuffle_pd(w1r.md, w1r.md, MULTILANE_SHUFFLE_MASK_D(0, 0));
+                f64_2x w1i0; w1i0.md = _mm_shuffle_pd(w1i.md, w1i.md, MULTILANE_SHUFFLE_MASK_D(0, 0));
+                f64_2x src54; src54.md = _mm_shuffle_pd(oSrc45.md, oSrc45.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+                f64_2x O45ri; O45ri.md = _mm_addsub_pd((oSrc45*w1r0).md, (src54*w1i0).md);
+
+                f64_2x w1r1; w1r1.md = _mm_shuffle_pd(w1r.md, w1r.md, MULTILANE_SHUFFLE_MASK_D(1, 1));
+                f64_2x w1i1; w1i1.md = _mm_shuffle_pd(w1i.md, w1i.md, MULTILANE_SHUFFLE_MASK_D(1, 1));
+                f64_2x src76; src76.md = _mm_shuffle_pd(oSrc67.md, oSrc67.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+                f64_2x O67ri; O67ri.md = _mm_addsub_pd((oSrc67*w1r1).md, (src76*w1i1).md);
+
+                _mm_store_pd(EPut, (eSrc45 + O45ri).md);
                 EPut += 2;
-                _mm_store_pd(OPut, s10ri.md);
+                _mm_store_pd(OPut, (eSrc45 - O45ri).md);
                 OPut += 2;
-                _mm_store_pd(EPut, s01ri.md);
+
+                _mm_store_pd(EPut, (eSrc67 + O67ri).md);
                 EPut += 2;
-                _mm_store_pd(OPut, s11ri.md);
+                _mm_store_pd(OPut, (eSrc67 - O67ri).md);
                 OPut += 2;
-                _mm_store_pd(EPut, s02ri.md);
+
+                f64_2x tempW1 = w1r * wStepr - w1i * wStepi;
+                w1i = w1r * wStepi + w1i * wStepr;
+                w1r = tempW1;
+
+                f64_2x oSrc89 = F64_2x(OGrab);
+                f64_2x eSrc89 = F64_2x(EGrab);
+                OGrab += 2;
+                EGrab += 2;
+
+                f64_2x oSrc1011 = F64_2x(OGrab);
+                f64_2x eSrc1011 = F64_2x(EGrab);
+                OGrab += 2;
+                EGrab += 2;
+
+                f64_2x w2r0; w2r0.md = _mm_shuffle_pd(w2r.md, w2r.md, MULTILANE_SHUFFLE_MASK_D(0, 0));
+                f64_2x w2i0; w2i0.md = _mm_shuffle_pd(w2i.md, w2i.md, MULTILANE_SHUFFLE_MASK_D(0, 0));
+                f64_2x src98; src98.md = _mm_shuffle_pd(oSrc89.md, oSrc89.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+                f64_2x O89ri; O89ri.md = _mm_addsub_pd((oSrc89*w2r0).md, (src98*w2i0).md);
+
+                f64_2x w2r1; w2r1.md = _mm_shuffle_pd(w2r.md, w2r.md, MULTILANE_SHUFFLE_MASK_D(1, 1));
+                f64_2x w2i1; w2i1.md = _mm_shuffle_pd(w2i.md, w2i.md, MULTILANE_SHUFFLE_MASK_D(1, 1));
+                f64_2x src1110; src1110.md = _mm_shuffle_pd(oSrc1011.md, oSrc1011.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+                f64_2x O1011ri; O1011ri.md = _mm_addsub_pd((oSrc1011*w2r1).md, (src1110*w2i1).md);
+
+                _mm_store_pd(EPut, (eSrc89 + O89ri).md);
                 EPut += 2;
-                _mm_store_pd(OPut, s12ri.md);
+                _mm_store_pd(OPut, (eSrc89 - O89ri).md);
                 OPut += 2;
-                _mm_store_pd(EPut, s03ri.md);
+
+                _mm_store_pd(EPut, (eSrc1011 + O1011ri).md);
                 EPut += 2;
-                _mm_store_pd(OPut, s13ri.md);
+                _mm_store_pd(OPut, (eSrc1011 - O1011ri).md);
                 OPut += 2;
-                _mm_store_pd(EPut, s04ri.md);
+
+                f64_2x tempW2 = w2r * wStepr - w2i * wStepi;
+                w2i = w2r * wStepi + w2i * wStepr;
+                w2r = tempW2;
+
+                f64_2x oSrc1213 = F64_2x(OGrab);
+                f64_2x eSrc1213 = F64_2x(EGrab);
+                OGrab += 2;
+                EGrab += 2;
+
+                f64_2x oSrc1415 = F64_2x(OGrab);
+                f64_2x eSrc1415 = F64_2x(EGrab);
+                OGrab += 2;
+                EGrab += 2;
+
+                f64_2x w3r0; w3r0.md = _mm_shuffle_pd(w3r.md, w3r.md, MULTILANE_SHUFFLE_MASK_D(0, 0));
+                f64_2x w3i0; w3i0.md = _mm_shuffle_pd(w3i.md, w3i.md, MULTILANE_SHUFFLE_MASK_D(0, 0));
+                f64_2x src1312; src1312.md = _mm_shuffle_pd(oSrc1213.md, oSrc1213.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+                f64_2x O1213ri; O1213ri.md = _mm_addsub_pd((oSrc1213*w3r0).md, (src1312*w3i0).md);
+
+                f64_2x w3r1; w3r1.md = _mm_shuffle_pd(w3r.md, w3r.md, MULTILANE_SHUFFLE_MASK_D(1, 1));
+                f64_2x w3i1; w3i1.md = _mm_shuffle_pd(w3i.md, w3i.md, MULTILANE_SHUFFLE_MASK_D(1, 1));
+                f64_2x src1514; src1514.md = _mm_shuffle_pd(oSrc1415.md, oSrc1415.md, MULTILANE_SHUFFLE_MASK_D(1, 0));
+                f64_2x O1415ri; O1415ri.md = _mm_addsub_pd((oSrc1415*w3r1).md, (src1514*w3i1).md);
+
+                _mm_store_pd(EPut, (eSrc1213 + O1213ri).md);
                 EPut += 2;
-                _mm_store_pd(OPut, s14ri.md);
+                _mm_store_pd(OPut, (eSrc1213 - O1213ri).md);
                 OPut += 2;
-                _mm_store_pd(EPut, s05ri.md);
+
+                _mm_store_pd(EPut, (eSrc1415 + O1415ri).md);
                 EPut += 2;
-                _mm_store_pd(OPut, s15ri.md);
+                _mm_store_pd(OPut, (eSrc1415 - O1415ri).md);
                 OPut += 2;
-                _mm_store_pd(EPut, s06ri.md);
-                EPut += 2;
-                _mm_store_pd(OPut, s16ri.md);
-                OPut += 2;
-                _mm_store_pd(EPut, s07ri.md);
-                EPut += 2;
-                _mm_store_pd(OPut, s17ri.md);
-                OPut += 2;
+
+                f64_2x tempW3 = w3r * wStepr - w3i * wStepi;
+                w3i = w3r * wStepi + w3i * wStepr;
+                w3r = tempW3;
             }
         }
         halfM = m;
         m <<= 1;
     }
 }
-#endif

@@ -373,7 +373,7 @@ s32 main(s32 argc, char **argv)
     {
         //inputSignal[index].real = 0.5*cos64(5.0 * 2.0 * F64_PI * (f64)index / (f64)FFT_COUNT);
         //inputSignal[index].imag = 0.5*sin64(5.0 * 2.0 * F64_PI * (f64)index / (f64)FFT_COUNT);
-        inputSignal64[index].real = sin64(2.0 * 2.0 * F64_PI * (f64)index / (f64)FFT_COUNT);
+        inputSignal64[index].real = sin64(5.0 * 2.0 * F64_PI * (f64)index / (f64)FFT_COUNT);
     }
     fft_normal0_64(fftCount, inputSignal64, outputSignal64);
     fft_normal2_64(fftCount, inputSignal64, outpu2Signal64);
@@ -385,6 +385,7 @@ s32 main(s32 argc, char **argv)
     //fft_inplace0_64(fftCount, inputSignal64);
     copy(FFT_COUNT * sizeof(c64), inputSignal64, outpu3Signal64);
     fft_inplace6_64(fftCount, outpu3Signal64);
+    fft_inplace_inexact6_64(fftCount, inputSignal64);
 
     f64 magnitude64[FFT_COUNT];
     f64 phase64[FFT_COUNT];
@@ -489,41 +490,28 @@ s32 main(s32 argc, char **argv)
     fft_inplace6_64(largeCount, outputL64);
     seconds4 = linux_get_seconds_elapsed(start, linux_get_wall_clock());
 
-#if 0
     start = linux_get_wall_clock();
-    fft_inexact6(largeCount, inputL, outputL);
-    f32 seconds4 = linux_get_seconds_elapsed(start, linux_get_wall_clock());
+    copy(largeCount * sizeof(c64), inputL64, outputL64);
+    fft_inplace_inexact6_64(largeCount, outputL64);
+    seconds5 = linux_get_seconds_elapsed(start, linux_get_wall_clock());
 
     start = linux_get_wall_clock();
-    fft_normal(largeCount, inputL, outputL);
-    f32 seconds5 = linux_get_seconds_elapsed(start, linux_get_wall_clock());
+    fft_normal64(largeCount, inputL64, outputL64);
+    seconds6 = linux_get_seconds_elapsed(start, linux_get_wall_clock());
 
     start = linux_get_wall_clock();
-    fft_fast(largeCount, inputL, outputL);
-    f32 seconds6 = linux_get_seconds_elapsed(start, linux_get_wall_clock());
-
-    start = linux_get_wall_clock();
-    copy(largeCount * sizeof(c32), inputL, outputL);
-    fft(largeCount, outputL);
-    f32 secondsRef = linux_get_seconds_elapsed(start, linux_get_wall_clock());
+    fft_fast64(largeCount, inputL64, outputL64);
+    f32 seconds7 = linux_get_seconds_elapsed(start, linux_get_wall_clock());
 
     fprintf(stdout, "Speed: (S = samples)\n");
-    fprintf(stdout, "%u kS in %6.3f seconds, (1: %6.3fMS/sec) (2: %6.3fMS/sec) (6a: %6.3fMS/sec) (6b: %6.3fMS/sec) (mfft: %6.3fMS/sec) (mffft: %6.3fMS/sec) [target: %6.3fMS/sec]\n", largeCount / 1024, seconds,
+    fprintf(stdout, "%u kS in %6.3f seconds, (1: %6.3fMS/sec) (2: %6.3fMS/sec) (5: %6.3fMS/sec) (6: %6.3fMS/sec) (6f: %6.3fMS/sec) (mfft: %6.3fMS/sec) (mffft: %6.3fMS/sec)\n", largeCount / 1024, seconds,
             (f64)(largeCount / 1024 / 1024) / seconds,
             (f64)(largeCount / 1024 / 1024) / seconds2,
             (f64)(largeCount / 1024 / 1024) / seconds3,
             (f64)(largeCount / 1024 / 1024) / seconds4,
             (f64)(largeCount / 1024 / 1024) / seconds5,
             (f64)(largeCount / 1024 / 1024) / seconds6,
-            (f64)(largeCount / 1024 / 1024) / secondsRef);
-#else
-    fprintf(stdout, "Speed: (S = samples)\n");
-    fprintf(stdout, "%u kS in %6.3f seconds, (1: %6.3fMS/sec) (2: %6.3fMS/sec) (5: %6.3fMS/sec) (6: %6.3fMS/sec)\n", largeCount / 1024, seconds,
-            (f64)(largeCount / 1024 / 1024) / seconds,
-            (f64)(largeCount / 1024 / 1024) / seconds2,
-            (f64)(largeCount / 1024 / 1024) / seconds3,
-            (f64)(largeCount / 1024 / 1024) / seconds4);
-#endif
+            (f64)(largeCount / 1024 / 1024) / seconds7);
 
     return 0;
 }
