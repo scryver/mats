@@ -94,6 +94,14 @@ struct SinCos64
     f64 sin; // NOTE(michiel): sin after, because it is often used as y-axis
 };
 
+#if COMPILER_MSVC
+// NOTE(michiel): Suppress divide by zero warning
+// NOTE(michiel): Suppress overflow in constant
+#pragma warning(push)
+#pragma warning(disable: 4723)
+#pragma warning(disable: 4756)
+#endif
+
 internal f32
 mats_xflow32(u32 sign, f32 base)
 {
@@ -113,12 +121,6 @@ mats_overflow32(u32 sign)
 {
     return mats_xflow32(sign, 0x1p97f);
 }
-
-#if COMPILER_MSVC
-// NOTE(michiel): Suppress divide by zero warning
-#pragma warning(push)
-#pragma warning(disable: 4723)
-#endif
 
 internal f32
 mats_divzero32(u32 sign)
