@@ -1,4 +1,16 @@
 
+internal void fft_shift32(u32 count, c32 *data);
+internal void fft_shift64(u32 count, c64 *data);
+
+internal void magnitude_from_fft32(u32 count, c32 *source, f32 *dest);
+internal void magnitude_from_fft64(u32 count, c64 *source, f64 *dest);
+internal void db_from_fft32(u32 count, c32 *source, f32 *dest);
+internal void db_from_fft64(u32 count, c64 *source, f64 *dest);
+internal void phase_from_fft32(u32 count, c32 *source, f32 *dest);
+internal void phase_from_fft64(u32 count, c64 *source, f64 *dest);
+internal void unwrapped_phase_from_fft32(u32 count, c32 *source, f32 *dest);
+internal void unwrapped_phase_from_fft64(u32 count, c64 *source, f64 *dest);
+
 // NOTE(michiel): The fast version are slightly less exact, the difference is in the calculation of e^(-i*2pi*j/m).
 //   The fast version do an adding of the angle instead of calling sincos multiple times, this makes it run 1.8 to 3 times as fast.
 

@@ -1,3 +1,32 @@
+
+internal void
+fft_shift32(u32 count, c32 *data)
+{
+    MATS_ASSERT(is_pow2(count));
+    u32 halfCount = count / 2;
+    c32 *src1 = data;
+    c32 *src2 = data + halfCount;
+    for (u32 index = 0; index < halfCount; ++index) {
+        c32 temp = *src1;
+        *src1++ = *src2;
+        *src2++ = temp;
+    }
+}
+
+internal void
+fft_shift64(u32 count, c64 *data)
+{
+    MATS_ASSERT(is_pow2(count));
+    u32 halfCount = count / 2;
+    c64 *src1 = data;
+    c64 *src2 = data + halfCount;
+    for (u32 index = 0; index < halfCount; ++index) {
+        c64 temp = *src1;
+        *src1++ = *src2;
+        *src2++ = temp;
+    }
+}
+
 internal void
 magnitude_from_fft32(u32 count, c32 *source, f32 *dest)
 {
