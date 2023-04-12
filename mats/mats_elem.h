@@ -1019,6 +1019,13 @@ exp2_64(f64 x)
 }
 
 internal f64
+pow2_64(f64 x)
+{
+    f64 result = exp2_64(x);
+    return result;
+}
+
+internal f64
 log64(f64 x)
 {
 #define LOG64_N (1 << LOG64_TABLE_BITS)

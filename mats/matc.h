@@ -238,8 +238,8 @@ operator /(c32 a, f32 b)
 internal c32
 operator /(f32 a, c32 b)
 {
-    c32 result = b;
-    result /= a;
+    c32 result = complex32(a, 0.0);
+    result /= b;
     return result;
 }
 
@@ -764,8 +764,8 @@ operator /(c64 a, f64 b)
 internal c64
 operator /(f64 a, c64 b)
 {
-    c64 result = b;
-    result /= a;
+    c64 result = complex64(a, 0.0);
+    result /= b;
     return result;
 }
 

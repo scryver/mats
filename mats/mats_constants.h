@@ -10,6 +10,7 @@ global const f32 g2powMin100F32    =  7.8886090522e-31f;  /* 0x0d800000 = 2^-100
 global const f32 gLn2F32           =  6.9314718246e-01f;  /* 0x3f317218 = ln(2) */
 global const f32 gInvLn2F32        =  1.4426950216e+00f;  /* 0x3fb8aa3b = 1/ln(2) */
 global const f32 gInvLn10F32       =  4.3429449201e-01f;  /* 0x3ede5bd9 = 1/ln(10) */
+global const f32 gLn10F32          =  0x1.26BB1Cp+1;
 global const f32 gHugeF32          =  1.0e+30f;
 global const f32 gTinyF32          =  1.0e-30f;
 
@@ -26,6 +27,7 @@ global const f64 g2powMin1000F64   =  9.33263618503218878990e-302; /* 0x01700000
 global const f64 gLn2F64           =  6.93147180559945286227e-01;  /* 0x3FE62E42FEFA39EF = ln(2) */
 global const f64 gInvLn2F64        =  1.44269504088896338700e+00;  /* 0x3ff71547652b82fe = 1/ln(2) */
 global const f64 gInvLn10F64       =  4.34294481903251816668e-01;  /* 0x3FDBCB7B1526E50E = 1/ln(10) */
+global const f64 gLn10F64          =  0x1.26BB1BBB55516p+1;
 global const f64 gHugeF64          =  1.0e+300;
 global const f64 gTinyF64          =  1.0e-300;
 

@@ -82,6 +82,9 @@ internal f64 MATS_F64_FROM_S64(s64 x) { mats_f64u fu; fu.s = (x); return fu.f; }
 #define MATS_F64_UWORD_IS_SUBNORMAL(x)  ((x) <  0x0080000000000000LL)
 //#define MATS_F64_UWORD_LOG_MIN          0x42CFF1B5
 
+#define MATS_RCP32(x)                   (1.0f / (x))
+#define MATS_RCP64(x)                   (1.0 / (x))
+
 struct SinCos32
 {
     f32 cos; // NOTE(michiel): cos first, because it is often used as x-axis

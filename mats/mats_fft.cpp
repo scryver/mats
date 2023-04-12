@@ -98,10 +98,31 @@ magnitude_from_fft64(u32 count, c64 *source, f64 *dest)
     // NOTE(michiel): sqrt(real^2 + imag^2)
     c64 *src = source;
     f64 *dst = dest;
+
+    u32 halfCount = count / 2;
+    for (u32 index = 0; index < halfCount; ++index) {
+        f64_2x a = F64_2x((f64 *)src);
+        ++src;
+        f64_2x b = F64_2x((f64 *)src);
+        ++src;
+        f64_2x real; real.md = _mm_shuffle_pd(a.md, b.md, MULTILANE_SHUFFLE_MASK_D(0, 0));
+        f64_2x imag; imag.md = _mm_shuffle_pd(a.md, b.md, MULTILANE_SHUFFLE_MASK_D(1, 1));
+        real = real * real;
+        imag = imag * imag;
+        f64_2x abs; abs.md = _mm_sqrt_pd((real + imag).md);
+        _mm_store_pd(dst, abs.md);
+        dst += 2;
+    }
+    if (count & 0x1) {
+        *dst = absolute64(*src);
+    }
+#if 0
     for (u32 index = 0; index < count; ++index)
     {
         *dst++ = absolute64(*src++);
     }
+#endif
+
 }
 
 internal void
