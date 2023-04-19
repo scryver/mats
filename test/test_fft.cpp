@@ -238,11 +238,14 @@ s32 main(s32 argc, char **argv)
     c32 outputSignal[FFT_COUNT];
     c32 outpu2Signal[FFT_COUNT];
     c32 outpu3Signal[FFT_COUNT];
+    c32 outpu4Signal[FFT_COUNT];
     for (u32 index = 0; index < FFT_COUNT; ++index)
     {
         //inputSignal[index].real = 0.5f*cos32(5.0f * 2.0f * F32_PI * (f32)index / (f32)FFT_COUNT);
         //inputSignal[index].imag = 0.5f*sin32(5.0f * 2.0f * F32_PI * (f32)index / (f32)FFT_COUNT);
         inputSignal[index].real = sin32(5.0f * 2.0f * F32_PI * (f32)index / (f32)FFT_COUNT);
+        outpu4Signal[index].real = inputSignal[index].real;
+        outpu4Signal[index].imag = 0.0f;
     }
     fft_normal0(fftCount, inputSignal, outputSignal);
     //fft_normal2(fftCount, inputSignal, outpu2Signal);
@@ -251,6 +254,12 @@ s32 main(s32 argc, char **argv)
     //copy(FFT_COUNT * sizeof(c32), inputSignal, outpu3Signal);
     //fft(fftCount, outpu3Signal);
     fft_inplace0(fftCount, inputSignal);
+
+    u32 fft32TableCount = fft_table_count(FFT_COUNT);
+    f32 *sinCosTable = (f32 *)malloc(fft32TableCount * sizeof(f32));
+    fft_build_table_f32(FFT_COUNT, sinCosTable);
+    fft_inplace_table(FFT_COUNT, outpu4Signal, sinCosTable);
+
     for (u32 index = 0; index < FFT_COUNT; ++index)
     {
         fprintf(stdout, "FFT[%3u]: ", index);
@@ -279,6 +288,13 @@ s32 main(s32 argc, char **argv)
         {
             f32 magnitude = absolute32(outpu3Signal[index]) / (0.5f * (f32)fftCount);
             f32 phase     = argument32(outpu3Signal[index]);
+            f32 magIndB   = 20.0f * log10_32(magnitude);
+            fprintf(stdout, "%-15a % 7.3f [% 7.2f dB]", magnitude, phase, magIndB);
+        }
+        fprintf(stdout, " | ");
+        {
+            f32 magnitude = absolute32(outpu4Signal[index]) / (0.5f * (f32)fftCount);
+            f32 phase     = argument32(outpu4Signal[index]);
             f32 magIndB   = 20.0f * log10_32(magnitude);
             fprintf(stdout, "%-15a % 7.3f [% 7.2f dB]", magnitude, phase, magIndB);
         }
@@ -326,6 +342,9 @@ s32 main(s32 argc, char **argv)
         inputL[index].imag = 0.5f*sin32(5.0f * 2.0f * F32_PI * (f32)index / (f32)largeCount);;
     }
 
+    f32 *sinCosTableLarge = (f32 *)malloc(sizeof(f32) * fft_table_count(largeCount));
+    fft_build_table_f32(largeCount, sinCosTableLarge);
+
     struct timespec start = linux_get_wall_clock();
     fft_normal0(largeCount, inputL, outputL);
     f32 seconds = linux_get_seconds_elapsed(start, linux_get_wall_clock());
@@ -352,28 +371,37 @@ s32 main(s32 argc, char **argv)
 
     start = linux_get_wall_clock();
     copy(largeCount * sizeof(c32), inputL, outputL);
+    fft_inplace_table(largeCount, outputL, sinCosTableLarge);
+    f32 seconds7 = linux_get_seconds_elapsed(start, linux_get_wall_clock());
+
+    start = linux_get_wall_clock();
+    copy(largeCount * sizeof(c32), inputL, outputL);
     fft(largeCount, outputL);
     f32 secondsRef = linux_get_seconds_elapsed(start, linux_get_wall_clock());
 
     fprintf(stdout, "Speed: (S = samples)\n");
-    fprintf(stdout, "%u kS in %6.3f seconds, (1: %6.3fMS/sec) (2: %6.3fMS/sec) (6a: %6.3fMS/sec) (6b: %6.3fMS/sec) (mfft: %6.3fMS/sec) (mffft: %6.3fMS/sec) [target: %6.3fMS/sec]\n", largeCount / 1024, seconds,
+    fprintf(stdout, "%u kS in %6.3f seconds, (1: %6.3fMS/sec) (2: %6.3fMS/sec) (6a: %6.3fMS/sec) (6b: %6.3fMS/sec) (mfft: %6.3fMS/sec) (mffft: %6.3fMS/sec) (mftab: %6.3fMS/sec) [target: %6.3fMS/sec]\n", largeCount / 1024, seconds,
             (f64)(largeCount / 1024 / 1024) / seconds,
             (f64)(largeCount / 1024 / 1024) / seconds2,
             (f64)(largeCount / 1024 / 1024) / seconds3,
             (f64)(largeCount / 1024 / 1024) / seconds4,
             (f64)(largeCount / 1024 / 1024) / seconds5,
             (f64)(largeCount / 1024 / 1024) / seconds6,
+            (f64)(largeCount / 1024 / 1024) / seconds7,
             (f64)(largeCount / 1024 / 1024) / secondsRef);
 
     c64 inputSignal64[FFT_COUNT] = {};
     c64 outputSignal64[FFT_COUNT];
     c64 outpu2Signal64[FFT_COUNT];
     c64 outpu3Signal64[FFT_COUNT];
+    c64 outpu4Signal64[FFT_COUNT];
     for (u32 index = 0; index < FFT_COUNT; ++index)
     {
         //inputSignal[index].real = 0.5*cos64(5.0 * 2.0 * F64_PI * (f64)index / (f64)FFT_COUNT);
         //inputSignal[index].imag = 0.5*sin64(5.0 * 2.0 * F64_PI * (f64)index / (f64)FFT_COUNT);
         inputSignal64[index].real = sin64(5.0 * 2.0 * F64_PI * (f64)index / (f64)FFT_COUNT);
+        outpu4Signal64[index].real = inputSignal64[index].real;
+        outpu4Signal64[index].imag = 0.0f;
     }
     fft_normal0_64(fftCount, inputSignal64, outputSignal64);
     fft_normal2_64(fftCount, inputSignal64, outpu2Signal64);
@@ -386,6 +414,11 @@ s32 main(s32 argc, char **argv)
     copy(FFT_COUNT * sizeof(c64), inputSignal64, outpu3Signal64);
     fft_inplace6_64(fftCount, outpu3Signal64);
     fft_inplace_inexact6_64(fftCount, inputSignal64);
+
+    u32 fft64TableCount = fft_table_count(FFT_COUNT);
+    f64 *sinCosTable64 = (f64 *)malloc(fft64TableCount * sizeof(f64));
+    fft_build_table_f64(FFT_COUNT, sinCosTable64);
+    fft_inplace_table64(FFT_COUNT, outpu4Signal64, sinCosTable64);
 
     f64 magnitude64[FFT_COUNT];
     f64 phase64[FFT_COUNT];
@@ -428,6 +461,13 @@ s32 main(s32 argc, char **argv)
             fprintf(stdout, "%-22a % 7.3f [% 7.2f dB]", magnitude, phase, magIndB);
         }
 #endif
+        fprintf(stdout, " | ");
+        {
+            f64 magnitude = absolute64(outpu4Signal64[index]) / (0.5 * (f64)fftCount);
+            f64 phase     = argument64(outpu4Signal64[index]);
+            f64 magIndB   = 20.0 * log10_64(magnitude);
+            fprintf(stdout, "%-22a % 7.3f [% 7.2f dB]", magnitude, phase, magIndB);
+        }
 
         fprintf(stdout, "\n");
     }
@@ -473,6 +513,9 @@ s32 main(s32 argc, char **argv)
         inputL64[index].imag = 0.5*sin64(5.0 * 2.0 * F64_PI * (f64)index / (f64)largeCount);;
     }
 
+    f64 *sinCosTableLarge64 = (f64 *)malloc(sizeof(f64) * fft_table_count(largeCount));
+    fft_build_table_f64(largeCount, sinCosTableLarge64);
+
     start = linux_get_wall_clock();
     fft_normal0_64(largeCount, inputL64, outputL64);
     seconds = linux_get_seconds_elapsed(start, linux_get_wall_clock());
@@ -501,17 +544,23 @@ s32 main(s32 argc, char **argv)
 
     start = linux_get_wall_clock();
     fft_fast64(largeCount, inputL64, outputL64);
-    f32 seconds7 = linux_get_seconds_elapsed(start, linux_get_wall_clock());
+    seconds7 = linux_get_seconds_elapsed(start, linux_get_wall_clock());
+
+    start = linux_get_wall_clock();
+    copy(largeCount * sizeof(c64), inputL64, outputL64);
+    fft_inplace_table64(largeCount, outputL64, sinCosTableLarge64);
+    f32 seconds8 = linux_get_seconds_elapsed(start, linux_get_wall_clock());
 
     fprintf(stdout, "Speed: (S = samples)\n");
-    fprintf(stdout, "%u kS in %6.3f seconds, (1: %6.3fMS/sec) (2: %6.3fMS/sec) (5: %6.3fMS/sec) (6: %6.3fMS/sec) (6f: %6.3fMS/sec) (mfft: %6.3fMS/sec) (mffft: %6.3fMS/sec)\n", largeCount / 1024, seconds,
+    fprintf(stdout, "%u kS in %6.3f seconds, (1: %6.3fMS/sec) (2: %6.3fMS/sec) (5: %6.3fMS/sec) (6: %6.3fMS/sec) (6f: %6.3fMS/sec) (mfft: %6.3fMS/sec) (mffft: %6.3fMS/sec) (mftab: %6.3fMS/sec)\n", largeCount / 1024, seconds,
             (f64)(largeCount / 1024 / 1024) / seconds,
             (f64)(largeCount / 1024 / 1024) / seconds2,
             (f64)(largeCount / 1024 / 1024) / seconds3,
             (f64)(largeCount / 1024 / 1024) / seconds4,
             (f64)(largeCount / 1024 / 1024) / seconds5,
             (f64)(largeCount / 1024 / 1024) / seconds6,
-            (f64)(largeCount / 1024 / 1024) / seconds7);
+            (f64)(largeCount / 1024 / 1024) / seconds7,
+            (f64)(largeCount / 1024 / 1024) / seconds8);
 
     return 0;
 }
