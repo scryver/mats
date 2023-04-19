@@ -1270,9 +1270,9 @@ log10_64(f64 x)
     {
         // NOTE(michiel): x < 2**-1022
         if ((sx & MATS_F64_ABS_MASK) == 0) {
-            return -F32_INF; // -g2pow54F64 / 0.0;       /* log(+-0)=-inf */
+            return -F64_INF; // -g2pow54F64 / 0.0;       /* log(+-0)=-inf */
         } else if (sx < 0) {
-            return (x - x) / 0.0;           /* log(-#) = NaN */
+            return F64_NAN; // (x - x) / 0.0;           /* log(-#) = NaN */
         }
         k -= 54;
         x *= g2pow54F64; /* subnormal number, scale up x */
