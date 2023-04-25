@@ -341,27 +341,27 @@ struct PowLogData
 #define EXP64_N  (1 << EXP64_TABLE_BITS)
 global const ExpData gExp64Data = {
     // N/ln2
-    .invln2N = 0x1.71547652b82fep0 * EXP64_N,
+    /*.invln2N =*/ 0x1.71547652b82fep0 * EXP64_N,
     // Used for rounding when !TOINT_INTRINSICS
 #if EXP64_USE_TOINT_NARROW
-    .shift = 0x1800000000.8p0,
+    /*.shift =*/ 0x1800000000.8p0,
 #else
-    .shift = 0x1.8p52,
+    /*.shift =*/ 0x1.8p52,
 #endif
 
     // -ln2/N
 #if EXP64_N == 64
-    .negln2hiN = -0x1.62e42fefa0000p-7,
-    .negln2loN = -0x1.cf79abc9e3b3ap-46,
+    /*.negln2hiN =*/ -0x1.62e42fefa0000p-7,
+    /*.negln2loN =*/ -0x1.cf79abc9e3b3ap-46,
 #elif EXP64_N == 128
-    .negln2hiN = -0x1.62e42fefa0000p-8,
-    .negln2loN = -0x1.cf79abc9e3b3ap-47,
+    /*.negln2hiN =*/ -0x1.62e42fefa0000p-8,
+    /*.negln2loN =*/ -0x1.cf79abc9e3b3ap-47,
 #elif EXP64_N == 256
-    .negln2hiN = -0x1.62e42fefc0000p-9,
-    .negln2loN = 0x1.c610ca86c3899p-45,
+    /*.negln2hiN =*/ -0x1.62e42fefc0000p-9,
+    /*.negln2loN =*/ 0x1.c610ca86c3899p-45,
 #endif
     // exp polynomial coefficients.
-    .poly = {
+    /*.poly =*/ {
 #if EXP64_N == 64 && EXP64_POLY_ORDER == 5 && !EXP64_POLY_WIDE
         // abs error: 1.5543*2^-60
         // ulp error: 0.529 (0.533 without fma)
@@ -423,9 +423,9 @@ global const ExpData gExp64Data = {
         0x1.1111167a4b553p-7,
 #endif
     },
-    .exp2_shift = 0x1.8p52 / EXP64_N,
+    /*.exp2_shift =*/ 0x1.8p52 / EXP64_N,
     // exp2 polynomial coefficients.
-    .exp2_poly = {
+    /*.exp2_poly =*/ {
 #if EXP64_N == 64 && EXP2_64_POLY_ORDER == 6 && EXP2_64_POLY_WIDE
         // abs error: 1.3054*2^-63
         // ulp error: 0.515
@@ -460,7 +460,7 @@ global const ExpData gExp64Data = {
     // 2^(k/N) ~= H[k]*(1 + T[k]) for int k in [0,N)
     // tab[2*k] = asuint64(T[k])
     // tab[2*k+1] = asuint64(H[k]) - (k << 52)/N
-    .tab = {
+    /*.tab =*/ {
 #if EXP64_N == 64
         0x0, 0x3ff0000000000000,
         0xbc7160139cd8dc5d, 0x3fefec9a3e778061,
@@ -920,9 +920,9 @@ global const ExpData gExp64Data = {
 
 #define LOG64_N (1 << LOG64_TABLE_BITS)
 global const LogData gLogData64 = {
-    .ln2hi = 0x1.62e42fefa3800p-1,
-    .ln2lo = 0x1.ef35793c76730p-45,
-    .poly = {
+    /*.ln2hi =*/ 0x1.62e42fefa3800p-1,
+    /*.ln2lo =*/ 0x1.ef35793c76730p-45,
+    /*.poly =*/ {
 #if LOG64_N == 64 && LOG64_POLY_ORDER == 7
         // relative error: 0x1.906eb8ap-58
         // abs error: 0x1.d2cad5a8p-67
@@ -954,7 +954,7 @@ global const LogData gLogData64 = {
         0x1.2493c29331a5cp-3,
 #endif
     },
-    .poly1 = {
+    /*.poly1 =*/ {
 #if LOG64_POLY1_ORDER == 10
         // relative error: 0x1.32eccc6p-62
         // in -0x1p-5 0x1.1p-5 (|log(1+x)| > 0x1p-5 outside this interval)
@@ -1023,7 +1023,7 @@ global const LogData gLogData64 = {
     a single rounding error when there is no fast fma for z*invc - 1, 3) ensures
     that logc + poly(z/c - 1) has small error, however near x == 1 when
     |log(x)| < 0x1p-4, this is not enough so that is special cased.  */
-    .tab = {
+    /*.tab =*/ {
 #if LOG64_N == 64
         {0x1.7242886495cd8p+0, -0x1.79e267bdfe000p-2},
         {0x1.6e1f769340dc9p+0, -0x1.6e60ee0ecb000p-2},
@@ -1221,7 +1221,7 @@ global const LogData gLogData64 = {
 #endif
     },
 #if !MATS_HAVE_FAST_FMA
-    .tab2 = {
+    /*.tab2 =*/ {
 #if LOG64_N == 64
         {0x1.61ffff94c4fecp-1, -0x1.9fe4fc998f325p-56},
         {0x1.66000020377ddp-1, 0x1.e804c7a9519f2p-55},
@@ -1425,9 +1425,9 @@ global const LogData gLogData64 = {
 // TODO(michiel): Compile assert LOG2_64_N == 64
 global const Log2Data gLog2Data64 =
 {
-    .invln2hi = 0x1.7154765200000p+0,
-    .invln2lo = 0x1.705fc2eefa200p-33,
-    .poly = {
+    /*.invln2hi =*/ 0x1.7154765200000p+0,
+    /*.invln2lo =*/ 0x1.705fc2eefa200p-33,
+    /*.poly =*/ {
         // relative error: 0x1.a72c2bf8p-58
         // abs error: 0x1.67a552c8p-66
         // in -0x1.f45p-8 0x1.f45p-8
@@ -1438,7 +1438,7 @@ global const Log2Data gLog2Data64 =
         -0x1.ec7b328ea92bcp-3,
         0x1.a6225e117f92ep-3,
     },
-    .poly1 = {
+    /*.poly1 =*/ {
         // relative error: 0x1.2fad8188p-63
         // in -0x1.5b51p-5 0x1.6ab2p-5
         -0x1.71547652b82fep-1,
@@ -1478,7 +1478,7 @@ ensures that z/c - 1 can be computed as (z - chi - clo)*invc with close to a
 single rounding error when there is no fast fma for z*invc - 1, 3) ensures
 that logc + poly(z/c - 1) has small error, however near x == 1 when
 |log2(x)| < 0x1p-4, this is not enough so that is special cased.  */
-    .tab = {
+    /*.tab =*/ {
         {0x1.724286bb1acf8p+0, -0x1.1095feecdb000p-1},
         {0x1.6e1f766d2cca1p+0, -0x1.08494bd76d000p-1},
         {0x1.6a13d0e30d48ap+0, -0x1.00143aee8f800p-1},
@@ -1545,7 +1545,7 @@ that logc + poly(z/c - 1) has small error, however near x == 1 when
         {0x1.767dcf99eff8cp-1, 0x1.ce0a43dbf4000p-2},
     },
 #if !MATS_HAVE_FAST_FMA
-    .tab2 = {
+    /*.tab2 =*/ {
         {0x1.6200012b90a8ep-1, 0x1.904ab0644b605p-55},
         {0x1.66000045734a6p-1, 0x1.1ff9bea62f7a9p-57},
         {0x1.69fffc325f2c5p-1, 0x1.27ecfcb3c90bap-55},
@@ -1618,9 +1618,9 @@ that logc + poly(z/c - 1) has small error, however near x == 1 when
 // TODO(michiel): Compile assert POW64_LOG_POLY_ORDER == 8
 global const PowLogData gPowLogData64 =
 {
-    .ln2hi = 0x1.62e42fefa3800p-1,
-    .ln2lo = 0x1.ef35793c76730p-45,
-    .poly = {
+    /*.ln2hi =*/ 0x1.62e42fefa3800p-1,
+    /*.ln2lo =*/ 0x1.ef35793c76730p-45,
+    /*.poly =*/ {
         // relative error: 0x1.11922ap-70
         // in -0x1.6bp-8 0x1.6bp-8
         // Coefficients are scaled to match the scaling during evaluation.
@@ -1654,7 +1654,7 @@ Note: |z/c - 1| < 1/N for the chosen c, |log(c) - logc - logctail| < 0x1p-97,
 the last few bits of logc are rounded away so k*ln2hi + logc has no rounding
 error and the interval for z is selected such that near x == 1, where log(x)
 is tiny, large cancellation error is avoided in logc + poly(z/c - 1).  */
-    .tab = {
+    /*.tab =*/ {
         {0x1.6a00000000000p+0, 0, -0x1.62c82f2b9c800p-2, 0x1.ab42428375680p-48},
         {0x1.6800000000000p+0, 0, -0x1.5d1bdbf580800p-2, -0x1.ca508d8e0f720p-46},
         {0x1.6600000000000p+0, 0, -0x1.5767717455800p-2, -0x1.362a4d5b6506dp-45},
