@@ -45,10 +45,9 @@ db_from_fft32(u32 count, c32 *source, f32 *dest)
     // NOTE(michiel): 20 * log10(sqrt(real^2 + imag^2)) => 20 * log10((real^2 + imag^2)^0.5) => 20 * 0.5 * log10(real^2 + imag^2)
     c32 *src = source;
     f32 *dst = dest;
-    f32 scaleFactor = 20.0f * log10_32(1.0f / (0.5f * (f32)count));
     for (u32 index = 0; index < count; ++index)
     {
-        *dst++ = scaleFactor + 10.0f * log10_32(square(src->real) + square(src->imag));
+        *dst++ = 10.0f * log10_32(square(src->real) + square(src->imag));
         ++src;
     }
 }
@@ -130,10 +129,9 @@ db_from_fft64(u32 count, c64 *source, f64 *dest)
 {
     c64 *src = source;
     f64 *dst = dest;
-    f64 scaleFactor = 20.0 * log10_64(1.0 / (0.5 * (f64)count));
     for (u32 index = 0; index < count; ++index)
     {
-        *dst++ = scaleFactor + 10.0 * log10_64(square(src->real) + square(src->imag));
+        *dst++ = 10.0 * log10_64(square(src->real) + square(src->imag));
         ++src;
     }
 }
