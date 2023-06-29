@@ -1,5 +1,5 @@
 
-internal void
+func void
 fft_normal2(u32 count, c32 *signal, c32 *dest)
 {
     i_expect(is_pow2(count));
@@ -175,7 +175,7 @@ fft_normal2(u32 count, c32 *signal, c32 *dest)
     }
 }
 
-internal void
+func void
 fft_normal3(u32 count, c32 *signal, c32 *dest)
 {
     i_expect(is_pow2(count));
@@ -418,7 +418,7 @@ fft_normal3(u32 count, c32 *signal, c32 *dest)
     }
 }
 
-internal void
+func void
 fft_normal4(u32 count, c32 *signal, c32 *dest)
 {
     i_expect(is_pow2(count));
@@ -711,7 +711,7 @@ fft_normal4(u32 count, c32 *signal, c32 *dest)
     }
 }
 
-internal void
+func void
 fft_normal5(u32 count, c32 *signal, c32 *dest)
 {
     i_expect(is_pow2(count));
@@ -939,7 +939,7 @@ fft_normal5(u32 count, c32 *signal, c32 *dest)
     }
 }
 
-internal void
+func void
 fft_inplace6(u32 count, c32 *dest)
 {
     i_expect(is_pow2(count));
@@ -1139,14 +1139,14 @@ fft_inplace6(u32 count, c32 *dest)
     }
 }
 
-internal void
+func void
 fft_normal6(u32 count, c32 *signal, c32 *dest)
 {
     copy(count * sizeof(c32), signal, dest);
     fft_inplace6(count, dest);
 }
 
-internal void
+func void
 fft_inplace_inexact6(u32 count, c32 *dest)
 {
     i_expect(is_pow2(count));
@@ -1376,14 +1376,14 @@ fft_inplace_inexact6(u32 count, c32 *dest)
     }
 }
 
-internal void
+func void
 fft_inexact6(u32 count, c32 *signal, c32 *dest)
 {
     copy(count * sizeof(c32), signal, dest);
     fft_inplace_inexact6(count, dest);
 }
 
-internal void
+func void
 fft_normal2_64(u32 count, c64 *signal, c64 *dest)
 {
     i_expect(is_pow2(count));
@@ -1559,7 +1559,7 @@ fft_normal2_64(u32 count, c64 *signal, c64 *dest)
     }
 }
 
-internal void
+func void
 fft_normal3_64(u32 count, c64 *signal, c64 *dest)
 {
     i_expect(is_pow2(count));
@@ -1812,7 +1812,7 @@ fft_normal3_64(u32 count, c64 *signal, c64 *dest)
     }
 }
 
-internal void
+func void
 fft_normal4_64(u32 count, c64 *signal, c64 *dest)
 {
     i_expect(is_pow2(count));
@@ -2110,7 +2110,7 @@ fft_normal4_64(u32 count, c64 *signal, c64 *dest)
     }
 }
 
-internal void
+func void
 fft_normal5_64(u32 count, c64 *signal, c64 *dest)
 {
     i_expect(is_pow2(count));
@@ -2370,7 +2370,7 @@ fft_normal5_64(u32 count, c64 *signal, c64 *dest)
     }
 }
 
-internal void
+func void
 fft_inplace6_64(u32 count, c64 *dest)
 {
     i_expect(is_pow2(count));
@@ -2656,7 +2656,7 @@ fft_inplace6_64(u32 count, c64 *dest)
     }
 }
 
-internal void
+func void
 fft_inplace_inexact6_64(u32 count, c64 *dest)
 {
     i_expect(is_pow2(count));

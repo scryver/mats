@@ -26,7 +26,7 @@ global const f64 gPiReduce1F64 = 3.14159265160560607910e0;
 global const f64 gPiReduce2F64 = 1.98418714791870343106e-9;
 global const f64 gPiReduce3F64 = 1.14423774522196636802e-17;
 
-internal f32
+func f32
 reduce_pi32(f32 x)
 {
     f32 t = x / gPiF32;
@@ -41,7 +41,7 @@ reduce_pi32(f32 x)
     return result;
 }
 
-internal f64
+func f64
 reduce_pi64(f64 x)
 {
     f64 t = x / gPiF32;
@@ -60,7 +60,7 @@ reduce_pi64(f64 x)
 //
 //
 
-internal c32
+func c32
 complex32(f32 real, f32 imag)
 {
     c32 result;
@@ -69,13 +69,13 @@ complex32(f32 real, f32 imag)
     return result;
 }
 
-internal c32
+func c32
 complex32_from_mag_phase(f32 magnitude, f32 phase)
 {
     return complex32(magnitude * cos32(phase), magnitude * sin32(phase));
 }
 
-internal c32
+func c32
 operator -(c32 a)
 {
     c32 result;
@@ -84,7 +84,7 @@ operator -(c32 a)
     return result;
 }
 
-internal c32 &
+func c32 &
 operator +=(c32 &a, c32 b)
 {
     a.real += b.real;
@@ -92,7 +92,7 @@ operator +=(c32 &a, c32 b)
     return a;
 }
 
-internal c32
+func c32
 operator +(c32 a, c32 b)
 {
     c32 result = a;
@@ -100,7 +100,7 @@ operator +(c32 a, c32 b)
     return result;
 }
 
-internal c32 &
+func c32 &
 operator -=(c32 &a, c32 b)
 {
     a.real -= b.real;
@@ -108,7 +108,7 @@ operator -=(c32 &a, c32 b)
     return a;
 }
 
-internal c32
+func c32
 operator -(c32 a, c32 b)
 {
     c32 result = a;
@@ -116,7 +116,7 @@ operator -(c32 a, c32 b)
     return result;
 }
 
-internal c32
+func c32
 operator *(c32 a, c32 b)
 {
     c32 result;
@@ -125,14 +125,14 @@ operator *(c32 a, c32 b)
     return result;
 }
 
-internal c32 &
+func c32 &
 operator *=(c32 &a, c32 b)
 {
     a = a * b;
     return a;
 }
 
-internal c32
+func c32
 operator /(c32 a, c32 b)
 {
     f32 divisor = (b.real * b.real + b.imag * b.imag);
@@ -142,21 +142,21 @@ operator /(c32 a, c32 b)
     return result;
 }
 
-internal c32 &
+func c32 &
 operator /=(c32 &a, c32 b)
 {
     a = a / b;
     return a;
 }
 
-internal c32 &
+func c32 &
 operator +=(c32 &a, f32 b)
 {
     a.real += b;
     return a;
 }
 
-internal c32
+func c32
 operator +(c32 a, f32 b)
 {
     c32 result = a;
@@ -164,7 +164,7 @@ operator +(c32 a, f32 b)
     return result;
 }
 
-internal c32
+func c32
 operator +(f32 a, c32 b)
 {
     c32 result = b;
@@ -172,14 +172,14 @@ operator +(f32 a, c32 b)
     return result;
 }
 
-internal c32 &
+func c32 &
 operator -=(c32 &a, f32 b)
 {
     a.real -= b;
     return a;
 }
 
-internal c32
+func c32
 operator -(c32 a, f32 b)
 {
     c32 result = a;
@@ -187,7 +187,7 @@ operator -(c32 a, f32 b)
     return result;
 }
 
-internal c32
+func c32
 operator -(f32 a, c32 b)
 {
     c32 result = b;
@@ -195,7 +195,7 @@ operator -(f32 a, c32 b)
     return result;
 }
 
-internal c32 &
+func c32 &
 operator *=(c32 &a, f32 b)
 {
     a.real *= b;
@@ -203,7 +203,7 @@ operator *=(c32 &a, f32 b)
     return a;
 }
 
-internal c32
+func c32
 operator *(c32 a, f32 b)
 {
     c32 result = a;
@@ -211,7 +211,7 @@ operator *(c32 a, f32 b)
     return result;
 }
 
-internal c32
+func c32
 operator *(f32 a, c32 b)
 {
     c32 result = b;
@@ -219,7 +219,7 @@ operator *(f32 a, c32 b)
     return result;
 }
 
-internal c32 &
+func c32 &
 operator /=(c32 &a, f32 b)
 {
     a.real /= b;
@@ -227,7 +227,7 @@ operator /=(c32 &a, f32 b)
     return a;
 }
 
-internal c32
+func c32
 operator /(c32 a, f32 b)
 {
     c32 result = a;
@@ -235,7 +235,7 @@ operator /(c32 a, f32 b)
     return result;
 }
 
-internal c32
+func c32
 operator /(f32 a, c32 b)
 {
     c32 result = complex32(a, 0.0);
@@ -243,7 +243,7 @@ operator /(f32 a, c32 b)
     return result;
 }
 
-internal c32
+func c32
 conjugate32(c32 c)
 {
     c32 result = c;
@@ -251,13 +251,13 @@ conjugate32(c32 c)
     return result;
 }
 
-internal f32
+func f32
 absolute32(c32 c)
 {
     return hypot32(c.real, c.imag);
 }
 
-internal f32
+func f32
 argument32(c32 c)
 {
     return atan2_32(c.imag, c.real);
@@ -267,7 +267,7 @@ argument32(c32 c)
 // NOTE(michiel): Complex elementary functions
 //
 
-internal c32
+func c32
 sqrt32(c32 c)
 {
     f32 x = c.real;
@@ -324,7 +324,7 @@ sqrt32(c32 c)
     return result;
 }
 
-internal c32
+func c32
 exp32(c32 c)
 {
     SinCos32 cs = sincos32(c.imag);
@@ -333,7 +333,7 @@ exp32(c32 c)
     return result;
 }
 
-internal c32
+func c32
 log32(c32 c)
 {
     f32 rr = absolute32(c);
@@ -343,7 +343,7 @@ log32(c32 c)
     return result;
 }
 
-internal c32
+func c32
 log10_32(c32 c)
 {
     f32 rr = absolute32(c);
@@ -353,7 +353,7 @@ log10_32(c32 c)
     return result;
 }
 
-internal c32
+func c32
 pow32(c32 x, c32 y)
 {
 
@@ -384,7 +384,7 @@ pow32(c32 x, c32 y)
 // NOTE(michiel): Complex trigonometric functions
 //
 
-internal c32
+func c32
 cos32(c32 c)
 {
     SinCos32 cs = sincos32(c.real);
@@ -393,7 +393,7 @@ cos32(c32 c)
     return result;
 }
 
-internal c32
+func c32
 sin32(c32 c)
 {
     SinCos32 cs = sincos32(c.real);
@@ -402,7 +402,7 @@ sin32(c32 c)
     return result;
 }
 
-internal f32
+func f32
 tan_serie32(c32 c)
 {
     // NOTE(michiel): Taylor-series expansion for cosh(2y) - cos(2x)
@@ -447,7 +447,7 @@ tan_serie32(c32 c)
     return d;
 }
 
-internal c32
+func c32
 tan32(c32 c)
 {
     SinCos32 cs  = sincos32(2.0f * c.real);
@@ -466,7 +466,7 @@ tan32(c32 c)
     return result;
 }
 
-internal c32
+func c32
 asin32(c32 c)
 {
     f32 x = c.real;
@@ -487,7 +487,7 @@ asin32(c32 c)
     return result;
 }
 
-internal c32
+func c32
 acos32(c32 c)
 {
     c32 result = asin32(c);
@@ -495,7 +495,7 @@ acos32(c32 c)
     return result;
 }
 
-internal c32
+func c32
 atan32(c32 c)
 {
     c32 result;
@@ -531,7 +531,7 @@ atan32(c32 c)
 // NOTE(michiel): Complex hyperbolic functions
 //
 
-internal c32
+func c32
 cosh32(c32 c)
 {
     SinCos32 csh = sinhcosh32(c.real);
@@ -540,7 +540,7 @@ cosh32(c32 c)
     return result;
 }
 
-internal c32
+func c32
 sinh32(c32 c)
 {
     SinCos32 csh = sinhcosh32(c.real);
@@ -549,7 +549,7 @@ sinh32(c32 c)
     return result;
 }
 
-internal c32
+func c32
 tanh32(c32 c)
 {
     SinCos32 csh = sinhcosh32(2.0f * c.real);
@@ -559,21 +559,21 @@ tanh32(c32 c)
     return result;
 }
 
-internal c32
+func c32
 acosh32(c32 c)
 {
     c32 result = log32(c + sqrt32(c + 1.0f) * sqrt32(c - 1.0f));
     return result;
 }
 
-internal c32
+func c32
 asinh32(c32 c)
 {
     c32 result = complex32(0, -1.0f) * asin32(c * complex32(0, 1.0f));
     return result;
 }
 
-internal c32
+func c32
 atanh32(c32 c)
 {
     c32 result = complex32(0, -1.0f) * atan32(c * complex32(0, 1));
@@ -586,7 +586,7 @@ atanh32(c32 c)
 //
 //
 
-internal c64
+func c64
 complex64(f64 real, f64 imag)
 {
     c64 result;
@@ -595,13 +595,13 @@ complex64(f64 real, f64 imag)
     return result;
 }
 
-internal c64
+func c64
 complex64_from_mag_phase(f64 magnitude, f64 phase)
 {
     return complex64(magnitude * cos64(phase), magnitude * sin64(phase));
 }
 
-internal c64
+func c64
 operator -(c64 a)
 {
     c64 result;
@@ -610,7 +610,7 @@ operator -(c64 a)
     return result;
 }
 
-internal c64 &
+func c64 &
 operator +=(c64 &a, c64 b)
 {
     a.real += b.real;
@@ -618,7 +618,7 @@ operator +=(c64 &a, c64 b)
     return a;
 }
 
-internal c64
+func c64
 operator +(c64 a, c64 b)
 {
     c64 result = a;
@@ -626,7 +626,7 @@ operator +(c64 a, c64 b)
     return result;
 }
 
-internal c64 &
+func c64 &
 operator -=(c64 &a, c64 b)
 {
     a.real -= b.real;
@@ -634,7 +634,7 @@ operator -=(c64 &a, c64 b)
     return a;
 }
 
-internal c64
+func c64
 operator -(c64 a, c64 b)
 {
     c64 result = a;
@@ -642,7 +642,7 @@ operator -(c64 a, c64 b)
     return result;
 }
 
-internal c64
+func c64
 operator *(c64 a, c64 b)
 {
     c64 result;
@@ -651,14 +651,14 @@ operator *(c64 a, c64 b)
     return result;
 }
 
-internal c64 &
+func c64 &
 operator *=(c64 &a, c64 b)
 {
     a = a * b;
     return a;
 }
 
-internal c64
+func c64
 operator /(c64 a, c64 b)
 {
     f64 divisor = (b.real * b.real + b.imag * b.imag);
@@ -668,21 +668,21 @@ operator /(c64 a, c64 b)
     return result;
 }
 
-internal c64 &
+func c64 &
 operator /=(c64 &a, c64 b)
 {
     a = a / b;
     return a;
 }
 
-internal c64 &
+func c64 &
 operator +=(c64 &a, f64 b)
 {
     a.real += b;
     return a;
 }
 
-internal c64
+func c64
 operator +(c64 a, f64 b)
 {
     c64 result = a;
@@ -690,7 +690,7 @@ operator +(c64 a, f64 b)
     return result;
 }
 
-internal c64
+func c64
 operator +(f64 a, c64 b)
 {
     c64 result = b;
@@ -698,14 +698,14 @@ operator +(f64 a, c64 b)
     return result;
 }
 
-internal c64 &
+func c64 &
 operator -=(c64 &a, f64 b)
 {
     a.real -= b;
     return a;
 }
 
-internal c64
+func c64
 operator -(c64 a, f64 b)
 {
     c64 result = a;
@@ -713,7 +713,7 @@ operator -(c64 a, f64 b)
     return result;
 }
 
-internal c64
+func c64
 operator -(f64 a, c64 b)
 {
     c64 result = b;
@@ -721,7 +721,7 @@ operator -(f64 a, c64 b)
     return result;
 }
 
-internal c64 &
+func c64 &
 operator *=(c64 &a, f64 b)
 {
     a.real *= b;
@@ -729,7 +729,7 @@ operator *=(c64 &a, f64 b)
     return a;
 }
 
-internal c64
+func c64
 operator *(c64 a, f64 b)
 {
     c64 result = a;
@@ -737,7 +737,7 @@ operator *(c64 a, f64 b)
     return result;
 }
 
-internal c64
+func c64
 operator *(f64 a, c64 b)
 {
     c64 result = b;
@@ -745,7 +745,7 @@ operator *(f64 a, c64 b)
     return result;
 }
 
-internal c64 &
+func c64 &
 operator /=(c64 &a, f64 b)
 {
     a.real /= b;
@@ -753,7 +753,7 @@ operator /=(c64 &a, f64 b)
     return a;
 }
 
-internal c64
+func c64
 operator /(c64 a, f64 b)
 {
     c64 result = a;
@@ -761,7 +761,7 @@ operator /(c64 a, f64 b)
     return result;
 }
 
-internal c64
+func c64
 operator /(f64 a, c64 b)
 {
     c64 result = complex64(a, 0.0);
@@ -769,7 +769,7 @@ operator /(f64 a, c64 b)
     return result;
 }
 
-internal c64
+func c64
 conjugate64(c64 c)
 {
     c64 result = c;
@@ -777,13 +777,13 @@ conjugate64(c64 c)
     return result;
 }
 
-internal f64
+func f64
 absolute64(c64 c)
 {
     return hypot64(c.real, c.imag);
 }
 
-internal f64
+func f64
 argument64(c64 c)
 {
     return atan2_64(c.imag, c.real);
@@ -793,7 +793,7 @@ argument64(c64 c)
 // NOTE(michiel): Complex elementary functions
 //
 
-internal c64
+func c64
 sqrt64(c64 c)
 {
     f64 x = c.real;
@@ -850,7 +850,7 @@ sqrt64(c64 c)
     return result;
 }
 
-internal c64
+func c64
 exp64(c64 c)
 {
     SinCos64 cs = sincos64(c.imag);
@@ -859,7 +859,7 @@ exp64(c64 c)
     return result;
 }
 
-internal c64
+func c64
 log64(c64 c)
 {
     f64 rr = absolute64(c);
@@ -869,7 +869,7 @@ log64(c64 c)
     return result;
 }
 
-internal c64
+func c64
 log10_64(c64 c)
 {
     f64 rr = absolute64(c);
@@ -879,7 +879,7 @@ log10_64(c64 c)
     return result;
 }
 
-internal c64
+func c64
 pow64(c64 x, c64 y)
 {
 
@@ -910,7 +910,7 @@ pow64(c64 x, c64 y)
 // NOTE(michiel): Complex trigonometric functions
 //
 
-internal c64
+func c64
 cos64(c64 c)
 {
     SinCos64 cs = sincos64(c.real);
@@ -919,7 +919,7 @@ cos64(c64 c)
     return result;
 }
 
-internal c64
+func c64
 sin64(c64 c)
 {
     SinCos64 cs = sincos64(c.real);
@@ -928,7 +928,7 @@ sin64(c64 c)
     return result;
 }
 
-internal f64
+func f64
 tan_serie64(c64 c)
 {
     // NOTE(michiel): Taylor-series expansion for cosh(2y) - cos(2x)
@@ -973,7 +973,7 @@ tan_serie64(c64 c)
     return d;
 }
 
-internal c64
+func c64
 tan64(c64 c)
 {
     SinCos64 cs  = sincos64(2.0 * c.real);
@@ -992,7 +992,7 @@ tan64(c64 c)
     return result;
 }
 
-internal c64
+func c64
 asin64(c64 c)
 {
     f64 x = c.real;
@@ -1013,7 +1013,7 @@ asin64(c64 c)
     return result;
 }
 
-internal c64
+func c64
 acos64(c64 c)
 {
     c64 result = asin64(c);
@@ -1021,7 +1021,7 @@ acos64(c64 c)
     return result;
 }
 
-internal c64
+func c64
 atan64(c64 c)
 {
     c64 result;
@@ -1057,7 +1057,7 @@ atan64(c64 c)
 // NOTE(michiel): Complex hyperbolic functions
 //
 
-internal c64
+func c64
 cosh64(c64 c)
 {
     SinCos64 csh = sinhcosh64(c.real);
@@ -1066,7 +1066,7 @@ cosh64(c64 c)
     return result;
 }
 
-internal c64
+func c64
 sinh64(c64 c)
 {
     SinCos64 csh = sinhcosh64(c.real);
@@ -1075,7 +1075,7 @@ sinh64(c64 c)
     return result;
 }
 
-internal c64
+func c64
 tanh64(c64 c)
 {
     SinCos64 csh = sinhcosh64(2.0 * c.real);
@@ -1085,21 +1085,21 @@ tanh64(c64 c)
     return result;
 }
 
-internal c64
+func c64
 acosh64(c64 c)
 {
     c64 result = log64(c + sqrt64(c + 1.0) * sqrt64(c - 1.0));
     return result;
 }
 
-internal c64
+func c64
 asinh64(c64 c)
 {
     c64 result = complex64(0, -1.0) * asin64(c * complex64(0, 1.0));
     return result;
 }
 
-internal c64
+func c64
 atanh64(c64 c)
 {
     c64 result = complex64(0, -1.0) * atan64(c * complex64(0, 1));

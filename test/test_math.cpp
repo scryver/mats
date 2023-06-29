@@ -9,7 +9,7 @@
 #include "../libberdip/src/multilane.h"
 
 #if 0
-internal f32
+func f32
 absolute(f32 x)
 {
     U32F32 xf = u32f32(x);
@@ -40,7 +40,7 @@ absolute(f32 x)
 
 #include "test_common.cpp"
 
-internal void
+func void
 print_info(String name, u32 maxNameSize, u32 calls, u32 tests, f32 seconds, f64 sum, f64 errSum, f32 secondsRatio)
 {
     f64 testCalls = (f64)((u64)calls * tests);
@@ -147,7 +147,7 @@ run_test_f32_4x(String name, u32 maxNameSize, u32 tests, f32 scaleFactor,
     return seconds;
 }
 
-internal f32
+func f32
 run_test_sincos_4x(String name, u32 maxNameSize, u32 tests, f32 scaleFactor,
                    SinCosF32_4x *sincos_func, f32 secondsBase)
 {

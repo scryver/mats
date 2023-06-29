@@ -6,7 +6,7 @@ union f32_4x
     u32 u[4];
 };
 
-internal f32_4x
+func f32_4x
 F32_4x(f32 value)
 {
     f32_4x result;
@@ -14,7 +14,7 @@ F32_4x(f32 value)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 S32_4x(s32 value)
 {
     f32_4x result;
@@ -22,7 +22,7 @@ S32_4x(s32 value)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 F32_4x(f32 value0, f32 value1, f32 value2, f32 value3)
 {
     f32_4x result;
@@ -30,7 +30,7 @@ F32_4x(f32 value0, f32 value1, f32 value2, f32 value3)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 zero_4x(void)
 {
     f32_4x result;
@@ -38,7 +38,7 @@ zero_4x(void)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 operator +(f32_4x a, f32_4x b)
 {
     f32_4x result;
@@ -46,7 +46,7 @@ operator +(f32_4x a, f32_4x b)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 operator -(f32_4x a, f32_4x b)
 {
     f32_4x result;
@@ -54,7 +54,7 @@ operator -(f32_4x a, f32_4x b)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 operator *(f32_4x a, f32_4x b)
 {
     f32_4x result;
@@ -62,7 +62,7 @@ operator *(f32_4x a, f32_4x b)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 operator &(f32_4x a, f32_4x b)
 {
     f32_4x result;
@@ -70,7 +70,7 @@ operator &(f32_4x a, f32_4x b)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 operator |(f32_4x a, f32_4x b)
 {
     f32_4x result;
@@ -78,7 +78,7 @@ operator |(f32_4x a, f32_4x b)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 andnot(f32_4x a, f32_4x b)
 {
     // NOTE(michiel): A & ~B
@@ -87,7 +87,7 @@ andnot(f32_4x a, f32_4x b)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 select(f32_4x a, f32_4x mask, f32_4x b)
 {
     // NOTE(michiel): If mask then b else a, ( (A & ~M) | (B & M) )
@@ -96,7 +96,7 @@ select(f32_4x a, f32_4x mask, f32_4x b)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 mix_in(f32_4x a, f32_4x mask, f32_4x b)
 {
     // NOTE(michiel): If mask then b with a, ( A | (B & M) )
@@ -105,7 +105,7 @@ mix_in(f32_4x a, f32_4x mask, f32_4x b)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 cmplt_s32_4x(f32_4x a, f32_4x b)
 {
     f32_4x result;
@@ -113,7 +113,7 @@ cmplt_s32_4x(f32_4x a, f32_4x b)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 cmpeq_s32_4x(f32_4x a, f32_4x b)
 {
     f32_4x result;
@@ -122,7 +122,7 @@ cmpeq_s32_4x(f32_4x a, f32_4x b)
 }
 
 /* Top 12 bits of the float representation with the sign bit cleared.  */
-internal f32_4x
+func f32_4x
 abstop12_4x(f32_4x x)
 {
     //return (u32f32(x).u >> 20) & 0x7ff;
@@ -131,7 +131,7 @@ abstop12_4x(f32_4x x)
     return result;
 }
 
-internal __m128
+func __m128
 reduce_fast_exp_4x(__m128 x, __m128i *np)
 {
     __m128 hpiInv = _mm_set1_ps(0x1.45F306p-1f);
@@ -141,7 +141,7 @@ reduce_fast_exp_4x(__m128 x, __m128i *np)
                                     _mm_set1_ps(0x1.921FB4p0f)));
 }
 
-internal __m128
+func __m128
 sinf_exp_poly_q0_4x(__m128 x, __m128 x2)
 {
     // NOTE(michiel): x - s1*x^3 + s2*x^5 - s3*x^7
@@ -153,7 +153,7 @@ sinf_exp_poly_q0_4x(__m128 x, __m128 x2)
     return _mm_add_ps(s, _mm_mul_ps(x7, s1));
 }
 
-internal __m128
+func __m128
 sinf_exp_poly_q1_4x(__m128 x2)
 {
     // NOTE(michiel): c0 - c1*x^2 + c2*x^4 - c3*x^6 + c4*x^8
@@ -167,7 +167,7 @@ sinf_exp_poly_q1_4x(__m128 x2)
     return _mm_add_ps(c, _mm_mul_ps(x6, c2));
 }
 
-internal f32_4x
+func f32_4x
 operator -(f32_4x f4)
 {
     u32 signMask = (u32)(1 << 31);
@@ -177,7 +177,7 @@ operator -(f32_4x f4)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 arm_cosf_4x(f32_4x y)
 {
     // NOTE(michiel): absolute value of y should be smaller than 100.0f
@@ -224,7 +224,7 @@ arm_cosf_4x(f32_4x y)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 arm_sinf_4x(f32_4x y)
 {
     // NOTE(michiel): absolute value of y should be smaller than 100.0f
@@ -290,7 +290,7 @@ struct SinCos4x
     f32_4x sin;
 };
 
-internal SinCos4x
+func SinCos4x
 arm_sincosf_4x(f32_4x y)
 {
     // NOTE(michiel): absolute value of y should be smaller than 100.0f
@@ -361,7 +361,7 @@ arm_sincosf_4x(f32_4x y)
 
 #if 0
 // NOTE(michiel): Above algorithms are based on these slimmed down versions
-internal f32
+func f32
 arm_exp_cosf(f32 y)
 {
     i_expect(absolute(y) < 120.0f);
@@ -389,7 +389,7 @@ arm_exp_cosf(f32 y)
     return result;
 }
 
-internal f32
+func f32
 arm_exp_sinf(f32 y)
 {
     i_expect(absolute(y) < 120.0f);

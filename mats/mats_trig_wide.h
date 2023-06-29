@@ -1,4 +1,4 @@
-internal f64_2x
+func f64_2x
 sinf_poly_q0_4x(f64_2x x, f64_2x x2)
 {
     // NOTE(michiel): x - s1*x^3 + s2*x^5 - s3*x^7
@@ -9,7 +9,7 @@ sinf_poly_q0_4x(f64_2x x, f64_2x x2)
     return s + x7 * s1;
 }
 
-internal f64_2x
+func f64_2x
 sinf_poly_q1_4x(f64_2x x2)
 {
     // NOTE(michiel): c0 - c1*x^2 + c2*x^4 - c3*x^6 + c4*x^8
@@ -21,7 +21,7 @@ sinf_poly_q1_4x(f64_2x x2)
     return c + x6 * c2;
 }
 
-internal f32_4x
+func f32_4x
 cos32_4x(f32_4x y)
 {
     // NOTE(michiel): absolute value of y should be smaller than 100.0f
@@ -83,7 +83,7 @@ cos32_4x(f32_4x y)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 sin32_4x(f32_4x y)
 {
     // NOTE(michiel): absolute value of y should be smaller than 100.0f
@@ -143,7 +143,7 @@ sin32_4x(f32_4x y)
     return result;
 }
 
-internal SinCos32_4x
+func SinCos32_4x
 sincos32_4x(f32_4x y)
 {
     // NOTE(michiel): absolute value of y should be smaller than 100.0f
@@ -215,7 +215,7 @@ sincos32_4x(f32_4x y)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 tan32_kernel_4x(f32_4x x, f32_4x mod)
 {
     f32_4x xOrig = x;
@@ -284,7 +284,7 @@ tan32_kernel_4x(f32_4x x, f32_4x mod)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 tan32_4x(f32_4x x)
 {
     // NOTE(michiel): absolute value of y should be smaller than 100.0f
@@ -319,7 +319,7 @@ tan32_4x(f32_4x x)
 
 #if 0
 // NOTE(michiel): Templates used to convert to 4x
-internal f32
+func f32
 acos32_temp(f32 x)
 {
 #define pi        3.1415925026e+00f
@@ -374,7 +374,7 @@ acos32_temp(f32 x)
 #undef pi
 }
 
-internal f32
+func f32
 asin32_temp(f32 x)
 {
 #define pio2_hi 1.57079637050628662109375f
@@ -438,7 +438,7 @@ asin32_temp(f32 x)
 }
 #endif
 
-internal f32_4x
+func f32_4x
 acos32_4x(f32_4x x)
 {
     // NOTE(michiel): Function is unspecified out of the [-1, 1] domain
@@ -512,7 +512,7 @@ acos32_4x(f32_4x x)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 asin32_4x(f32_4x x)
 {
     // NOTE(michiel): Function is unspecified out of the [-1, 1] domain
@@ -596,7 +596,7 @@ alignas(16) global const f32_4x gAtanLoF32_4x = {
     5.0121582440e-09f, 3.7748947079e-08f, 3.4473217170e-08f, 7.5497894159e-08f, /* atan(inf)lo 0x33a22168 */
 };
 
-internal f32_4x
+func f32_4x
 atan32_4x(f32_4x x)
 {
     f32_4x hx = x & F32_4x(0x7FFFFFFFU);
@@ -713,7 +713,7 @@ atan32_4x(f32_4x x)
 
 #if 0
 // NOTE(michiel): Atan2 template used for simd
-internal f32
+func f32
 atan2_32_temp(f32 y, f32 x)
 {
     s32 ix = MATS_S32_FROM_F32(x);
@@ -767,7 +767,7 @@ atan2_32_temp(f32 y, f32 x)
 }
 #endif
 
-internal f32_4x
+func f32_4x
 atan2_32_4x(f32_4x y, f32_4x x)
 {
     f32_4x hx = x & F32_4x(0x7FFFFFFFU);

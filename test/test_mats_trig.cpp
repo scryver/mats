@@ -32,7 +32,7 @@
 
 #include "test_common.cpp"
 
-internal void
+func void
 sincos_wrap64(f64 val, f64 *s, f64 *c)
 {
     SinCos64 result = sincos64(val);
@@ -40,7 +40,7 @@ sincos_wrap64(f64 val, f64 *s, f64 *c)
     *c = result.cos;
 }
 
-internal void
+func void
 sincos_wrap32(f32 val, f32 *s, f32 *c)
 {
     SinCos32 result = sincos32(val);
@@ -48,57 +48,57 @@ sincos_wrap32(f32 val, f32 *s, f32 *c)
     *c = result.cos;
 }
 
-internal f64
+func f64
 sincos_match(f64 val)
 {
     return square(sin(val)) + square(cos(val));
 }
 
-internal f32
+func f32
 sincos_matchf(f32 val)
 {
     return square(sinf(val)) + square(cosf(val));
 }
 
-internal f32
+func f32
 sincos_match32(f32 val)
 {
     return square(sin32(val)) + square(cos32(val));
 }
 
-internal f32
+func f32
 sincos_match_cs_32(f32 val)
 {
     SinCos32 cs = sincos32(val);
     return square(cs.sin) + square(cs.cos);
 }
 
-internal f32
+func f32
 sincos_matchf_arm(f32 val)
 {
     return square(arm_sinf(val)) + square(arm_cosf(val));
 }
 
-internal f32
+func f32
 sincos_match_pi(f32 val)
 {
     return square(sin_pi(val)) + square(cos_pi(val));
 }
 
-internal f64
+func f64
 sincos_match64(f64 val)
 {
     return square(sin64(val)) + square(cos64(val));
 }
 
-internal f64
+func f64
 sincos_match_cs_64(f64 val)
 {
     SinCos64 cs = sincos64(val);
     return square(cs.sin) + square(cs.cos);
 }
 
-internal f32_4x
+func f32_4x
 sinf_4x(f32_4x x)
 {
     f32_4x result;
@@ -109,7 +109,7 @@ sinf_4x(f32_4x x)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 cosf_4x(f32_4x x)
 {
     f32_4x result;
@@ -120,7 +120,7 @@ cosf_4x(f32_4x x)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 tanf_4x(f32_4x x)
 {
     f32_4x result;
@@ -131,7 +131,7 @@ tanf_4x(f32_4x x)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 acosf_4x(f32_4x x)
 {
     f32_4x result;
@@ -142,7 +142,7 @@ acosf_4x(f32_4x x)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 acos32_temp_4x(f32_4x x)
 {
     f32_4x result;
@@ -153,7 +153,7 @@ acos32_temp_4x(f32_4x x)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 asinf_4x(f32_4x x)
 {
     f32_4x result;
@@ -164,7 +164,7 @@ asinf_4x(f32_4x x)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 asin32_temp_4x(f32_4x x)
 {
     f32_4x result;
@@ -175,7 +175,7 @@ asin32_temp_4x(f32_4x x)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 atanf_4x(f32_4x x)
 {
     f32_4x result;
@@ -186,7 +186,7 @@ atanf_4x(f32_4x x)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 atan2f_4x(f32_4x y, f32_4x x)
 {
     f32_4x result;

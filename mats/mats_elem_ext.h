@@ -2,7 +2,7 @@
 // NOTE(michiel): Pow
 //
 
-internal f64
+func f64
 pow32_log2(u32 xu)
 {
     u32 temp = xu - 0x3F330000;
@@ -26,7 +26,7 @@ pow32_log2(u32 xu)
     return result;
 }
 
-internal f64
+func f64
 pow32_exp2(f64 xd, u32 signBias)
 {
     f64 kd = xd + gExp2F32_ShiftScaled;
@@ -46,7 +46,7 @@ pow32_exp2(f64 xd, u32 signBias)
     return result;
 }
 
-internal s32
+func s32
 pow32_checkint(u32 xu)
 {
     s32 e = (xu & MATS_F32_EXP_MASK) >> MATS_F32_EXP_SHIFT;
@@ -65,13 +65,13 @@ pow32_checkint(u32 xu)
     return 2;
 }
 
-internal s32
+func s32
 pow32_zeroinfnan(u32 ix)
 {
     return 2 * ix - 1 >= 2u * MATS_F32_EXP_MASK - 1;
 }
 
-internal f32
+func f32
 pow32(f32 x, f32 y)
 {
     u32 signBias = 0;
@@ -147,13 +147,13 @@ pow32(f32 x, f32 y)
     return (f32)pow32_exp2(yLogX, signBias);
 }
 
-internal f32
+func f32
 pow10_32(f32 x)
 {
     return pow32(10.0f, x);
 }
 
-internal f32
+func f32
 exp10_32(f32 x)
 {
     return pow32(10.0f, x);
@@ -162,7 +162,7 @@ exp10_32(f32 x)
 /* Compute y+TAIL = log(x) where the rounded result is y and TAIL has about
    additional 15 bits precision.  IX is the bit representation of x, but
    normalized in the subnormal range using the sign bit for the exponent.  */
-internal f64
+func f64
 pow64_log(u64 ix, f64 *tail)
 {
 #define POW64_LOG_N (1 << POW64_LOG_TABLE_BITS)
@@ -229,7 +229,7 @@ pow64_log(u64 ix, f64 *tail)
 
 /* Computes sign*exp(x+xtail) where |xtail| < 2^-8/N and |xtail| <= |x|.
    The sign_bias argument is SIGN_BIAS or 0 and sets the sign to -1 or 1.  */
-internal f64
+func f64
 pow64_exp(f64 x, f64 xtail, u32 signBias)
 {
 #define POW64_EXP_N   (1 << EXP64_TABLE_BITS)
@@ -358,7 +358,7 @@ pow64_exp(f64 x, f64 xtail, u32 signBias)
 
 /* Returns 0 if not int, 1 if odd int, 2 if even int.  The argument is
    the bit representation of a non-zero finite floating-point value.  */
-internal s32
+func s32
 pow64_checkint(u64 iy)
 {
     s32 e = (iy >> 52) & 0x7ff;
@@ -375,13 +375,13 @@ pow64_checkint(u64 iy)
 }
 
 /* Returns 1 if input is the bit representation of 0, infinity or nan.  */
-internal s32
+func s32
 pow64_zeroinfnan(u64 i)
 {
     return (2 * i - 1) >= (2 * MATS_U64_FROM_F64(F64_INF) - 1);
 }
 
-internal f64
+func f64
 pow64(f64 x, f64 y)
 {
     u32 signBias = 0;
@@ -485,13 +485,13 @@ pow64(f64 x, f64 y)
     return pow64_exp(ehi, elo, signBias);
 }
 
-internal f64
+func f64
 pow10_64(f64 x)
 {
     return pow64(10.0, x);
 }
 
-internal f64
+func f64
 exp10_64(f64 x)
 {
     return pow64(10.0, x);

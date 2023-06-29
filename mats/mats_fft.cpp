@@ -1,5 +1,5 @@
 
-internal void
+func void
 fft_shift32(u32 count, c32 *data)
 {
     MATS_ASSERT(is_pow2(count));
@@ -13,7 +13,7 @@ fft_shift32(u32 count, c32 *data)
     }
 }
 
-internal void
+func void
 fft_shift64(u32 count, c64 *data)
 {
     MATS_ASSERT(is_pow2(count));
@@ -27,7 +27,7 @@ fft_shift64(u32 count, c64 *data)
     }
 }
 
-internal void
+func void
 magnitude_from_fft32(u32 count, c32 *source, f32 *dest)
 {
     // NOTE(michiel): sqrt(real^2 + imag^2)
@@ -39,7 +39,7 @@ magnitude_from_fft32(u32 count, c32 *source, f32 *dest)
     }
 }
 
-internal void
+func void
 db_from_fft32(u32 count, c32 *source, f32 *dest)
 {
     // NOTE(michiel): 20 * log10(sqrt(real^2 + imag^2)) => 20 * log10((real^2 + imag^2)^0.5) => 20 * 0.5 * log10(real^2 + imag^2)
@@ -52,7 +52,7 @@ db_from_fft32(u32 count, c32 *source, f32 *dest)
     }
 }
 
-internal void
+func void
 phase_from_fft32(u32 count, c32 *source, f32 *dest)
 {
     c32 *src = source;
@@ -63,7 +63,7 @@ phase_from_fft32(u32 count, c32 *source, f32 *dest)
     }
 }
 
-internal void
+func void
 unwrapped_phase_from_fft32(u32 count, c32 *source, f32 *dest)
 {
     c32 *src = source;
@@ -91,7 +91,7 @@ unwrapped_phase_from_fft32(u32 count, c32 *source, f32 *dest)
         }
     }
 }
-internal void
+func void
 magnitude_from_fft64(u32 count, c64 *source, f64 *dest)
 {
     // NOTE(michiel): sqrt(real^2 + imag^2)
@@ -124,7 +124,7 @@ magnitude_from_fft64(u32 count, c64 *source, f64 *dest)
 
 }
 
-internal void
+func void
 db_from_fft64(u32 count, c64 *source, f64 *dest)
 {
     c64 *src = source;
@@ -136,7 +136,7 @@ db_from_fft64(u32 count, c64 *source, f64 *dest)
     }
 }
 
-internal void
+func void
 phase_from_fft64(u32 count, c64 *source, f64 *dest)
 {
     c64 *src = source;
@@ -147,7 +147,7 @@ phase_from_fft64(u32 count, c64 *source, f64 *dest)
     }
 }
 
-internal void
+func void
 unwrapped_phase_from_fft64(u32 count, c64 *source, f64 *dest)
 {
     c64 *src = source;
@@ -176,7 +176,7 @@ unwrapped_phase_from_fft64(u32 count, c64 *source, f64 *dest)
     }
 }
 
-internal void
+func void
 fft_inplace(u32 count, c32 *dest)
 {
     MATS_ASSERT(is_pow2(count));
@@ -376,7 +376,7 @@ fft_inplace(u32 count, c32 *dest)
     }
 }
 
-internal void
+func void
 fft_inplace_fast(u32 count, c32 *dest)
 {
     MATS_ASSERT(is_pow2(count));
@@ -606,7 +606,7 @@ fft_inplace_fast(u32 count, c32 *dest)
     }
 }
 
-internal void
+func void
 fft_build_table_f32(u32 count, f32 *dest)
 {
     SinCos32_4x csBase = sincos32_4x(F32_4x(0.0f, -0.25f * F32_PI, -0.5f * F32_PI, -0.75f * F32_PI));
@@ -646,7 +646,7 @@ fft_build_table_f32(u32 count, f32 *dest)
     }
 }
 
-internal void
+func void
 fft_inplace_table(u32 count, c32 *dest, f32 *sinCosTable)
 {
     MATS_ASSERT(is_pow2(count));
@@ -853,7 +853,7 @@ fft_inplace_table(u32 count, c32 *dest, f32 *sinCosTable)
     }
 }
 
-internal void
+func void
 ifft_inplace(u32 count, c32 *dest)
 {
     MATS_ASSERT(is_pow2(count));
@@ -1059,7 +1059,7 @@ ifft_inplace(u32 count, c32 *dest)
     }
 }
 
-internal void
+func void
 ifft_inplace_fast(u32 count, c32 *dest)
 {
     MATS_ASSERT(is_pow2(count));
@@ -1295,7 +1295,7 @@ ifft_inplace_fast(u32 count, c32 *dest)
     }
 }
 
-internal void
+func void
 ifft_build_table_f32(u32 count, f32 *dest)
 {
     SinCos32_4x csBase = sincos32_4x(F32_4x(0.0f, 0.25f * F32_PI, 0.5f * F32_PI, 0.75f * F32_PI));
@@ -1335,7 +1335,7 @@ ifft_build_table_f32(u32 count, f32 *dest)
     }
 }
 
-internal void
+func void
 ifft_inplace_table(u32 count, c32 *dest, f32 *sinCosTable)
 {
     fft_inplace_table(count, dest, sinCosTable);
@@ -1350,7 +1350,7 @@ ifft_inplace_table(u32 count, c32 *dest, f32 *sinCosTable)
 // NOTE(michiel): 64-bit version
 //
 
-internal void
+func void
 fft_inplace64(u32 count, c64 *dest)
 {
     MATS_ASSERT(is_pow2(count));
@@ -1636,7 +1636,7 @@ fft_inplace64(u32 count, c64 *dest)
     }
 }
 
-internal void
+func void
 fft_inplace_fast64(u32 count, c64 *dest)
 {
     MATS_ASSERT(is_pow2(count));
@@ -1967,7 +1967,7 @@ fft_inplace_fast64(u32 count, c64 *dest)
     }
 }
 
-internal void
+func void
 fft_build_table_f64(u32 count, f64 *dest)
 {
     f64 *d = dest;
@@ -2024,7 +2024,7 @@ fft_build_table_f64(u32 count, f64 *dest)
     }
 }
 
-internal void
+func void
 fft_inplace_table64(u32 count, c64 *dest, f64 *sinCosTable)
 {
     MATS_ASSERT(is_pow2(count));
@@ -2324,7 +2324,7 @@ fft_inplace_table64(u32 count, c64 *dest, f64 *sinCosTable)
     }
 }
 
-internal void
+func void
 ifft_inplace64(u32 count, c64 *dest)
 {
     MATS_ASSERT(is_pow2(count));
@@ -2616,7 +2616,7 @@ ifft_inplace64(u32 count, c64 *dest)
     }
 }
 
-internal void
+func void
 ifft_inplace_fast64(u32 count, c64 *dest)
 {
     MATS_ASSERT(is_pow2(count));
@@ -2953,7 +2953,7 @@ ifft_inplace_fast64(u32 count, c64 *dest)
     }
 }
 
-internal void
+func void
 ifft_build_table_f64(u32 count, f64 *dest)
 {
     f64 *d = dest;
@@ -3010,7 +3010,7 @@ ifft_build_table_f64(u32 count, f64 *dest)
     }
 }
 
-internal void
+func void
 ifft_inplace_table64(u32 count, c64 *dest, f64 *sinCosTable)
 {
     fft_inplace_table64(count, dest, sinCosTable);

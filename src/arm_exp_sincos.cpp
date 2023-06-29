@@ -1,5 +1,5 @@
 
-internal f32
+func f32
 reduce_fast_exp(f32 x, int *np)
 {
     f32 hpi_inv = 0x1.45F306p+23f;
@@ -13,7 +13,7 @@ reduce_fast_exp(f32 x, int *np)
     return x - n * 0x1.921FB4p0f;
 }
 
-internal f32
+func f32
 sinf_exp_poly_q0(f32 x, f32 x2)
 {
     // NOTE(michiel): x - s1*x^3 + s2*x^5 - s3*x^7
@@ -24,7 +24,7 @@ sinf_exp_poly_q0(f32 x, f32 x2)
     return s + x7 * s1;                             // x - s1*x^3 + x^5*(s2 - s3*x^2)
 }
 
-internal f32
+func f32
 sinf_exp_poly_q1(f32 x2)
 {
     // NOTE(michiel): c0 - c1*x^2 + c2*x^4 - c3*x^6 + c4*x^8;
@@ -38,7 +38,7 @@ sinf_exp_poly_q1(f32 x2)
 
 global f64 gSinCosSigns[4] = { 1.0, -1.0, -1.0, 1.0 };
 
-internal f32
+func f32
 arm_exp_cosf(f32 y)
 {
     i_expect(absolute(y) < 120.0f);
@@ -114,7 +114,7 @@ arm_exp_cosf(f32 y)
     return result;
 }
 
-internal f32
+func f32
 arm_exp_sinf(f32 y)
 {
     i_expect(absolute(y) < 120.0f);

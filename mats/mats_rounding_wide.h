@@ -2,7 +2,7 @@
 // NOTE(michiel): Floor/Ceil/Round/Truncate 4x
 //
 
-internal f32_4x
+func f32_4x
 floor32_4x(f32_4x x)
 {
     f32_4x result;
@@ -10,7 +10,7 @@ floor32_4x(f32_4x x)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 ceil32_4x(f32_4x x)
 {
     f32_4x result;
@@ -18,7 +18,7 @@ ceil32_4x(f32_4x x)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 round32_4x(f32_4x x)
 {
     f32_4x result;
@@ -26,7 +26,7 @@ round32_4x(f32_4x x)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 trunc32_4x(f32_4x x)
 {
     f32_4x result;
@@ -34,7 +34,7 @@ trunc32_4x(f32_4x x)
     return result;
 }
 
-internal f32
+func f32
 modulus32_nosafe(f32 num, f32 den)
 {
     // NOTE(michiel): No 'nan', 'inf' or subnormal support, and den may not be zero.
@@ -104,7 +104,7 @@ modulus32_nosafe(f32 num, f32 den)
 	return result;		/* exact output */
 }
 
-internal f64_2x
+func f64_2x
 floor64_2x(f64_2x x)
 {
     f64_2x result;
@@ -112,7 +112,7 @@ floor64_2x(f64_2x x)
     return result;
 }
 
-internal f64_2x
+func f64_2x
 ceil64_2x(f64_2x x)
 {
     f64_2x result;
@@ -120,7 +120,7 @@ ceil64_2x(f64_2x x)
     return result;
 }
 
-internal f64_2x
+func f64_2x
 round64_2x(f64_2x x)
 {
     f64_2x result;
@@ -128,7 +128,7 @@ round64_2x(f64_2x x)
     return result;
 }
 
-internal f64_2x
+func f64_2x
 trunc64_2x(f64_2x x)
 {
     f64_2x result;

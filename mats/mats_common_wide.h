@@ -1,5 +1,5 @@
 
-internal f32_4x
+func f32_4x
 select4x(f32_4x a, f32_4x mask, f32_4x b)
 {
     // NOTE(michiel): if mask return b else a
@@ -13,7 +13,7 @@ select4x(f32_4x a, f32_4x mask, f32_4x b)
     return result;
 }
 
-internal f64_2x
+func f64_2x
 select2x(f64_2x a, f64_2x mask, f64_2x b)
 {
     // NOTE(michiel): if mask return b else a

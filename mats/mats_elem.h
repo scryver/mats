@@ -6,7 +6,7 @@
 // NOTE(michiel): 32-bit
 //
 
-internal f32
+func f32
 sqrt32(f32 x)
 {
     f32 result;
@@ -88,7 +88,7 @@ sqrt32(f32 x)
     return result;
 }
 
-internal f32
+func f32
 hypot32(f32 x, f32 y)
 {
     u32 ux = MATS_F32U(x).u & MATS_F32_ABS_MASK;
@@ -129,7 +129,7 @@ hypot32(f32 x, f32 y)
     return result;
 }
 
-internal f32
+func f32
 exp32(f32 x)
 {
     u32 xu = MATS_F32U(x).u;
@@ -174,7 +174,7 @@ exp32(f32 x)
     return (f32)res;
 }
 
-internal f32
+func f32
 exp2_32(f32 x)
 {
     // NOTE(michiel): result = 2^x
@@ -216,13 +216,13 @@ exp2_32(f32 x)
     return (f32)y;
 }
 
-internal f32
+func f32
 pow2_32(f32 x)
 {
     return exp2_32(x);
 }
 
-internal f32
+func f32
 log32(f32 x)
 {
     u32 xu = MATS_F32U(x).u;
@@ -266,7 +266,7 @@ log32(f32 x)
     return (f32)result;
 }
 
-internal f32
+func f32
 log2_32(f32 x)
 {
     u32 xu = MATS_F32U(x).u;
@@ -312,7 +312,7 @@ log2_32(f32 x)
     return (f32)result;
 }
 
-internal f32
+func f32
 log10_32(f32 x)
 {
     s32 hx = MATS_S32_FROM_F32(x);
@@ -339,7 +339,7 @@ log10_32(f32 x)
     return z + y * gLog10F32_2_hi;
 }
 
-internal f32
+func f32
 expm1_32(f32 x)
 {
     // NOTE(michiel): result = exp(x) - 1
@@ -474,7 +474,7 @@ expm1_32(f32 x)
     return result;
 }
 
-internal f32
+func f32
 log1p32(f32 x)
 {
     // NOTE(michiel): result = log(1 + x)
@@ -592,7 +592,7 @@ log1p32(f32 x)
     }
 }
 
-internal f32
+func f32
 log1p_fast32(f32 x)
 {
     // NOTE(michiel): Musl libc version
@@ -672,7 +672,7 @@ log1p_fast32(f32 x)
 // NOTE(michiel): 64-bit
 //
 
-internal f64
+func f64
 sqrt64(f64 x)
 {
     f64 result = 0.0;
@@ -686,7 +686,7 @@ sqrt64(f64 x)
     return result;
 }
 
-internal f64
+func f64
 hypot64(f64 x, f64 y)
 {
     s64 ax = MATS_S64_FROM_F64(x) & MATS_F64_ABS_MASK;
@@ -788,7 +788,7 @@ hypot64(f64 x, f64 y)
 }
 
 
-internal f64
+func f64
 exp64(f64 x)
 {
 #define EXP64_N  (1 << EXP64_TABLE_BITS)
@@ -901,7 +901,7 @@ exp64(f64 x)
 #undef EXP64_N
 }
 
-internal f64
+func f64
 exp2_64(f64 x)
 {
 #define EXP2_64_N  (1 << EXP64_TABLE_BITS)
@@ -1018,14 +1018,14 @@ exp2_64(f64 x)
 #undef EXP2_64_N
 }
 
-internal f64
+func f64
 pow2_64(f64 x)
 {
     f64 result = exp2_64(x);
     return result;
 }
 
-internal f64
+func f64
 log64(f64 x)
 {
 #define LOG64_N (1 << LOG64_TABLE_BITS)
@@ -1158,7 +1158,7 @@ log64(f64 x)
 #undef LOG64_N
 }
 
-internal f64
+func f64
 log2_64(f64 x)
 {
 #define LOG2_64_N (1 << LOG2_64_TABLE_BITS)
@@ -1260,7 +1260,7 @@ log2_64(f64 x)
 #undef LOG2_64_N
 }
 
-internal f64
+func f64
 log10_64(f64 x)
 {
     s64 sx = MATS_S64_FROM_F64(x);
@@ -1291,7 +1291,7 @@ log10_64(f64 x)
     return  z + y * gLog10F64_2_hi;
 }
 
-internal f64
+func f64
 expm1_64(f64 x)
 {
     // NOTE(michiel): result = exp(x) - 1
@@ -1440,7 +1440,7 @@ expm1_64(f64 x)
     return result;
 }
 
-internal f64
+func f64
 log1p64(f64 x)
 {
     f64 ln2_hi = gLn2HighF64s[0];

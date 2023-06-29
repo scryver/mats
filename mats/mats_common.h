@@ -16,10 +16,10 @@ union mats_f64u
     s32 s32s[2];
 };
 
-internal mats_f32u MATS_F32U(u32 x) { mats_f32u result; result.u = x; return result; }
-internal mats_f32u MATS_F32U(f32 x) { mats_f32u result; result.f = x; return result; }
-internal mats_f64u MATS_F64U(u64 x) { mats_f64u result; result.u = x; return result; }
-internal mats_f64u MATS_F64U(f64 x) { mats_f64u result; result.f = x; return result; }
+func mats_f32u MATS_F32U(u32 x) { mats_f32u result; result.u = x; return result; }
+func mats_f32u MATS_F32U(f32 x) { mats_f32u result; result.f = x; return result; }
+func mats_f64u MATS_F64U(u64 x) { mats_f64u result; result.u = x; return result; }
+func mats_f64u MATS_F64U(f64 x) { mats_f64u result; result.f = x; return result; }
 
 #define MATS_F32_SIGN_MASK    0x80000000
 #define MATS_F32_EXP_MASK     0x7F800000
@@ -46,15 +46,15 @@ internal mats_f64u MATS_F64U(f64 x) { mats_f64u result; result.f = x; return res
 #define MATS_F64_EXP_MIN     -1022
 
 // NOTE(michiel): We do this in a function because C++ doesn't support the same initializer as C
-internal u32 MATS_U32_FROM_F32(f32 x) { mats_f32u fu; fu.f = (x); return fu.u; }
-internal s32 MATS_S32_FROM_F32(f32 x) { mats_f32u fu; fu.f = (x); return fu.s; }
-internal f32 MATS_F32_FROM_U32(u32 x) { mats_f32u fu; fu.u = (x); return fu.f; }
-internal f32 MATS_F32_FROM_S32(s32 x) { mats_f32u fu; fu.s = (x); return fu.f; }
+func u32 MATS_U32_FROM_F32(f32 x) { mats_f32u fu; fu.f = (x); return fu.u; }
+func s32 MATS_S32_FROM_F32(f32 x) { mats_f32u fu; fu.f = (x); return fu.s; }
+func f32 MATS_F32_FROM_U32(u32 x) { mats_f32u fu; fu.u = (x); return fu.f; }
+func f32 MATS_F32_FROM_S32(s32 x) { mats_f32u fu; fu.s = (x); return fu.f; }
 
-internal u64 MATS_U64_FROM_F64(f64 x) { mats_f64u fu; fu.f = (x); return fu.u; }
-internal s64 MATS_S64_FROM_F64(f64 x) { mats_f64u fu; fu.f = (x); return fu.s; }
-internal f64 MATS_F64_FROM_U64(u64 x) { mats_f64u fu; fu.u = (x); return fu.f; }
-internal f64 MATS_F64_FROM_S64(s64 x) { mats_f64u fu; fu.s = (x); return fu.f; }
+func u64 MATS_U64_FROM_F64(f64 x) { mats_f64u fu; fu.f = (x); return fu.u; }
+func s64 MATS_S64_FROM_F64(f64 x) { mats_f64u fu; fu.f = (x); return fu.s; }
+func f64 MATS_F64_FROM_U64(u64 x) { mats_f64u fu; fu.u = (x); return fu.f; }
+func f64 MATS_F64_FROM_S64(s64 x) { mats_f64u fu; fu.s = (x); return fu.f; }
 
 #define MATS_F32_UWORD_IS_FINITE(x)     ((x) <  MATS_F32_EXP_MASK)
 #define MATS_F32_UWORD_IS_NAN(x)        ((x) >  MATS_F32_EXP_MASK)
@@ -105,7 +105,7 @@ struct SinCos64
 #pragma warning(disable: 4756)
 #endif
 
-internal f32
+func f32
 mats_xflow32(u32 sign, f32 base)
 {
     // TODO(michiel): Could add errno
@@ -113,26 +113,26 @@ mats_xflow32(u32 sign, f32 base)
     return result;
 }
 
-internal f32
+func f32
 mats_underflow32(u32 sign)
 {
     return mats_xflow32(sign, 0x1p-95f);
 }
 
-internal f32
+func f32
 mats_overflow32(u32 sign)
 {
     return mats_xflow32(sign, 0x1p97f);
 }
 
-internal f32
+func f32
 mats_divzero32(u32 sign)
 {
     f32 result = (sign ? -1.0f : 1.0f) / 0.0f;
     return result;
 }
 
-internal f32
+func f32
 mats_invalid32(f32 x)
 {
     f32 result = (x - x) / (x - x);
@@ -143,13 +143,13 @@ mats_invalid32(f32 x)
 #pragma warning(pop)
 #endif
 
-internal u32
+func u32
 abstop12_(f32 x)
 {
     return MATS_U32_FROM_F32(x) & 0x7FF00000;
 }
 
-internal b32
+func b32
 issignaling32(f32 x)
 {
     u32 xu = MATS_U32_FROM_F32(x);
@@ -158,7 +158,7 @@ issignaling32(f32 x)
     return 2 * (xu ^ 0x00400000) > 0xFF800000u;
 }
 
-internal f64
+func f64
 mats_xflow64(u64 sign, f64 base)
 {
     // TODO(michiel): Could add errno
@@ -166,13 +166,13 @@ mats_xflow64(u64 sign, f64 base)
     return result;
 }
 
-internal f64
+func f64
 mats_underflow64(u64 sign)
 {
     return mats_xflow64(sign, 0x1p-767);
 }
 
-internal f64
+func f64
 mats_overflow64(u64 sign)
 {
     return mats_xflow64(sign, 0x1p769);
@@ -184,14 +184,14 @@ mats_overflow64(u64 sign)
 #pragma warning(disable: 4723)
 #endif
 
-internal f64
+func f64
 mats_divzero64(u64 sign)
 {
     f64 result = (sign ? -1.0 : 1.0) / 0.0;
     return result;
 }
 
-internal f64
+func f64
 mats_invalid64(f64 x)
 {
     f64 result = (x - x) / (x - x);
@@ -202,7 +202,7 @@ mats_invalid64(f64 x)
 #pragma warning(pop)
 #endif
 
-internal b32
+func b32
 issignaling64(f64 x)
 {
     u64 xu = MATS_U64_FROM_F64(x);
@@ -211,13 +211,13 @@ issignaling64(f64 x)
     return 2 * (xu ^ 0x0008000000000000) > 2 * 0x7FF8000000000000ULL;
 }
 
-internal u32
+func u32
 mats_top12(f64 x)
 {
     return MATS_U64_FROM_F64(x) >> 52;
 }
 
-internal u32
+func u32
 mats_top16(f64 x)
 {
     return MATS_U64_FROM_F64(x) >> 48;
@@ -227,31 +227,31 @@ mats_top16(f64 x)
 // NOTE(michiel): Public
 //
 
-internal f32
+func f32
 absolute32(f32 x)
 {
     return MATS_F32_FROM_U32(MATS_U32_FROM_F32(x) & MATS_F32_ABS_MASK);
 }
 
-internal f64
+func f64
 absolute64(f64 x)
 {
     return MATS_F64_FROM_U64(MATS_U64_FROM_F64(x) & MATS_F64_ABS_MASK);
 }
 
-internal f32
+func f32
 copysign32(f32 x, f32 y)
 {
     return MATS_F32_FROM_U32((MATS_U32_FROM_F32(x) & MATS_F32_ABS_MASK) | (MATS_U32_FROM_F32(y) & MATS_F32_SIGN_MASK));
 }
 
-internal f64
+func f64
 copysign64(f64 x, f64 y)
 {
     return MATS_F64_FROM_U64((MATS_U64_FROM_F64(x) & MATS_F64_ABS_MASK) | (MATS_U64_FROM_F64(y) & MATS_F64_SIGN_MASK));
 }
 
-internal f64
+func f64
 scalbn64(f64 x, s32 e)
 {
     s64 sx = MATS_S64_FROM_F64(x);

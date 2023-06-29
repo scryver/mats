@@ -9,7 +9,7 @@
 #include "../mats/mats.h"
 #include "../mats/mats_wide.h"
 
-internal f32
+func f32
 tan_kernel_logic(f32 x, s32 mod)
 {
 	s32 ix = (s32)u32f32(x).u;
@@ -44,7 +44,7 @@ tan_kernel_logic(f32 x, s32 mod)
     }
 }
 
-internal f32_4x
+func f32_4x
 tan_kernel_logic_4x(f32_4x x, f32_4x mod)
 {
     f32_4x hx = x & S32_4x(0x7FFFFFFF);

@@ -95,14 +95,14 @@ global const f64 g2PiPowMin64 = 0x1.921FB54442D18p-62;
 global const f64 gPiOver4 = 0x1.921FB54442D18p-1;
 
 /* Top 12 bits of the float representation with the sign bit cleared.  */
-internal u32
+func u32
 abstop12(f32 x)
 {
     //return (u32f32(x).u >> 20) & 0x7ff;
     return u32f32(x).u & 0x7ff00000;
 }
 
-internal void
+func void
 force_eval_float(f32 f)
 {
     volatile f32 x = f;
@@ -112,7 +112,7 @@ force_eval_float(f32 f)
 /* Compute the sine and cosine of inputs X and X2 (X squared), using the
    polynomial P and store the results in SINP and COSP.  N is the quadrant,
    if odd the cosine and sine polynomials are swapped.  */
-internal void
+func void
 sincosf_poly(f64 x, f64 x2, ArmSinCos *p, int n, f32 *sinp, f32 *cosp)
 {
     f64 x3, x4, x5, x6, s, c, c1, c2, s1;
@@ -140,7 +140,7 @@ sincosf_poly(f64 x, f64 x2, ArmSinCos *p, int n, f32 *sinp, f32 *cosp)
 
 /* Return the sine of inputs X and X2 (X squared) using the polynomial P.
    N is the quadrant, and if odd the cosine polynomial is used.  */
-internal f32
+func f32
 sinf_poly(f64 x, f64 x2, ArmSinCos *p, int n)
 {
     f64 x3, x4, x6, x7, s, c, c1, c2, s1;
@@ -173,7 +173,7 @@ sinf_poly(f64 x, f64 x2, ArmSinCos *p, int n)
    The values for PI/2 and 2/PI are accessed via P.  Since PI/2 as a double
    is accurate to 55 bits and the worst-case cancellation happens at 6 * PI/4,
    the result is accurate for |X| <= 120.0.  */
-internal f64
+func f64
 reduce_fast(f64 x, ArmSinCos *p, int *np)
 {
     f64 r;
@@ -200,7 +200,7 @@ reduce_fast(f64 x, ArmSinCos *p, int *np)
    multiply computes the exact 2.62-bit fixed-point modulo.  Since the result
    can have at most 29 leading zeros after the binary point, the double
    precision result is accurate to 33 bits.  */
-internal f64
+func f64
 reduce_large(u32 xi, int *np)
 {
     const u32 *arr = &gArm4OverPi[(xi >> 26) & 15];
@@ -227,7 +227,7 @@ reduce_large(u32 xi, int *np)
    error is 0.5303 * 2^-23.  A single-step range reduction is used for
    small values.  Large inputs have their range reduced using fast integer
    arithmetic.  */
-internal void
+func void
 arm_sincosf(f32 y, f32 *sinp, f32 *cosp)
 {
     f64 x = y;
@@ -289,7 +289,7 @@ arm_sincosf(f32 y, f32 *sinp, f32 *cosp)
    error is 0.5303 * 2^-23.  A single-step range reduction is used for
    small values.  Large inputs have their range reduced using fast integer
    arithmetic.  */
-internal f32
+func f32
 arm_sinf(f32 y)
 {
     f64 x = y;
@@ -346,7 +346,7 @@ arm_sinf(f32 y)
    error is 0.5303 * 2^-23.  A single-step range reduction is used for
    small values.  Large inputs have their range reduced using fast integer
    arithmetic.  */
-internal f32
+func f32
 arm_cosf(f32 y)
 {
     f64 x = y;

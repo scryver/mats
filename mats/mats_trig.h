@@ -1,5 +1,5 @@
 
-internal f64
+func f64
 reduce_fast_pi4(f64 x, int *np)
 {
     /* Use scaled float to int conversion with explicit rounding.
@@ -11,7 +11,7 @@ reduce_fast_pi4(f64 x, int *np)
     return x - n * 0x1.921FB54442D18p0;
 }
 
-internal f64
+func f64
 sinf_poly_q0(f64 x, f64 x2)
 {
     // NOTE(michiel): x - s1*x^3 + s2*x^5 - s3*x^7
@@ -22,7 +22,7 @@ sinf_poly_q0(f64 x, f64 x2)
     return s + x7 * s1;                             // x - s1*x^3 + x^5*(s2 - s3*x^2)
 }
 
-internal f64
+func f64
 sinf_poly_q1(f64 x2)
 {
     // NOTE(michiel): c0 - c1*x^2 + c2*x^4 - c3*x^6 + c4*x^8;
@@ -34,7 +34,7 @@ sinf_poly_q1(f64 x2)
     return c + x6 * c2;                               // c0 - c1*x^2 + c2*x^4 + x^6(-c3 + c4*x^2)
 }
 
-internal f32
+func f32
 cos32(f32 y)
 {
     MATS_ASSERT(absolute32(y) < 120.0f);
@@ -62,7 +62,7 @@ cos32(f32 y)
     return result;
 }
 
-internal f32
+func f32
 sin32(f32 y)
 {
     MATS_ASSERT(absolute32(y) < 120.0f);
@@ -91,7 +91,7 @@ sin32(f32 y)
     return result;
 }
 
-internal SinCos32
+func SinCos32
 sincos32(f32 y)
 {
     MATS_ASSERT(absolute32(y) < 120.0f);
@@ -122,7 +122,7 @@ sincos32(f32 y)
     return result;
 }
 
-internal f32
+func f32
 tan32_kernel(f32 x, s32 mod)
 {
 	s32 ix = (s32)MATS_F32U(x).u;
@@ -189,7 +189,7 @@ tan32_kernel(f32 x, s32 mod)
     }
 }
 
-internal f32
+func f32
 tan32(f32 y)
 {
     MATS_ASSERT(absolute32(y) < 120.0f);
@@ -252,7 +252,7 @@ f32 r = p / q
 
 #endif
 
-internal f32
+func f32
 acos32(f32 x)
 {
 #define pi        3.1415925026e+00f
@@ -305,7 +305,7 @@ acos32(f32 x)
 #undef pi
 }
 
-internal f32
+func f32
 asin32(f32 x)
 {
 #define pio2_hi 1.57079637050628662109375f
@@ -368,7 +368,7 @@ asin32(f32 x)
 #undef qS3
 #undef qS4
 
-internal f32
+func f32
 atan32(f32 x)
 {
     s32 ix = (s32)MATS_F32U(x).u;
@@ -474,7 +474,7 @@ atan32(f32 x)
     }
 }
 
-internal f32
+func f32
 atan2_32(f32 y, f32 x)
 {
     s32 ix = MATS_S32_FROM_F32(x);
@@ -556,7 +556,7 @@ atan2_32(f32 y, f32 x)
 // NOTE(michiel): Hyperbolic functions
 //
 
-internal f32
+func f32
 cosh32(f32 x)
 {
     s32 ix = (s32)MATS_F32U(x).u;
@@ -602,7 +602,7 @@ cosh32(f32 x)
     }
 }
 
-internal f32
+func f32
 sinh32(f32 x)
 {
     s32 jx = (s32)MATS_F32U(x).u;
@@ -646,7 +646,7 @@ sinh32(f32 x)
     }
 }
 
-internal SinCos32
+func SinCos32
 sinhcosh32(f32 x)
 {
     SinCos32 result;
@@ -666,7 +666,7 @@ sinhcosh32(f32 x)
     return result;
 }
 
-internal f32
+func f32
 tanh32(f32 x)
 {
     s32 jx = (s32)MATS_F32U(x).u;
@@ -710,7 +710,7 @@ tanh32(f32 x)
     return jx < 0 ? -result : result;
 }
 
-internal f32
+func f32
 acosh32(f32 x)
 {
     s32 jx = (s32)MATS_F32U(x).u;
@@ -740,7 +740,7 @@ acosh32(f32 x)
     }
 }
 
-internal f32
+func f32
 asinh32(f32 x)
 {
     s32 jx = (s32)MATS_F32U(x).u;
@@ -769,7 +769,7 @@ asinh32(f32 x)
     return jx > 0 ? result : -result;
 }
 
-internal f32
+func f32
 atanh32(f32 x)
 {
     s32 jx = (s32)MATS_F32U(x).u;
@@ -806,7 +806,7 @@ global const s32 gRemPiInitJK[] = {
     2, 3, 4, 6,
 };
 
-internal s32
+func s32
 kernel_rem_pi_over_2(f64 *x, f64 *y, s32 e0, s32 nx, s32 prec, const s32 *twoOverPi)
 {
     s32 jk = gRemPiInitJK[prec];
@@ -1044,7 +1044,7 @@ kernel_rem_pi_over_2(f64 *x, f64 *y, s32 e0, s32 nx, s32 prec, const s32 *twoOve
     return n & 7;
 }
 
-internal f64
+func f64
 kernel_cos64(f64 x, f64 y)
 {
     s64 ix = MATS_S64_FROM_F64(x);
@@ -1102,7 +1102,7 @@ kernel_cos64(f64 x, f64 y)
     return result;
 }
 
-internal f64
+func f64
 kernel_sin64(f64 x, f64 y, s32 iy)
 {
     s64 ix = MATS_S64_FROM_F64(x);
@@ -1148,7 +1148,7 @@ kernel_sin64(f64 x, f64 y, s32 iy)
     return result;
 }
 
-internal f64
+func f64
 kernel_tan64(f64 x, f64 y, s32 iy)
 {
     s64 ix = MATS_S64_FROM_F64(x);
@@ -1253,7 +1253,7 @@ kernel_tan64(f64 x, f64 y, s32 iy)
     }
 }
 
-internal s32
+func s32
 ieee754_rem_pi_over_2(f64 x, f64 *y)
 {
     s64 sx = MATS_S64_FROM_F64(x);
@@ -1390,7 +1390,7 @@ ieee754_rem_pi_over_2(f64 x, f64 *y)
     }
 }
 
-internal f64
+func f64
 cos64(f64 x)
 {
     s64 ix = MATS_S64_FROM_F64(x);
@@ -1421,7 +1421,7 @@ cos64(f64 x)
     return result;
 }
 
-internal f64
+func f64
 sin64(f64 x)
 {
     s64 ix = MATS_S64_FROM_F64(x);
@@ -1452,7 +1452,7 @@ sin64(f64 x)
     return result;
 }
 
-internal SinCos64
+func SinCos64
 sincos64(f64 x)
 {
     s64 ix = MATS_S64_FROM_F64(x);
@@ -1499,7 +1499,7 @@ sincos64(f64 x)
     return result;
 }
 
-internal f64
+func f64
 tan64(f64 x)
 {
     s64 ix = MATS_S64_FROM_F64(x);
@@ -1525,7 +1525,7 @@ tan64(f64 x)
     return result;
 }
 
-internal f64
+func f64
 acos64(f64 x)
 {
     s64 ix = MATS_S64_FROM_F64(x);
@@ -1602,7 +1602,7 @@ acos64(f64 x)
 #undef pS0
 }
 
-internal f64
+func f64
 asin64(f64 x)
 {
     s64 ix = MATS_S64_FROM_F64(x);
@@ -1676,7 +1676,7 @@ asin64(f64 x)
 #undef pS0
 }
 
-internal f64
+func f64
 atan64(f64 x)
 {
     s64 ix = MATS_S64_FROM_F64(x);
@@ -1767,7 +1767,7 @@ atan64(f64 x)
     }
 }
 
-internal f64
+func f64
 atan2_64(f64 y, f64 x)
 {
     s64 sx = MATS_S64_FROM_F64(x);
@@ -1858,7 +1858,7 @@ atan2_64(f64 y, f64 x)
     }
 }
 
-internal f64
+func f64
 cosh64(f64 x)
 {
     s64 ix = MATS_S64_FROM_F64(x);
@@ -1904,7 +1904,7 @@ cosh64(f64 x)
     }
 }
 
-internal f64
+func f64
 sinh64(f64 x)
 {
     s64 ix = MATS_S64_FROM_F64(x);
@@ -1950,7 +1950,7 @@ sinh64(f64 x)
     }
 }
 
-internal SinCos64
+func SinCos64
 sinhcosh64(f64 x)
 {
     SinCos64 result;
@@ -1970,7 +1970,7 @@ sinhcosh64(f64 x)
     return result;
 }
 
-internal f64
+func f64
 tanh64(f64 x)
 {
     s64 ix = MATS_S64_FROM_F64(x);
@@ -2004,7 +2004,7 @@ tanh64(f64 x)
     return (ix < 0) ? -result : result;
 }
 
-internal f64
+func f64
 acosh64(f64 x)
 {
     s64 ix = MATS_S64_FROM_F64(x);
@@ -2039,7 +2039,7 @@ acosh64(f64 x)
     }
 }
 
-internal f64
+func f64
 asinh64(f64 x)
 {
     s64 ix = MATS_S64_FROM_F64(x);
@@ -2072,7 +2072,7 @@ asinh64(f64 x)
     return (ix < 0) ? -result : result;
 }
 
-internal f64
+func f64
 atanh64(f64 x)
 {
     s64 sx = MATS_S64_FROM_F64(x);

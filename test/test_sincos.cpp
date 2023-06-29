@@ -590,7 +590,7 @@ int merror;
 char *mname;
 
 /* Return the first bit different between two double numbers */
-internal int
+func int
 mag_of_error(double is,
              double shouldbe)
 {
@@ -619,7 +619,7 @@ mag_of_error(double is,
     return 64;
 }
 
-internal int
+func int
 ffcheck(double is,
         one_line_type *p,
         char *name,
@@ -660,7 +660,7 @@ void finish (double result,
     mag = ffcheck(result, p,name, merror, errno);
 }
 
-internal void
+func void
 run_vector_1(one_line_type *p, char *func, char *name, char *args)
 {
     double result;
@@ -751,14 +751,14 @@ run_vector_1(one_line_type *p, char *func, char *name, char *args)
     }
 }
 
-internal void test_cosf(void)
+func void test_cosf(void)
 {
     run_vector_1(cosf_vec,(char *)(arm_cosf),"arm_cosf","ff");
     run_vector_1(cosf_vec,(char *)(sun93_cosf),"sun93_cosf","ff");
     run_vector_1(cosf_vec,(char *)(arm_exp_cosf),"arm_exp_cosf","ff");
 }
 
-internal void test_sinf(void)
+func void test_sinf(void)
 {
     run_vector_1(sinf_vec,(char *)(arm_sinf),"arm_sinf","ff");
     run_vector_1(sinf_vec,(char *)(sun93_sinf),"sun93_sinf","ff");

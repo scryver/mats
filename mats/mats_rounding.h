@@ -6,7 +6,7 @@
 // NOTE(michiel): 32-bit
 //
 
-internal f32
+func f32
 floor32(f32 x)
 {
     f32 result;
@@ -59,7 +59,7 @@ floor32(f32 x)
     return result;
 }
 
-internal f32
+func f32
 ceil32(f32 x)
 {
     f32 result;
@@ -112,7 +112,7 @@ ceil32(f32 x)
     return result;
 }
 
-internal f32
+func f32
 round32(f32 x)
 {
     f32 result;
@@ -158,7 +158,7 @@ round32(f32 x)
     return result;
 }
 
-internal f32
+func f32
 trunc32(f32 x)
 {
     f32 result;
@@ -202,7 +202,7 @@ trunc32(f32 x)
     return result;
 }
 
-internal f32
+func f32
 modulus32(f32 num, f32 den)
 {
     // NOTE(michiel): Returns 'num % den' where the returned value's sign is equal to the sign of the numerator,
@@ -326,7 +326,7 @@ modulus32(f32 num, f32 den)
 	return result;		/* exact output */
 }
 
-internal f32
+func f32
 remainder32(f32 num, f32 den)
 {
     // NOTE(michiel): Returns 'num % den' where the absolute value of the result is less than or equal to half the absolute value
@@ -387,7 +387,7 @@ remainder32(f32 num, f32 den)
 // NOTE(michiel): 64-bit
 //
 
-internal f64
+func f64
 floor64(f64 x)
 {
     f64 result;
@@ -435,7 +435,7 @@ floor64(f64 x)
     return result;
 }
 
-internal f64
+func f64
 ceil64(f64 x)
 {
     f64 result;
@@ -484,7 +484,7 @@ ceil64(f64 x)
     return result;
 }
 
-internal f64
+func f64
 round64(f64 x)
 {
     f64 result = 0.0;
@@ -528,7 +528,7 @@ round64(f64 x)
     return result;
 }
 
-internal f64
+func f64
 trunc64(f64 x)
 {
     f64 result = 0.0;
@@ -570,7 +570,7 @@ trunc64(f64 x)
     return result;
 }
 
-internal f64
+func f64
 modulus64(f64 num, f64 den)
 {
     // NOTE(michiel): Returns 'num % den' where the returned value's sign is equal to the sign of the numerator,
@@ -690,7 +690,7 @@ modulus64(f64 num, f64 den)
 	return result;
 }
 
-internal f64
+func f64
 remainder64(f64 num, f64 den)
 {
     // NOTE(michiel): Returns 'num % den' where the absolute value of the result is less than or equal to half the absolute value

@@ -82,7 +82,7 @@ global const s32 gNPiOver2_hw[] = {
     0x4242c700, 0x42490f00
 };
 
-internal f32
+func f32
 sun93_fabsf(f32 x)
 {
 	u32 ix = u32f32(x).u;
@@ -90,7 +90,7 @@ sun93_fabsf(f32 x)
     return result;
 }
 
-internal f32
+func f32
 sun93_copysignf(f32 x, f32 y)
 {
 	u32 ix = u32f32(x).u;
@@ -99,7 +99,7 @@ sun93_copysignf(f32 x, f32 y)
     return result;
 }
 
-internal f32 sun93_floorf(f32 x)
+func f32 sun93_floorf(f32 x)
 {
 	s32 i0 = (s32)u32f32(x).u;
 	u32 ix = (i0 & 0x7fffffff);
@@ -145,7 +145,7 @@ internal f32 sun93_floorf(f32 x)
 	return x;
 }
 
-internal f32
+func f32
 sun93_scalbnf(f32 x, int n)
 {
     s32 ix = (s32)u32f32(x).u;
@@ -187,7 +187,7 @@ sun93_scalbnf(f32 x, int n)
     return x * g2powMin25F32;
 }
 
-internal s32
+func s32
 __kernel_rem_pio2f(f32 *x, f32 *y, s32 e0, s32 nx, s32 prec, const s32 *ipio2)
 {
     s32 n,iq[20],k,ih;
@@ -398,7 +398,7 @@ __kernel_rem_pio2f(f32 *x, f32 *y, s32 e0, s32 nx, s32 prec, const s32 *ipio2)
     return n & 7;
 }
 
-internal f32
+func f32
 __kernel_cosf(f32 x, f32 y)
 {
 	u32 ix = u32f32(x).u;
@@ -434,7 +434,7 @@ __kernel_cosf(f32 x, f32 y)
 	}
 }
 
-internal f32
+func f32
 __kernel_sinf(f32 x, f32 y, b32 isYNonZero)
 {
 	u32 ix = u32f32(x).u;
@@ -462,7 +462,7 @@ __kernel_sinf(f32 x, f32 y, b32 isYNonZero)
  * return the remainder of x rem pi/2 in y[0]+y[1]
  */
 
-internal s32
+func s32
 __ieee754_rem_pio2f(f32 x, f32 *y)
 {
     f32 z,w,t,r,fn;
@@ -587,7 +587,7 @@ __ieee754_rem_pio2f(f32 x, f32 *y)
     return n;
 }
 
-internal f32
+func f32
 sun93_cosf(f32 x)
 {
 	f32 y[2], z = 0.0f;
@@ -615,7 +615,7 @@ sun93_cosf(f32 x)
 	}
 }
 
-internal f32
+func f32
 sun93_sinf(f32 x)
 {
 	f32 y[2], z = 0.0f;

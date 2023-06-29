@@ -34,7 +34,7 @@ struct SinCos4x
     f32_4x sin;
 };
 
-internal __m128
+func __m128
 sinf_exp_poly_q0_4x(__m128 x, __m128 x2)
 {
     // NOTE(michiel): x - s1*x^3 + s2*x^5 - s3*x^7
@@ -46,7 +46,7 @@ sinf_exp_poly_q0_4x(__m128 x, __m128 x2)
     return _mm_add_ps(s, _mm_mul_ps(x7, s1));
 }
 
-internal __m128
+func __m128
 sinf_exp_poly_q1_4x(__m128 x2)
 {
     // NOTE(michiel): c0 - c1*x^2 + c2*x^4 - c3*x^6 + c4*x^8
@@ -60,7 +60,7 @@ sinf_exp_poly_q1_4x(__m128 x2)
     return _mm_add_ps(c, _mm_mul_ps(x6, c2));
 }
 
-internal f32_4x
+func f32_4x
 arm_cosf_4x(f32_4x y)
 {
     // NOTE(michiel): absolute value of y should be smaller than 100.0f
@@ -110,7 +110,7 @@ arm_cosf_4x(f32_4x y)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 arm_sinf_4x(f32_4x y)
 {
     // NOTE(michiel): absolute value of y should be smaller than 100.0f
@@ -159,7 +159,7 @@ arm_sinf_4x(f32_4x y)
     return result;
 }
 
-internal SinCos4x
+func SinCos4x
 arm_sincosf_4x(f32_4x y)
 {
     // NOTE(michiel): absolute value of y should be smaller than 100.0f
@@ -217,7 +217,7 @@ arm_sincosf_4x(f32_4x y)
 
 #if 0
 // NOTE(michiel): Above algorithms are based on these slimmed down versions
-internal f32
+func f32
 arm_exp_cosf(f32 y)
 {
     i_expect(absolute(y) < 120.0f);
@@ -245,7 +245,7 @@ arm_exp_cosf(f32 y)
     return result;
 }
 
-internal f32
+func f32
 arm_exp_sinf(f32 y)
 {
     i_expect(absolute(y) < 120.0f);

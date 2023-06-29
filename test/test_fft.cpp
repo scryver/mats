@@ -12,25 +12,25 @@
 #include "../mats/matc.h"
 #include "../mats/mats_fft.h"
 
-internal f32
+func f32
 square(f32 x)
 {
     return x * x;
 }
 
-internal f64
+func f64
 square(f64 x)
 {
     return x * x;
 }
 
-internal f32
+func f32
 cos_pi(f32 x)
 {
     return cos32(x);
 }
 
-internal f32
+func f32
 sin_pi(f32 x)
 {
     return sin32(x);
@@ -41,7 +41,7 @@ typedef c64 Complex64;
 #include "../libberdip/src/fft.cpp"
 #include "../mats/mats_fft.cpp"
 
-internal void
+func void
 fft_normal0(u32 count, c32 *signal, c32 *dest)
 {
     i_expect(is_pow2(count));
@@ -81,7 +81,7 @@ fft_normal0(u32 count, c32 *signal, c32 *dest)
     }
 }
 
-internal void
+func void
 fft_inplace0(u32 count, c32 *signal)
 {
     i_expect(is_pow2(count));
@@ -127,7 +127,7 @@ fft_inplace0(u32 count, c32 *signal)
     }
 }
 
-internal void
+func void
 fft_normal0_64(u32 count, c64 *signal, c64 *dest)
 {
     i_expect(is_pow2(count));
@@ -167,7 +167,7 @@ fft_normal0_64(u32 count, c64 *signal, c64 *dest)
     }
 }
 
-internal void
+func void
 fft_inplace0_64(u32 count, c64 *signal)
 {
     i_expect(is_pow2(count));
@@ -215,7 +215,7 @@ fft_inplace0_64(u32 count, c64 *signal)
 
 #include "../src/fft_evolution.cpp"
 
-internal struct timespec
+func struct timespec
 linux_get_wall_clock()
 {
     struct timespec clock;
@@ -223,7 +223,7 @@ linux_get_wall_clock()
     return clock;
 }
 
-internal f32
+func f32
 linux_get_seconds_elapsed(struct timespec start, struct timespec end)
 {
     return ((f32)(end.tv_sec - start.tv_sec)

@@ -13,7 +13,7 @@
  * Conversion to float by Ian Lance Taylor, Cygnus Support, ian@cygnus.com.
  */
 
-internal f32
+func f32
 sun93_sqrtf(f32 x)
 {
 	s32 ix = (s32)u32f32(x).u;
@@ -116,7 +116,7 @@ global const f32 gAtanF32[] = {
     1.6285819933e-02, /* 0x3c8569d7 */
 };
 
-internal f32
+func f32
 sun93_atanf(f32 x)
 {
 	s32 ix = (s32)u32f32(x).u;
@@ -194,7 +194,7 @@ pi_o_2  = 1.5707963705e+00, /* 0x3fc90fdb */
 pi      = 3.1415927410e+00,  /* 0x40490fdb */
 pi_lo   = -8.7422776573e-08; /* 0xb3bbbd2e */
 
-internal f32
+func f32
 sun93_atan2f(f32 y, f32 x)
 {
 	f32 z;

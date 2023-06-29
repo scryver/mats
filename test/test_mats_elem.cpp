@@ -115,7 +115,7 @@
 #undef log1p64
 #undef log1p_fast64
 
-internal f32
+func f32
 hypot_ieee754(f32 x, f32 y)
 {
 	s32 ha = MATS_S32_FROM_F32(x) & MATS_F32_ABS_MASK;
@@ -199,7 +199,7 @@ hypot_ieee754(f32 x, f32 y)
     return w;
 }
 
-internal f32
+func f32
 exp32_sse(f32 x)
 {
     WideMath xw;
@@ -302,7 +302,7 @@ WIDE_FUNC_FROM_F32_F32(powf)
 #define pow32_temp pow32
 WIDE_FUNC_FROM_F32_F32(pow32_temp)
 
-internal f32_4x
+func f32_4x
 log10_32_fast_4x_t(f32_4x x)
 {
     return log10_32_fast_4x(x);

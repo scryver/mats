@@ -2,7 +2,7 @@
 // NOTE(michiel): Sqrt
 //
 
-internal f32_4x
+func f32_4x
 sqrt32_4x(f32_4x x)
 {
     f32_4x result;
@@ -14,13 +14,13 @@ sqrt32_4x(f32_4x x)
 // NOTE(michiel): Hypot
 //
 
-internal f32_4x
+func f32_4x
 hypot32_fast_4x(f32_4x x, f32_4x y)
 {
     return sqrt32_4x(x * x + y * y);
 }
 
-internal f32_4x
+func f32_4x
 hypot32_4x(f32_4x x, f32_4x y)
 {
     f32_4x xu = s32_4x_and(x, S32_4x(MATS_F32_ABS_MASK));
@@ -84,7 +84,7 @@ hypot32_4x(f32_4x x, f32_4x y)
 // NOTE(michiel): Exp
 //
 
-internal f32_4x
+func f32_4x
 exp32_fast_4x(f32_4x x)
 {
     // NOTE(michiel): |x| < 88.0f
@@ -143,7 +143,7 @@ exp32_fast_4x(f32_4x x)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 exp32_4x(f32_4x x)
 {
     f32_4x topMask   = S32_4x(0x7FF00000);
@@ -174,7 +174,7 @@ exp32_4x(f32_4x x)
 // NOTE(michiel): Exp2
 //
 
-internal f32_4x
+func f32_4x
 exp2_32_fast_4x(f32_4x x)
 {
     // NOTE(michiel): |x| < 128.0f
@@ -234,7 +234,7 @@ exp2_32_fast_4x(f32_4x x)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 exp2_32_4x(f32_4x x)
 {
     f32_4x topMask   = S32_4x(0x7FF00000);
@@ -266,7 +266,7 @@ exp2_32_4x(f32_4x x)
 // NOTE(michiel): Log
 //
 
-internal f32_4x
+func f32_4x
 log32_fast_4x(f32_4x x)
 {
     // NOTE(michiel): x >= 0x1p-126, and not inf or nan
@@ -315,7 +315,7 @@ log32_fast_4x(f32_4x x)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 log32_4x(f32_4x x)
 {
     f32_4x lowExpBit = S32_4x(0x00800000);
@@ -357,7 +357,7 @@ log32_4x(f32_4x x)
 // NOTE(michiel): Log2
 //
 
-internal f32_4x
+func f32_4x
 log2_32_fast_4x(f32_4x x)
 {
     // NOTE(michiel): x >= 0x1p-126, and not inf or nan
@@ -408,7 +408,7 @@ log2_32_fast_4x(f32_4x x)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 log2_32_4x(f32_4x x)
 {
     f32_4x lowExpBit = S32_4x(0x00800000);
@@ -446,7 +446,7 @@ log2_32_4x(f32_4x x)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 log10_32_fast_4x(f32_4x x, f32_4x k = zero_f32_4x())
 {
     f32_4x invLn10    = F32_4x(gInvLn10F32);
@@ -463,7 +463,7 @@ log10_32_fast_4x(f32_4x x, f32_4x k = zero_f32_4x())
     return result;
 }
 
-internal f32_4x
+func f32_4x
 log10_32_4x(f32_4x x)
 {
     f32_4x zero4x     = zero_f32_4x();
@@ -501,7 +501,7 @@ log10_32_4x(f32_4x x)
 
 #if 0
 // NOTE(michiel): Template used for simd
-internal f32
+func f32
 expm1_32_temp(f32 x)
 {
     // NOTE(michiel): result = exp(x) - 1
@@ -620,7 +620,7 @@ expm1_32_temp(f32 x)
 }
 #endif
 
-internal f32_4x
+func f32_4x
 expm1_32_4x(f32_4x x)
 {
     f32_4x hx = x & S32_4x(0x7FFFFFFF);
@@ -712,7 +712,7 @@ expm1_32_4x(f32_4x x)
 
 #if 0
 // NOTE(michiel): Template used for simd
-internal f32
+func f32
 log1p32_temp(f32 x)
 {
     // NOTE(michiel): Musl libc version
@@ -777,7 +777,7 @@ log1p32_temp(f32 x)
 }
 #endif
 
-internal f32_4x
+func f32_4x
 log1p32_4x(f32_4x x)
 {
     f32_4x ln2Hi = F32_4x(gLn2HighF32s[0]);
@@ -839,7 +839,7 @@ log1p32_4x(f32_4x x)
 // NOTE(mich2iel): Pow
 //
 
-internal void
+func void
 pow32_log2_4x(f32_4x x, f64_2x *dstLo, f64_2x *dstHi)
 {
     f64_2x poly0 = F64_2x(gPowF32_Log2Poly[0]);
@@ -886,7 +886,7 @@ pow32_log2_4x(f32_4x x, f64_2x *dstLo, f64_2x *dstHi)
     *dstHi = resultHi;
 }
 
-internal f32_4x
+func f32_4x
 pow32_exp2_4x(f64_2x xLo, f64_2x xHi, f32_4x signBias)
 {
     f64_2x poly0 = F64_2x(gExp2F32_Poly[0]);
@@ -933,7 +933,7 @@ pow32_exp2_4x(f64_2x xLo, f64_2x xHi, f32_4x signBias)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 pow32_4x(f32_4x x, f32_4x y)
 {
     // NOTE(michiel): We don't really care about the results for bad inputs!
@@ -982,7 +982,7 @@ pow32_4x(f32_4x x, f32_4x y)
     return result;
 }
 
-internal f32_4x
+func f32_4x
 pow10_32_4x(f32_4x x)
 {
     return pow32_4x(F32_4x(10.0f), x);
