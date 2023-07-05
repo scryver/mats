@@ -28,7 +28,7 @@ sinf_poly_q1(f64 x2)
     // NOTE(michiel): c0 - c1*x^2 + c2*x^4 - c3*x^6 + c4*x^8;
     f64 x4 = x2 * x2;                                 // x^4
     f64 c2 = -0x1.6c087e89a359dp-10 + x2 * 0x1.99343027bf8c3p-16; // -c3 + c4*x^2
-    f64 c1 = 1.0f - x2 * 0x1.ffffffd0c621cp-2;              // c0 - c1*x^2
+    f64 c1 = 1.0 - x2 * 0x1.ffffffd0c621cp-2;              // c0 - c1*x^2
     f64 x6 = x4 * x2;                                 // x^6
     f64 c = c1 + x4 * 0x1.55553e1068f19p-5;                 // c0 - c1*x^2 + c2*x^4
     return c + x6 * c2;                               // c0 - c1*x^2 + c2*x^4 + x^6(-c3 + c4*x^2)
@@ -106,7 +106,7 @@ sincos32(f32 y)
     else
     {
         int n = 0;
-        f64 xm = (abstop12_(y) < abstop12_(0.25f * F32_PI)) ? x : reduce_fast_pi4(x, &n);
+        f64 xm = (abstop12_(y) < abstop12_(0.25f * F32_PI)) ? (f64)x : reduce_fast_pi4((f64)x, &n);
         f64 x2 = xm * xm;
         f64 sinP = sinf_poly_q0(xm, x2);
         f64 cosP = sinf_poly_q1(x2);
@@ -202,7 +202,7 @@ tan32(f32 y)
     else
     {
         int n = 0;
-        f32 x = (f32)reduce_fast_pi4(y, &n);
+        f32 x = (f32)reduce_fast_pi4((f64)y, &n);
         result = tan32_kernel(x, 1 - ((n & 1) << 1));
     }
     return result;
@@ -841,6 +841,7 @@ kernel_rem_pi_over_2(f64 *x, f64 *y, s32 e0, s32 nx, s32 prec, const s32 *twoOve
 
     s32 n,iq[20],i,k,ih;
     f64 z,fq[20];
+    fq[0] = 0.0;
 
     recompute:
     z = q[jz];
@@ -1158,7 +1159,7 @@ kernel_tan64(f64 x, f64 y, s32 iy)
     {
         if ((s32)x == 0)
         {
-            u32 low = ix & 0xFFFFFFFF;
+            u32 low = (u32)(ix & 0xFFFFFFFF);
             if (((top | low) | (iy + 1)) == 0)
             {
                 return 1.0 / absolute64(x);
@@ -1257,7 +1258,7 @@ func s32
 ieee754_rem_pi_over_2(f64 x, f64 *y)
 {
     s64 sx = MATS_S64_FROM_F64(x);
-    s32 hx = sx >> 32;
+    s32 hx = (s32)(sx >> 32);
     s32 ix = hx & 0x7FFFFFFF;
 
     if (ix <= 0x3FE921FB)
@@ -1318,7 +1319,7 @@ ieee754_rem_pi_over_2(f64 x, f64 *y)
         {
             s32 j = ix >> 20;
             y[0] = r - w;
-            u32 high = MATS_U64_FROM_F64(y[0]) >> 32;
+            u32 high = (u32)(MATS_U64_FROM_F64(y[0]) >> 32);
             s32 i = j - ((high >> 20) & 0x7FF);
             if (i > 16)
             {
@@ -1327,7 +1328,7 @@ ieee754_rem_pi_over_2(f64 x, f64 *y)
                 r = t - w;
                 w = fn * gPiOver2F64_2t - ((t - r) - w);
                 y[0] = r - w;
-                high = MATS_U64_FROM_F64(y[0]) >> 32;
+                high = (u32)(MATS_U64_FROM_F64(y[0]) >> 32);
                 i = j - ((high >> 20) & 0x7FF);
                 if (i > 49)
                 {
@@ -1359,7 +1360,7 @@ ieee754_rem_pi_over_2(f64 x, f64 *y)
         return 0;
     }
 
-    u32 lowZ = sx & 0xFFFFFFFF;
+    u32 lowZ = (u32)(sx & 0xFFFFFFFF);
     s32 e0 = (s32)((ix >> 20) - 1046); // NOTE(michiel): ilogb(z) - 23
     s32 highZ = ix - (e0 << 20);
     f64 z = MATS_F64_FROM_U64(((u64)highZ << 32) | (u64)lowZ);
@@ -1533,7 +1534,7 @@ acos64(f64 x)
 
     if (top >= 0x3FF00000)
     {
-        u32 low = ix & 0xFFFFFFFF;
+        u32 low = (u32)(ix & 0xFFFFFFFF);
         if (((top - 0x3FF00000) | low) == 0)
         {
             if (ix > 0) {
@@ -1620,7 +1621,7 @@ asin64(f64 x)
 #define qS4  7.70381505559019352791e-02    /* 0x3FB3B8C5B12E9282 */
     if (top >= 0x3FF00000)
     {
-        u32 low = ix & 0xFFFFFFFF;
+        u32 low = (u32)(ix & 0xFFFFFFFF);
         if (((top - 0x3FF00000) | low) == 0)
         {
             return x * gPiOver2F64 + x * gPiOver2F64_lo;
@@ -1685,7 +1686,7 @@ atan64(f64 x)
     s32 id = 0;
     if (top >= 0x44100000)
     {
-        u32 low = ix & 0xFFFFFFFF;
+        u32 low = (u32)(ix & 0xFFFFFFFF);
         if ((top > 0x7FF00000) ||
             ((top == 0x7FF00000) && low))
         {
@@ -1775,8 +1776,8 @@ atan2_64(f64 y, f64 x)
 
     u32 ix = (sx >> 32) & 0x7FFFFFFF;
     u32 iy = (sy >> 32) & 0x7FFFFFFF;
-    u32 lx = (sx & 0xFFFFFFFF);
-    u32 ly = (sy & 0xFFFFFFFF);
+    u32 lx = (u32)(sx & 0xFFFFFFFF);
+    u32 ly = (u32)(sy & 0xFFFFFFFF);
 
     if (((ix | ((lx | -lx) >> 31)) > 0x7FF00000) ||
         ((iy | ((ly | -ly) >> 31)) > 0x7FF00000))
@@ -1788,7 +1789,7 @@ atan2_64(f64 y, f64 x)
         return atan64(y);
     }
 
-    s32 m = ((sx >> 62) & 0x2) | ((sy >> 63) & 0x1);
+    s32 m = (s32)(((sx >> 62) & 0x2) | ((sy >> 63) & 0x1));
 
     // NOTE(michiel): y == 0
     if ((iy | ly) == 0)
@@ -1889,7 +1890,7 @@ cosh64(f64 x)
     }
     else
     {
-        u32 low = ix & 0xFFFFFFFF;
+        u32 low = (u32)(ix & 0xFFFFFFFF);
         if ((top < 0x408633CE) ||
             ((top == 0x408633CE) && (low <= 0x8FB9F87DU)))
         {
@@ -1935,7 +1936,7 @@ sinh64(f64 x)
     }
     else
     {
-        u32 low = ix & 0xFFFFFFFF;
+        u32 low = (u32)(ix & 0xFFFFFFFF);
         if ((top < 0x408633CE) ||
             ((top == 0x408633CE) && (low <= 0x8FB9F87DU)))
         {
@@ -2008,7 +2009,7 @@ func f64
 acosh64(f64 x)
 {
     s64 ix = MATS_S64_FROM_F64(x);
-    s32 top = (ix >> 32);
+    s32 top = (s32)(ix >> 32);
 
     if (top < 0x3FF00000)
     {
@@ -2078,7 +2079,7 @@ atanh64(f64 x)
     s64 sx = MATS_S64_FROM_F64(x);
 
     u32 ix = (sx >> 32) & 0x7FFFFFFF;
-    u32 lx = (sx & 0xFFFFFFFF);
+    u32 lx = (u32)(sx & 0xFFFFFFFF);
 
     if ((ix | ((lx | -lx) >> 31)) > 0x7FF00000)
     {

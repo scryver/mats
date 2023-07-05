@@ -214,13 +214,13 @@ issignaling64(f64 x)
 func u32
 mats_top12(f64 x)
 {
-    return MATS_U64_FROM_F64(x) >> 52;
+    return safe_truncate_to_u32(MATS_U64_FROM_F64(x) >> 52);
 }
 
 func u32
 mats_top16(f64 x)
 {
-    return MATS_U64_FROM_F64(x) >> 48;
+    return safe_truncate_to_u32(MATS_U64_FROM_F64(x) >> 48);
 }
 
 //
@@ -255,8 +255,8 @@ func f64
 scalbn64(f64 x, s32 e)
 {
     s64 sx = MATS_S64_FROM_F64(x);
-    s32 hx = sx >> 32;
-    s32 lx = sx & 0xFFFFFFFF;
+    s32 hx = (s32)(sx >> 32);
+    s32 lx = (s32)(sx & 0xFFFFFFFF);
 
     s32 k = (hx & 0x7FF00000) >> 20;
     if (k == 0)
@@ -268,7 +268,7 @@ scalbn64(f64 x, s32 e)
         }
 
         x *= g2pow54F64;
-        hx = MATS_S64_FROM_F64(x) >> 32;
+        hx = (s32)(MATS_S64_FROM_F64(x) >> 32);
         k = ((hx & 0x7FF00000) >> 20) - 54;
         if (e < -50000) {
             return gTinyF64 * x;

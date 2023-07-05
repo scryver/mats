@@ -192,6 +192,7 @@ __kernel_rem_pio2f(f32 *x, f32 *y, s32 e0, s32 nx, s32 prec, const s32 *ipio2)
 {
     s32 n,iq[20],k,ih;
     f32 z,fw,f[20],fq[20],q[20];
+    fq[0] = 0.0f;
 
     /* initialize jk*/
     s32 jk = gInitJK[prec];

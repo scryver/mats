@@ -124,7 +124,7 @@ hypot32(f32 x, f32 y)
         x *= 0x1p90f;
         y *= 0x1p90f;
     }
-    f32 result = z * sqrt32((f32)((f64)x * x + (f64)y * y));
+    f32 result = z * sqrt32((f32)((f64)x * (f64)x + (f64)y * (f64)y));
     //f32 result = z * sqrt32(x * x + y * y); // NOTE(michiel): Less accurate, but faster
     return result;
 }
@@ -151,7 +151,7 @@ exp32(f32 x)
         }
     }
 
-    f64 xd = x;
+    f64 xd = (f64)x;
     f64 z = gExp2F32_InvLn2Scaled * xd;
 
     f64 kd = z + gExp2F32_Shift; /* Rounding to double precision is required.  */
@@ -197,7 +197,7 @@ exp2_32(f32 x)
         }
     }
 
-    f64 xd = x;
+    f64 xd = (f64)x;
     f64 kd = xd + gExp2F32_ShiftScaled; /* Rounding to double precision is required.  */
     u64 ki = MATS_F64U(kd).u;
     kd -= gExp2F32_ShiftScaled;
@@ -1114,7 +1114,7 @@ log64(f64 x)
        The ith subinterval contains z and c is near its center.  */
     u64 tmp = ix - 0x3fe6000000000000ULL;
     s32 i = (tmp >> (52 - LOG64_TABLE_BITS)) % LOG64_N;
-    s32 k = (s64)tmp >> 52; /* arithmetic shift */
+    s32 k = (s32)((s64)tmp >> 52); /* arithmetic shift */
     u64 iz = ix - (tmp & (0xfffULL << 52));
     f64 invc = gLogData64.tab[i].invc;
     f64 logc = gLogData64.tab[i].logc;
@@ -1217,7 +1217,7 @@ log2_64(f64 x)
        The ith subinterval contains z and c is near its center.  */
     u64 tmp = ix - 0x3fe6000000000000;
     s32 i = (tmp >> (52 - LOG2_64_TABLE_BITS)) % LOG2_64_N;
-    s32 k = (s64)tmp >> 52; /* arithmetic shift */
+    s32 k = (s32)((s64)tmp >> 52); /* arithmetic shift */
     u64 iz = ix - (tmp & (0xfffULL << 52));
     f64 invc = gLog2Data64.tab[i].invc;
     f64 logc = gLog2Data64.tab[i].logc;
@@ -1282,7 +1282,7 @@ log10_64(f64 x)
         return x + x;
     }
 
-    k += (sx >> MATS_F64_EXP_SHIFT) - MATS_F64_EXP_BIAS;
+    k += (s32)((sx >> MATS_F64_EXP_SHIFT) - MATS_F64_EXP_BIAS);
     s32 i  = (u32)k >> 31;
     sx = (sx & MATS_F64_MANT_MASK) | ((s64)(MATS_F64_EXP_BIAS - i) << MATS_F64_EXP_SHIFT);
     f64 y  = (f64)(k + i);
@@ -1299,7 +1299,7 @@ expm1_64(f64 x)
     f64 ln2_lo = gLn2LowF64s[0];
 
     s64 sx = MATS_S64_FROM_F64(x);
-    u32 hx = sx >> 32;
+    u32 hx = (u32)((u64)sx >> 32);
     s32 xSign = hx & 0x80000000;   /* sign bit of x */
     hx &= 0x7FFFFFFF;            /* high word of |x| */
     u64 ux = sx & MATS_F64_ABS_MASK;
@@ -1447,7 +1447,7 @@ log1p64(f64 x)
     f64 ln2_lo = gLn2LowF64s[0];
 
 	s64 sx = MATS_S64_FROM_F64(x);
-    s32 hx = sx >> 32;
+    s32 hx = (s32)(sx >> 32);
     s32 ax = hx & 0x7FFFFFFF;
 
     f64 f = 0.0;
@@ -1495,7 +1495,7 @@ log1p64(f64 x)
         {
             f64 u  = 1.0 + x;
             shu = MATS_S64_FROM_F64(u);
-	        k  = (shu >> MATS_F64_EXP_SHIFT) - MATS_F64_EXP_BIAS;
+	        k  = (s32)((shu >> MATS_F64_EXP_SHIFT) - MATS_F64_EXP_BIAS);
 	        c  = (k > 0) ? 1.0 - (u - x) : x - (u - 1.0); /* correction term */
             c /= u;
 	    }
@@ -1503,7 +1503,7 @@ log1p64(f64 x)
         {
             f64 u = x;
             shu = MATS_S64_FROM_F64(u);
-	        k  = (shu >> MATS_F64_EXP_SHIFT) - MATS_F64_EXP_BIAS;
+	        k  = (s32)((shu >> MATS_F64_EXP_SHIFT) - MATS_F64_EXP_BIAS);
 	    }
 	    hu = (shu >> 32) & 0x000fffff;
         f64 u;

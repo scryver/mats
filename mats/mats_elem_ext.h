@@ -171,7 +171,7 @@ pow64_log(u64 ix, f64 *tail)
        The ith subinterval contains z and c is near its center.  */
     u64 tmp = ix - 0x3FE6955500000000ULL;
     s32 i = (tmp >> (MATS_F64_EXP_SHIFT - POW64_LOG_TABLE_BITS)) % POW64_LOG_N;
-    s32 k = (s64)tmp >> MATS_F64_EXP_SHIFT; /* arithmetic shift */
+    s32 k = (s32)((s64)tmp >> MATS_F64_EXP_SHIFT); /* arithmetic shift */
     u64 iz = ix - (tmp & (0xFFFULL << 52));
     f64 z = MATS_F64_FROM_U64(iz);
     f64 kd = (f64)k;

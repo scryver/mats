@@ -152,7 +152,7 @@ unwrapped_phase_from_fft64(u32 count, c64 *source, f64 *dest)
 {
     c64 *src = source;
     f64 *dst = dest;
-    f64 unwrapper = 0.0f;
+    f64 unwrapper = 0.0;
     if (count)
     {
         f64 prev = argument64(*src++);

@@ -37,18 +37,18 @@ reduce_pi32(f32 x)
     }
 
     t = (f32)(s32)t;  /* the multiple */
-    f32 result = (f32)(((x - t * gPiReduce1F32) - t * gPiReduce2F32) - t * gPiReduce3F32);
+    f32 result = (f32)((((f64)x - (f64)t * gPiReduce1F32) - (f64)t * gPiReduce2F32) - (f64)t * gPiReduce3F32);
     return result;
 }
 
 func f64
 reduce_pi64(f64 x)
 {
-    f64 t = x / gPiF32;
-    if (t >= 0.0f) {
-        t += 0.5f;
+    f64 t = (f64)x / (f64)gPiF32;
+    if (t >= 0.0) {
+        t += 0.5;
     } else {
-        t -= 0.5f;
+        t -= 0.5;
     }
 
     t = (f64)(s64)t;  /* the multiple */
