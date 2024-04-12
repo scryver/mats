@@ -51,7 +51,7 @@ fft_normal0(u32 count, c32 *signal, c32 *dest)
     i_expect(highBit.found);
     for (u32 index = 0; index < count; ++index)
     {
-        u32 reversedIndex = reverse_bits32(index, highBit.index);
+        u32 reversedIndex = reverse_bits(index, highBit.index);
         dest[index] = signal[reversedIndex];
     }
 
@@ -92,7 +92,7 @@ fft_inplace0(u32 count, c32 *signal)
     {
         //u32 reversedIndex = bit_reverse(index, highBit.index);
         //reversedIndex >>= (31 - highBit.index);
-        u32 reversedIndex = reverse_bits32(index, highBit.index);
+        u32 reversedIndex = reverse_bits(index, highBit.index);
         if (reversedIndex > index)
         {
             c32 temp = signal[index];
@@ -137,7 +137,7 @@ fft_normal0_64(u32 count, c64 *signal, c64 *dest)
     i_expect(highBit.found);
     for (u32 index = 0; index < count; ++index)
     {
-        u32 reversedIndex = reverse_bits32(index, highBit.index);
+        u32 reversedIndex = reverse_bits(index, highBit.index);
         dest[index] = signal[reversedIndex];
     }
 
@@ -178,7 +178,7 @@ fft_inplace0_64(u32 count, c64 *signal)
     {
         //u32 reversedIndex = bit_reverse(index, highBit.index);
         //reversedIndex >>= (31 - highBit.index);
-        u32 reversedIndex = reverse_bits32(index, highBit.index);
+        u32 reversedIndex = reverse_bits(index, highBit.index);
         if (reversedIndex > index)
         {
             c64 temp = signal[index];

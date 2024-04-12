@@ -192,7 +192,7 @@ fft_inplace(u32 count, c32 *dest)
         u32 index2 = index0 + halfCount;
         u32 index3 = index1 + halfCount;
 
-        u32 revIndex0 = reverse_bits32(index0, highBit.index);
+        u32 revIndex0 = reverse_bits(index0, highBit.index);
         u32 revIndex1 = revIndex0 ^ halfCount;
         u32 revIndex2 = revIndex0 + 1;
         u32 revIndex3 = revIndex1 + 1;
@@ -392,7 +392,7 @@ fft_inplace_fast(u32 count, c32 *dest)
         u32 index2 = index0 + halfCount;
         u32 index3 = index1 + halfCount;
 
-        u32 revIndex0 = reverse_bits32(index0, highBit.index);
+        u32 revIndex0 = reverse_bits(index0, highBit.index);
         u32 revIndex1 = revIndex0 ^ halfCount;
         u32 revIndex2 = revIndex0 + 1;
         u32 revIndex3 = revIndex1 + 1;
@@ -662,7 +662,7 @@ fft_inplace_table(u32 count, c32 *dest, f32 *sinCosTable)
         u32 index2 = index0 + halfCount;
         u32 index3 = index1 + halfCount;
 
-        u32 revIndex0 = reverse_bits32(index0, highBit.index);
+        u32 revIndex0 = reverse_bits(index0, highBit.index);
         u32 revIndex1 = revIndex0 ^ halfCount;
         u32 revIndex2 = revIndex0 + 1;
         u32 revIndex3 = revIndex1 + 1;
@@ -869,7 +869,7 @@ ifft_inplace(u32 count, c32 *dest)
         u32 index2 = index0 + halfCount;
         u32 index3 = index1 + halfCount;
 
-        u32 revIndex0 = reverse_bits32(index0, highBit.index);
+        u32 revIndex0 = reverse_bits(index0, highBit.index);
         u32 revIndex1 = revIndex0 ^ halfCount;
         u32 revIndex2 = revIndex0 + 1;
         u32 revIndex3 = revIndex1 + 1;
@@ -1075,7 +1075,7 @@ ifft_inplace_fast(u32 count, c32 *dest)
         u32 index2 = index0 + halfCount;
         u32 index3 = index1 + halfCount;
 
-        u32 revIndex0 = reverse_bits32(index0, highBit.index);
+        u32 revIndex0 = reverse_bits(index0, highBit.index);
         u32 revIndex1 = revIndex0 ^ halfCount;
         u32 revIndex2 = revIndex0 + 1;
         u32 revIndex3 = revIndex1 + 1;
@@ -1366,7 +1366,7 @@ fft_inplace64(u32 count, c64 *dest)
         u32 index2 = index0 + halfCount;
         u32 index3 = index1 + halfCount;
 
-        u32 revIndex0 = reverse_bits32(index0, highBit.index);
+        u32 revIndex0 = reverse_bits(index0, highBit.index);
         u32 revIndex1 = revIndex0 ^ halfCount;
         u32 revIndex2 = revIndex0 + 1;
         u32 revIndex3 = revIndex1 + 1;
@@ -1652,7 +1652,7 @@ fft_inplace_fast64(u32 count, c64 *dest)
         u32 index2 = index0 + halfCount;
         u32 index3 = index1 + halfCount;
 
-        u32 revIndex0 = reverse_bits32(index0, highBit.index);
+        u32 revIndex0 = reverse_bits(index0, highBit.index);
         u32 revIndex1 = revIndex0 ^ halfCount;
         u32 revIndex2 = revIndex0 + 1;
         u32 revIndex3 = revIndex1 + 1;
@@ -2040,7 +2040,7 @@ fft_inplace_table64(u32 count, c64 *dest, f64 *sinCosTable)
         u32 index2 = index0 + halfCount;
         u32 index3 = index1 + halfCount;
 
-        u32 revIndex0 = reverse_bits32(index0, highBit.index);
+        u32 revIndex0 = reverse_bits(index0, highBit.index);
         u32 revIndex1 = revIndex0 ^ halfCount;
         u32 revIndex2 = revIndex0 + 1;
         u32 revIndex3 = revIndex1 + 1;
@@ -2340,7 +2340,7 @@ ifft_inplace64(u32 count, c64 *dest)
         u32 index2 = index0 + halfCount;
         u32 index3 = index1 + halfCount;
 
-        u32 revIndex0 = reverse_bits32(index0, highBit.index);
+        u32 revIndex0 = reverse_bits(index0, highBit.index);
         u32 revIndex1 = revIndex0 ^ halfCount;
         u32 revIndex2 = revIndex0 + 1;
         u32 revIndex3 = revIndex1 + 1;
@@ -2632,7 +2632,7 @@ ifft_inplace_fast64(u32 count, c64 *dest)
         u32 index2 = index0 + halfCount;
         u32 index3 = index1 + halfCount;
 
-        u32 revIndex0 = reverse_bits32(index0, highBit.index);
+        u32 revIndex0 = reverse_bits(index0, highBit.index);
         u32 revIndex1 = revIndex0 ^ halfCount;
         u32 revIndex2 = revIndex0 + 1;
         u32 revIndex3 = revIndex1 + 1;
